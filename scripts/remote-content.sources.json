@@ -1,0 +1,25 @@
+{
+  "_comment": "Remote Copilot asset sources. Edit this file to add or remove sources and files. Do NOT vendor upstream files directly in this template — they are downloaded on demand into .github/**/upstream/.",
+  "sources": [
+    {
+      "key": "awesome-copilot",
+      "description": "GitHub's curated collection of Copilot instructions, agents, and skills",
+      "repo": "github/awesome-copilot",
+      "ref": "main",
+      "enabled": true,
+      "items": {
+        "instructions": [
+          "instructions/powershell.instructions.md",
+          "instructions/powershell-pester-5.instructions.md"
+        ],
+        "agents": [
+          "agents/power-platform-expert.agent.md"
+        ],
+        "skills": [],
+        "claudeCommands": [
+          "agents/power-platform-expert.agent.md"
+        ]
+      }
+    }
+  ]
+}

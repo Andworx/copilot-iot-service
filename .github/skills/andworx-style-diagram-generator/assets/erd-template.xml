@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="draw.io" modified="2026-04-28" agent="Copilot" version="1.0" type="device">
+  <diagram id="erd-template" name="Entity Relationship Diagram">
+    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1008" pageHeight="612" background="ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- Engineering Border Frame -->
+        <mxCell id="border-outer" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=none;strokeWidth=2;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="928" height="512" as="geometry"/>
+        </mxCell>
+        
+        <!-- Row Labels (A, B, C, D) - Left Side -->
+        <mxCell id="label-row-a" value="D" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="15" y="100" width="25" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-row-b" value="C" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="15" y="240" width="25" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-row-c" value="B" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="15" y="380" width="25" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Column Labels (4, 3, 2, 1) - Top Side -->
+        <mxCell id="label-col-4" value="4" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="80" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-col-3" value="3" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="300" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-col-2" value="2" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="520" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-col-1" value="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="900" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity Type Label (Left Vertical Axis) -->
+        <mxCell id="entity-label" value="Entities" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="5" y="280" width="25" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity Table 1 -->
+        <mxCell id="entity-1" value="Customers" style="rounded=0;shadow=1;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;fontSize=11;fontFamily=Helvetica;fontStyle=1;overflow=fill;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="150" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity 1 Attributes -->
+        <mxCell id="entity-1-pk" value="CustomerID (PK)" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="140" width="150" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity-1-attr1" value="Name" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="165" width="150" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity-1-attr2" value="Email" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="190" width="150" height="25" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity Table 2 -->
+        <mxCell id="entity-2" value="Projects" style="rounded=0;shadow=1;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;fontSize=11;fontFamily=Helvetica;fontStyle=1;overflow=fill;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="100" width="150" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity 2 Attributes -->
+        <mxCell id="entity-2-pk" value="ProjectID (PK)" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="140" width="150" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity-2-attr1" value="Title" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="165" width="150" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity-2-fk" value="CustomerID (FK)" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;fontStyle=3;" vertex="1" parent="1">
+          <mxGeometry x="400" y="190" width="150" height="25" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity Table 3 -->
+        <mxCell id="entity-3" value="Tasks" style="rounded=0;shadow=1;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;fontSize=11;fontFamily=Helvetica;fontStyle=1;overflow=fill;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="100" width="150" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Entity 3 Attributes -->
+        <mxCell id="entity-3-pk" value="TaskID (PK)" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="700" y="140" width="150" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity-3-attr1" value="Description" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;" vertex="1" parent="1">
+          <mxGeometry x="700" y="165" width="150" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity-3-fk" value="ProjectID (FK)" style="text;html=1;strokeColor=#333333;fillColor=#FFFFFF;fontSize=9;fontFamily=Helvetica;border=1;align=left;verticalAlign=top;spacing=2;fontStyle=3;" vertex="1" parent="1">
+          <mxGeometry x="700" y="190" width="150" height="25" as="geometry"/>
+        </mxCell>
+        
+        <!-- Relationship Line: Customers to Projects -->
+        <mxCell id="relationship-1" value="1:N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;align=center;" edge="1" parent="1" source="entity-1" target="entity-2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="sourcePoint" x="250" y="120"/>
+            <mxPoint as="targetPoint" x="400" y="120"/>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Relationship Line: Projects to Tasks -->
+        <mxCell id="relationship-2" value="1:N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;align=center;" edge="1" parent="1" source="entity-2" target="entity-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="sourcePoint" x="550" y="120"/>
+            <mxPoint as="targetPoint" x="700" y="120"/>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Title Block -->
+        <mxCell id="title-block" value="" style="rounded=0;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=1;fontSize=9;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="600" y="520" width="360" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block: Title -->
+        <mxCell id="title-text" value="Entity Relationship Diagram" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="610" y="525" width="180" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block: Version -->
+        <mxCell id="version-text" value="Version: 1.0" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="790" y="525" width="85" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block: Page -->
+        <mxCell id="page-text" value="Page 1 of 1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;align=right;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="875" y="525" width="85" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- Divider lines in title block -->
+        <mxCell id="divider-1" value="" style="line;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="790" y="520" width="1" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="divider-2" value="" style="line;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="875" y="520" width="1" height="60" as="geometry"/>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

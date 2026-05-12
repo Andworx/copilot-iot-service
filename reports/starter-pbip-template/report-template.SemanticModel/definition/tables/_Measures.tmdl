@@ -1,0 +1,5 @@
+table _Measures
+	isHidden
+	measure 'Total Requests' = COUNTROWS('Service Requests')
+	measure 'Closed Requests' = CALCULATE([Total Requests], 'Service Requests'[Status] = "Closed")
+	measure 'Closure Rate %' = DIVIDE([Closed Requests], [Total Requests])

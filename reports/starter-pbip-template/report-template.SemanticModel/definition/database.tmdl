@@ -1,0 +1,4 @@
+createOrReplace
+	database ReportTemplate
+		compatibilityLevel: 1565
+		model ReportTemplate

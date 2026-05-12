@@ -1,0 +1,65 @@
+[
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_PortalBaseUrl",
+    "displayName": "Portal Base URL",
+    "description": "The base URL of the power pages portal (e.g., https://your-org.powerappsportals.com). Used by flows to construct deep links in notifications.",
+    "type": "String",
+    "defaultValue": ""
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_EscalationTeamsGroupId",
+    "displayName": "Escalation Teams Group ID",
+    "description": "The Microsoft Teams Group (Team) ID where escalation adaptive cards are posted.",
+    "type": "String",
+    "defaultValue": ""
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_EscalationTeamsChannelId",
+    "displayName": "Escalation Teams Channel ID",
+    "description": "The Microsoft Teams Channel ID within the escalation Team.",
+    "type": "String",
+    "defaultValue": ""
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_StaleBusinessHours",
+    "displayName": "Stale Business Hours Threshold",
+    "description": "Number of business hours before an unassigned item is flagged as stale.",
+    "type": "String",
+    "defaultValue": "4"
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_WorkingHoursStart",
+    "displayName": "Working Hours Start",
+    "description": "Start of the business day in 24-hour format (HH:mm).",
+    "type": "String",
+    "defaultValue": "08:00"
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_WorkingHoursEnd",
+    "displayName": "Working Hours End",
+    "description": "End of the business day in 24-hour format (HH:mm).",
+    "type": "String",
+    "defaultValue": "17:00"
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_WorkingTimeZone",
+    "displayName": "Working Time Zone",
+    "description": "Windows time zone ID for business hours calculations (e.g., Eastern Standard Time).",
+    "type": "String",
+    "defaultValue": "Eastern Standard Time"
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_NotificationFromEmail",
+    "displayName": "Notification From Email",
+    "description": "Optional shared mailbox address for notification emails. Leave empty to use the flow owner's mailbox.",
+    "type": "String",
+    "defaultValue": ""
+  },
+  {
+    "schemaName": "YOUR_PUBLISHER_PREFIX_MDAAppId",
+    "displayName": "Model-Driven App ID",
+    "description": "The GUID of the model-driven app, used to construct deep links in Teams card actions.",
+    "type": "String",
+    "defaultValue": ""
+  }
+]

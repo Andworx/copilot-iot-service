@@ -1,0 +1,19 @@
+-- Starter DAX patterns for report templates
+
+Total Requests =
+COUNTROWS('Service Requests')
+
+Closed Requests =
+CALCULATE(
+    [Total Requests],
+    'Service Requests'[Status] = "Closed"
+)
+
+Closure Rate % =
+VAR TotalCount = [Total Requests]
+VAR ClosedCount = [Closed Requests]
+RETURN
+    DIVIDE(ClosedCount, TotalCount)
+
+Average Resolution Hours =
+AVERAGE('Service Requests'[ResolutionHours])

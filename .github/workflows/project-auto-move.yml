@@ -1,0 +1,90 @@
+name: Project Auto-Move on PR Status
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize, closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  move-issue-on-pr-change:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get linked issue from PR body
+        id: get-issue
+        run: |
+          # Extract issue number from PR body (e.g., "Fixes #123")
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oP '(?i)(Fixes|Closes|Resolves)\s+#\K[0-9]+' | head -1)
+          echo "issue_number=${ISSUE_NUMBER}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Resolve linked issue node id
+        if: steps.get-issue.outputs.issue_number != ''
+        id: issue-node
+        run: |
+          ISSUE_NODE_ID=$(gh api "repos/${{ github.repository }}/issues/${{ steps.get-issue.outputs.issue_number }}" --jq '.node_id')
+          echo "issue_node_id=${ISSUE_NODE_ID}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+
+      - name: Validate org project token access
+        if: steps.get-issue.outputs.issue_number != ''
+        id: project-access
+        run: |
+          if gh project view YOUR_PROJECT_NUMBER --owner YOUR_ORG_NAME >/dev/null 2>&1; then
+            echo "ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "ok=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
+        shell: bash
+
+      - name: Project move skipped due to token access
+        if: steps.get-issue.outputs.issue_number != '' && steps.project-access.outputs.ok != 'true'
+        run: |
+          echo "Skipping project status move: token cannot access org project #YOUR_PROJECT_NUMBER."
+          echo "Fix PAT_PROJECT by authorizing it for YOUR_ORG_NAME org and scopes repo, read:project, write:project."
+        shell: bash
+
+      - name: Handle PR opened/reopened/edited - Move to In Review
+        if: github.event.action != 'closed' && steps.get-issue.outputs.issue_number != '' && steps.project-access.outputs.ok == 'true'
+        uses: leonsteinhaeuser/project-beta-automations@v2.2.1
+        with:
+          gh_token: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
+          organization: YOUR_ORG_NAME
+          project_id: YOUR_PROJECT_NUMBER
+          resource_node_id: ${{ steps.issue-node.outputs.issue_node_id }}
+          status_value: "In Review"
+
+      - name: Handle PR merged - Move to Done and close issue
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true && steps.get-issue.outputs.issue_number != '' && steps.project-access.outputs.ok == 'true'
+        uses: leonsteinhaeuser/project-beta-automations@v2.2.1
+        with:
+          gh_token: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
+          organization: YOUR_ORG_NAME
+          project_id: YOUR_PROJECT_NUMBER
+          resource_node_id: ${{ steps.issue-node.outputs.issue_node_id }}
+          status_value: "Done"
+
+      - name: Close linked issue on PR merge
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true && steps.get-issue.outputs.issue_number != ''
+        run: |
+          gh issue close "${{ steps.get-issue.outputs.issue_number }}" --repo "${{ github.repository }}" --reason "completed"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+
+      - name: Handle PR closed (unmerged) - Move back to In Progress
+        if: github.event.action == 'closed' && github.event.pull_request.merged == false && steps.get-issue.outputs.issue_number != '' && steps.project-access.outputs.ok == 'true'
+        uses: leonsteinhaeuser/project-beta-automations@v2.2.1
+        with:
+          gh_token: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
+          organization: YOUR_ORG_NAME
+          project_id: YOUR_PROJECT_NUMBER
+          resource_node_id: ${{ steps.issue-node.outputs.issue_node_id }}
+          status_value: "In Progress"

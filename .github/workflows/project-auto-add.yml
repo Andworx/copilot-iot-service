@@ -1,0 +1,24 @@
+name: Project Auto-Add
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: read
+  contents: read
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'YOUR_PROJECT_LABEL')
+    steps:
+      - name: Add issue to project board
+        env:
+          # Use PAT_PROJECT secret if available; fall back to GITHUB_TOKEN
+          GH_TOKEN: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          # Add issue to org-level project (number: YOUR_PROJECT_NUMBER)
+          # Note: Requires PAT_PROJECT secret with 'read:project' scope for org-level projects
+          gh project item-add YOUR_PROJECT_NUMBER --owner YOUR_ORG_NAME --url "$ISSUE_URL" || echo "Failed to add to project. See .github/PROJECT_BOARD_GUIDE.md for setup."

@@ -1,0 +1,46 @@
+name: Project Label Sync
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  sync-project-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get linked issue from PR body
+        id: get-issue
+        run: |
+          # Extract issue number from PR body (e.g., "Fixes #123")
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oP '(?i)(Fixes|Closes|Resolves)\s+#\K[0-9]+' | head -1)
+          echo "issue_number=${ISSUE_NUMBER}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Check if issue has project label
+        if: steps.get-issue.outputs.issue_number != ''
+        id: check-label
+        run: |
+          TARGET_REPO="${{ github.event.pull_request.base.repo.full_name }}"
+          LABELS=$(gh issue view ${{ steps.get-issue.outputs.issue_number }} --repo "$TARGET_REPO" --json labels --jq '.labels[].name')
+          if echo "$LABELS" | grep -q "YOUR_PROJECT_LABEL"; then
+            echo "has_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_label=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+
+      - name: Add project label to issue if missing
+        if: steps.get-issue.outputs.issue_number != '' && steps.check-label.outputs.has_label == 'false'
+        run: |
+          TARGET_REPO="${{ github.event.pull_request.base.repo.full_name }}"
+          gh issue edit ${{ steps.get-issue.outputs.issue_number }} --repo "$TARGET_REPO" --add-label "YOUR_PROJECT_LABEL"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash

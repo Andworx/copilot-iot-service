@@ -1,0 +1,15 @@
+{
+  "_comment": "Internal file tracking applied token values per environment. Used by Apply-ProjectTokens.ps1 to detect value changes.",
+  "dev": {
+    "appliedAt": null,
+    "values": {}
+  },
+  "test": {
+    "appliedAt": null,
+    "values": {}
+  },
+  "prod": {
+    "appliedAt": null,
+    "values": {}
+  }
+}

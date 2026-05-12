@@ -1,0 +1,75 @@
+{
+  "_comment": "Token configuration for scripts/Apply-ProjectTokens.ps1. Project tokens are shared across all environments and should be set once under project.required. Environment tokens remain in dev/test/prod. Leave unknown values as placeholders and optional values as null.",
+  "project": {
+    "_comment_email_prefix": "YOUR_EMAIL_TEMPLATE_PREFIX is used to namespace managed email templates in Dataverse. Defaults to YOUR_PROJECT_ID if you leave it as-is. Must be a short identifier with no spaces (e.g. MyProject).",
+    "required": {
+      "YOUR_PROJECT_NAME": "YOUR_PROJECT_NAME",
+      "YOUR_PROJECT_ID": "YOUR_PROJECT_ID",
+      "YOUR_SOLUTION_NAME": "YOUR_SOLUTION_NAME",
+      "YOUR_PUBLISHER_PREFIX": "YOUR_PUBLISHER_PREFIX",
+      "YOUR_EMAIL_TEMPLATE_PREFIX": "YOUR_EMAIL_TEMPLATE_PREFIX"
+    }
+  },
+  "required": [
+    "YOUR_ORG_NAME",
+    "YOUR_ORG_URL",
+    "YOUR_TENANT_ID",
+    "YOUR_CLOUD_ENV"
+  ],
+  "optional": [
+    "YOUR_CLIENT_ID",
+    "YOUR_PORTAL_SLUG",
+    "YOUR_WEBSITE_ID",
+    "YOUR_PORTAL_FOLDER",
+    "YOUR_PROJECT_NUMBER",
+    "YOUR_PROJECT_LABEL"
+  ],
+  "dev": {
+    "required": {
+      "YOUR_ORG_NAME": "YOUR_ORG_NAME",
+      "YOUR_ORG_URL": "YOUR_ORG_URL",
+      "YOUR_TENANT_ID": "YOUR_TENANT_ID",
+      "YOUR_CLOUD_ENV": "commercial"
+    },
+    "optional": {
+      "YOUR_CLIENT_ID": null,
+      "YOUR_PORTAL_SLUG": null,
+      "YOUR_WEBSITE_ID": null,
+      "YOUR_PORTAL_FOLDER": null,
+      "YOUR_PROJECT_NUMBER": null,
+      "YOUR_PROJECT_LABEL": null
+    }
+  },
+  "test": {
+    "required": {
+      "YOUR_ORG_NAME": "YOUR_ORG_NAME",
+      "YOUR_ORG_URL": "YOUR_ORG_URL",
+      "YOUR_TENANT_ID": "YOUR_TENANT_ID",
+      "YOUR_CLOUD_ENV": "commercial"
+    },
+    "optional": {
+      "YOUR_CLIENT_ID": null,
+      "YOUR_PORTAL_SLUG": null,
+      "YOUR_WEBSITE_ID": null,
+      "YOUR_PORTAL_FOLDER": null,
+      "YOUR_PROJECT_NUMBER": null,
+      "YOUR_PROJECT_LABEL": null
+    }
+  },
+  "prod": {
+    "required": {
+      "YOUR_ORG_NAME": "YOUR_ORG_NAME",
+      "YOUR_ORG_URL": "YOUR_ORG_URL",
+      "YOUR_TENANT_ID": "YOUR_TENANT_ID",
+      "YOUR_CLOUD_ENV": "commercial"
+    },
+    "optional": {
+      "YOUR_CLIENT_ID": null,
+      "YOUR_PORTAL_SLUG": null,
+      "YOUR_WEBSITE_ID": null,
+      "YOUR_PORTAL_FOLDER": null,
+      "YOUR_PROJECT_NUMBER": null,
+      "YOUR_PROJECT_LABEL": null
+    }
+  }
+}

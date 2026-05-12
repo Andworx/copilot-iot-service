@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="draw.io" modified="2026-04-28" agent="Copilot" version="1.0" type="device">
+  <diagram id="swimlane-template" name="Cross-Functional Process">
+    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1008" pageHeight="612" background="ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- Engineering Border Frame -->
+        <mxCell id="border-outer" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=none;strokeWidth=2;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="928" height="512" as="geometry"/>
+        </mxCell>
+        
+        <!-- Row Labels (A, B, C, D) - Left Side -->
+        <mxCell id="label-row-a" value="D" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="15" y="100" width="25" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-row-b" value="C" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="15" y="240" width="25" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-row-c" value="B" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="15" y="380" width="25" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Column Labels (4, 3, 2, 1) - Top Side -->
+        <mxCell id="label-col-4" value="4" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="80" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-col-3" value="3" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="300" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-col-2" value="2" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="520" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-col-1" value="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="900" y="15" width="40" height="25" as="geometry"/>
+        </mxCell>
+        
+        <!-- Process Group Label (Left Vertical Axis) -->
+        <mxCell id="process-label" value="The Process" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="5" y="280" width="25" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- Swim Lanes Container -->
+        <mxCell id="swimlane-container" value="" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;strokeColor=none;fillColor=none;fontSize=12;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="880" height="450" as="geometry"/>
+        </mxCell>
+        
+        <!-- Swim Lane 1: Customer -->
+        <mxCell id="lane-customer" value="Customer" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=40;horizontalStack=1;resizeParent=1;strokeColor=#333333;fillColor=#E8E8F0;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="swimlane-container">
+          <mxGeometry y="0" width="176" height="450" as="geometry"/>
+        </mxCell>
+        
+        <!-- Swim Lane 2: Management -->
+        <mxCell id="lane-management" value="Management" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=40;horizontalStack=1;resizeParent=1;strokeColor=#333333;fillColor=#E8E8F0;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="176" y="0" width="176" height="450" as="geometry"/>
+        </mxCell>
+        
+        <!-- Swim Lane 3: Developers -->
+        <mxCell id="lane-developers" value="Developers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=40;horizontalStack=1;resizeParent=1;strokeColor=#333333;fillColor=#E8E8F0;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="352" y="0" width="176" height="450" as="geometry"/>
+        </mxCell>
+        
+        <!-- Swim Lane 4: BA -->
+        <mxCell id="lane-ba" value="BA" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=40;horizontalStack=1;resizeParent=1;strokeColor=#333333;fillColor=#E8E8F0;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="528" y="0" width="176" height="450" as="geometry"/>
+        </mxCell>
+        
+        <!-- Swim Lane 5: Automations -->
+        <mxCell id="lane-automations" value="Automations" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=40;horizontalStack=1;resizeParent=1;strokeColor=#333333;fillColor=#E8E8F0;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="704" y="0" width="176" height="450" as="geometry"/>
+        </mxCell>
+        
+        <!-- Start Event (in Customer lane) -->
+        <mxCell id="start-event" value="" style="ellipse;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="lane-customer">
+          <mxGeometry x="30" y="80" width="40" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Activity 1 (in Customer lane) -->
+        <mxCell id="activity-1" value="Requests Project" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;container=0;" vertex="1" parent="lane-customer">
+          <mxGeometry x="20" y="140" width="130" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- Activity 2 (in Management lane) -->
+        <mxCell id="activity-2" value="Review Solution" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;container=0;" vertex="1" parent="lane-management">
+          <mxGeometry x="20" y="140" width="130" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- End Event (in Automations lane) -->
+        <mxCell id="end-event" value="" style="ellipse;shadow=1;strokeColor=#333333;fillColor=#333333;strokeWidth=2;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="lane-automations">
+          <mxGeometry x="30" y="340" width="40" height="40" as="geometry"/>
+        </mxCell>
+        
+        <!-- Connector: Start to Activity 1 -->
+        <mxCell id="connector-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="lane-customer" source="start-event" target="activity-1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Connector: Activity 1 to Activity 2 -->
+        <mxCell id="connector-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="swimlane-container" source="activity-1" target="activity-2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block -->
+        <mxCell id="title-block" value="" style="rounded=0;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=1;fontSize=9;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="600" y="520" width="360" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block: Title -->
+        <mxCell id="title-text" value="The Process" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="610" y="525" width="180" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block: Version -->
+        <mxCell id="version-text" value="Version: 1.0" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="790" y="525" width="85" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- Title Block: Page -->
+        <mxCell id="page-text" value="Page 1 of 1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;align=right;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="875" y="525" width="85" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- Divider lines in title block -->
+        <mxCell id="divider-1" value="" style="line;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="790" y="520" width="1" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="divider-2" value="" style="line;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="875" y="520" width="1" height="60" as="geometry"/>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

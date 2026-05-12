@@ -1,0 +1,36 @@
+# Secrets
+.env
+# Local notes and scratch files
+.notes/
+
+
+# Export outputs
+scripts/exports/
+
+# PAC CLI internal files
+**/.portalconfig/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Node / Playwright
+node_modules/
+playwright-report/
+playwright-report-live/
+test-results/
+test-results-*/
+blob-report/
+
+# .NET / Dataverse plugins
+**/bin/
+**/obj/
+
+# Project-specific generated data
+scripts/data/
+
+# Power BI local/generated artifacts
+**/.pbi/
+**/*.pbix
+**/*.abf
+**/*localSettings.json

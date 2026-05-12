@@ -1,0 +1,21 @@
+{
+  "name": "YOUR_PROJECT_ID-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright E2E tests for the YOUR_PROJECT_NAME power pages portal.",
+  "scripts": {
+    "test:e2e": "playwright test --project=contract",
+    "test:e2e:all": "playwright test",
+    "test:e2e:contract": "playwright test --project=contract --grep @contract",
+    "test:e2e:live": "playwright test --project=live",
+    "test:e2e:live:grep": "playwright test --project=live --grep @live",
+    "test:e2e:anon": "playwright test --grep @anon",
+    "test:e2e:negative": "playwright test --grep @negative",
+    "test:e2e:upload": "playwright test --grep @upload",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
+}

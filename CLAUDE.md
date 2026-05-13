@@ -1,21 +1,21 @@
-# YOUR_PROJECT_NAME — Claude Code Instructions
+# AgenticIoT — Claude Code Instructions
 
 ## Project Identity
 
-- **Project name:** YOUR_PROJECT_NAME
-- **Solution unique name:** YOUR_SOLUTION_NAME
-- **Publisher prefix:** YOUR_PUBLISHER_PREFIX
-- **Organisation URL:** YOUR_ORG_URL
-- **Org / tenant:** YOUR_ORG_NAME
-- **Cloud environment:** YOUR_CLOUD_ENV (commercial | gcc | gcch | dod)
+- **Project name:** AgenticIoT
+- **Solution unique name:** AgenticIoT
+- **Publisher prefix:** andy
+- **Organisation URL:** andworx-development.crm.dynamics.com/
+- **Org / tenant:** andworx-development
+- **Cloud environment:**  commercial (commercial | gcc | gcch | dod)
 
 Fill in `project.tokens.json` and run `.\scripts\Apply-ProjectTokens.ps1 -Environment dev` to stamp these values across the repo.
 
 ## Solution & Publisher
 
-- Solution unique name: `YOUR_SOLUTION_NAME`
-- Publisher prefix: `YOUR_PUBLISHER_PREFIX` — all custom entities, columns, choices, and relationships use this prefix; no exceptions
-- Target environment: `YOUR_ORG_URL`
+- Solution unique name: `AgenticIoT`
+- Publisher prefix: `andy` — all custom entities, columns, choices, and relationships use this prefix; no exceptions
+- Target environment: `andworx-development.crm.dynamics.com/`
 
 ## PAC CLI
 
@@ -27,7 +27,7 @@ Fill in `project.tokens.json` and run `.\scripts\Apply-ProjectTokens.ps1 -Enviro
 ## File Organisation
 
 ```
-YOUR_PROJECT_ID/
+AgenticIoT/
 ├── automations/         # Non-flow automation assets
 │   └── emails/          # Managed email templates (templates.json + HTML body files)
 ├── power pages/         # Power Pages portal assets (PAC CLI v2 format)
@@ -58,7 +58,7 @@ YOUR_PROJECT_ID/
 
 ## Export Output
 
-Exports go to `scripts/exports/YOUR_SOLUTION_NAME/` organised by component type, each with a `_summary.json`.
+Exports go to `scripts/exports/AgenticIoT/` organised by component type, each with a `_summary.json`.
 
 ## Project Plan
 
@@ -75,11 +75,11 @@ Maintain `requirements/PLAN.md`. Track status with: `✅ Done`, `⬜ Verify`, `�
 
 | Token | Purpose |
 |---|---|
-| `YOUR_PROJECT_NAME` | Human-readable project name used in UI labels and documentation |
-| `YOUR_PROJECT_ID` | Short identifier used in folder names and prefixes |
-| `YOUR_SOLUTION_NAME` | Dataverse solution unique name |
-| `YOUR_PUBLISHER_PREFIX` | Publisher prefix for all custom Dataverse components |
-| `YOUR_EMAIL_TEMPLATE_PREFIX` | Prefix for all managed email templates (e.g. `MyProject`). Used by `Import-EmailTemplates.ps1` to validate template names. Set to a short identifier with no spaces. |
+| `AgenticIoT` | Human-readable project name used in UI labels and documentation |
+| `AgenticIoT` | Short identifier used in folder names and prefixes |
+| `AgenticIoT` | Dataverse solution unique name |
+| `andy` | Publisher prefix for all custom Dataverse components |
+| `agenticiot` | Prefix for all managed email templates (e.g. `MyProject`). Used by `Import-EmailTemplates.ps1` to validate template names. Set to a short identifier with no spaces. |
 
 ### Optional tokens (set in `project.tokens.json > optional` and each env's `optional`)
 

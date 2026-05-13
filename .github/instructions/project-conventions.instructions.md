@@ -1,13 +1,13 @@
 ---
-description: "Use when working on YOUR_PROJECT_NAME — general conventions for file organization, solution naming, PAC CLI usage, and deployment practices."
+description: "Use when working on AgenticIoT — general conventions for file organization, solution naming, PAC CLI usage, and deployment practices."
 ---
-# YOUR_PROJECT_NAME — Project Conventions
+# AgenticIoT — Project Conventions
 
 ## Solution & Publisher
 
-- Solution unique name: `YOUR_SOLUTION_NAME`
-- Publisher prefix: `YOUR_PUBLISHER_PREFIX`
-- Environment: `YOUR_ORG_URL`
+- Solution unique name: `AgenticIoT`
+- Publisher prefix: `andy`
+- Environment: `andworx-development.crm.dynamics.com/`
 
 ## PAC CLI
 
@@ -19,7 +19,7 @@ description: "Use when working on YOUR_PROJECT_NAME — general conventions for 
 ## File Organization
 
 ```
-YOUR_PROJECT_ID/
+AgenticIoT/
 ├── automations/        # Non-flow automation assets
 │   └── emails/          # Managed email templates (templates.json + HTML body files)
 ├── power pages/            # power pages portal assets (PAC CLI v2 format)
@@ -54,7 +54,7 @@ Examples: `automations/emails/`, `tables/choices/`, `flows/`, `copilot agents/`
 
 ## Export Output
 
-Exports go to `scripts/exports/YOUR_SOLUTION_NAME/` organized by component type, each with a `_summary.json`.
+Exports go to `scripts/exports/AgenticIoT/` organized by component type, each with a `_summary.json`.
 
 ## README Maintenance (Required)
 

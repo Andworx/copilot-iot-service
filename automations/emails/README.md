@@ -1,6 +1,6 @@
 # Email Templates
 
-This folder contains managed email template definitions for `YOUR_PROJECT_NAME`. Templates are deployed to Dataverse by `scripts/Import-EmailTemplates.ps1`.
+This folder contains managed email template definitions for `AgenticIoT`. Templates are deployed to Dataverse by `scripts/Import-EmailTemplates.ps1`.
 
 ## Files
 
@@ -12,20 +12,20 @@ This folder contains managed email template definitions for `YOUR_PROJECT_NAME`.
 
 ## Naming Convention
 
-All managed template names must start with **`YOUR_EMAIL_TEMPLATE_PREFIX`** followed by a space, hyphen, space, and a descriptive name:
+All managed template names must start with **`agenticiot`** followed by a space, hyphen, space, and a descriptive name:
 
 ```
-YOUR_EMAIL_TEMPLATE_PREFIX - Template Name
+agenticiot - Template Name
 ```
 
-This is enforced by `Import-EmailTemplates.ps1` using the `YOUR_EMAIL_TEMPLATE_PREFIX` project token. Set the correct value in `project.tokens.json` under `project.required`, then run `Apply-ProjectTokens.ps1`.
+This is enforced by `Import-EmailTemplates.ps1` using the `agenticiot` project token. Set the correct value in `project.tokens.json` under `project.required`, then run `Apply-ProjectTokens.ps1`.
 
 ## templates.json Schema
 
 ```json
 [
   {
-    "name": "YOUR_EMAIL_TEMPLATE_PREFIX - Template Name",
+    "name": "agenticiot - Template Name",
     "subject": "Email subject line",
     "bodyFile": "template-name.html",
     "description": "Purpose of this template",
@@ -40,7 +40,7 @@ This is enforced by `Import-EmailTemplates.ps1` using the `YOUR_EMAIL_TEMPLATE_P
 
 | Field | Required | Description |
 |---|---|---|
-| `name` | ✅ | Unique display name in Dataverse. Must start with `YOUR_EMAIL_TEMPLATE_PREFIX - `. |
+| `name` | ✅ | Unique display name in Dataverse. Must start with `agenticiot - `. |
 | `subject` | ✅ | Email subject line. May include placeholder tokens. |
 | `bodyFile` | ✅ | Path to the HTML body file, relative to this folder. |
 | `description` | recommended | Purpose of the template, stored in Dataverse. Placeholder tokens and version are appended automatically. |
@@ -55,9 +55,9 @@ This is enforced by `Import-EmailTemplates.ps1` using the `YOUR_EMAIL_TEMPLATE_P
 ```json
 [
   {
-    "name": "YOUR_EMAIL_TEMPLATE_PREFIX - Welcome Email",
-    "subject": "Welcome to YOUR_PROJECT_NAME, {{FirstName}}!",
-    "bodyFile": "example/YOUR_EMAIL_TEMPLATE_PREFIX - Welcome Email.html",
+    "name": "agenticiot - Welcome Email",
+    "subject": "Welcome to AgenticIoT, {{FirstName}}!",
+    "bodyFile": "example/agenticiot - Welcome Email.html",
     "description": "Sent to new contacts on registration.",
     "templateTargetEntity": "contact",
     "placeholders": ["{{FirstName}}", "{{PortalUrl}}"],
@@ -66,7 +66,7 @@ This is enforced by `Import-EmailTemplates.ps1` using the `YOUR_EMAIL_TEMPLATE_P
 ]
 ```
 
-### Corresponding body file: `example/YOUR_EMAIL_TEMPLATE_PREFIX - Welcome Email.html`
+### Corresponding body file: `example/agenticiot - Welcome Email.html`
 
 See the file in the `example/` subfolder for the matching HTML starter.
 
@@ -74,5 +74,5 @@ See the file in the `example/` subfolder for the matching HTML starter.
 
 1. Create an HTML body file in this folder (or a subfolder).
 2. Add an entry to `templates.json` following the schema above.
-3. Ensure the `name` starts with `YOUR_EMAIL_TEMPLATE_PREFIX - `.
+3. Ensure the `name` starts with `agenticiot - `.
 4. Run `scripts/Import-EmailTemplates.ps1` to deploy.

@@ -1,6 +1,6 @@
 # Dataverse Plugins
 
-This folder contains Dataverse plugin assemblies for `YOUR_PROJECT_NAME`.
+This folder contains Dataverse plugin assemblies for `AgenticIoT`.
 
 Use plugins for synchronous server-side logic such as validation, calculated updates, and post-operation integrity processing.
 

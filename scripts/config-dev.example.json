@@ -1,9 +1,9 @@
 {
-  "environmentUrl": "https://YOUR_ORG_URL",
+  "environmentUrl": "https://andworx-development.crm.dynamics.com/",
   "apiVersion": "v9.2",
   "tenantId": "YOUR_TENANT_ID",
   "clientId": "YOUR_CLIENT_ID",
-  "cloudEnvironment": "YOUR_CLOUD_ENV",
-  "publisherPrefix": "YOUR_PUBLISHER_PREFIX",
-  "solutionUniqueName": "YOUR_SOLUTION_NAME"
+  "cloudEnvironment": " commercial",
+  "publisherPrefix": "andy",
+  "solutionUniqueName": "AgenticIoT"
 }

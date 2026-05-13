@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export environment variable definitions and values from the YOUR_SOLUTION_NAME solution.
+    Export environment variable definitions and values from the AgenticIoT solution.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/environmentvariables.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/environmentvariables.
 #>
 
 function Export-EnvironmentVariables {

@@ -1,19 +1,19 @@
 [
   {
-    "schemaName": "YOUR_PUBLISHER_PREFIX_shared_commondataserviceforapps",
-    "displayName": "YOUR_PROJECT_NAME — Dataverse",
-    "description": "Dataverse connection used by all YOUR_PROJECT_NAME flows for triggers and data operations.",
+    "schemaName": "andy_shared_commondataserviceforapps",
+    "displayName": "AgenticIoT — Dataverse",
+    "description": "Dataverse connection used by all AgenticIoT flows for triggers and data operations.",
     "connectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
   },
   {
-    "schemaName": "YOUR_PUBLISHER_PREFIX_shared_office365",
-    "displayName": "YOUR_PROJECT_NAME — Office 365 Outlook",
+    "schemaName": "andy_shared_office365",
+    "displayName": "AgenticIoT — Office 365 Outlook",
     "description": "Office 365 Outlook connection used by notification flows.",
     "connectorId": "/providers/Microsoft.PowerApps/apis/shared_office365"
   },
   {
-    "schemaName": "YOUR_PUBLISHER_PREFIX_shared_teams",
-    "displayName": "YOUR_PROJECT_NAME — Microsoft Teams",
+    "schemaName": "andy_shared_teams",
+    "displayName": "AgenticIoT — Microsoft Teams",
     "description": "Microsoft Teams connection used for adaptive card notifications.",
     "connectorId": "/providers/Microsoft.PowerApps/apis/shared_teams"
   }

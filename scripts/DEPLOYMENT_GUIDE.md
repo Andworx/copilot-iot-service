@@ -1,4 +1,4 @@
-# YOUR_PROJECT_NAME — Deployment Guide
+# AgenticIoT — Deployment Guide
 
 ## Prerequisites
 
@@ -23,8 +23,8 @@ Copy-Item .env.example .env
 
 ```powershell
 Copy-Item config-dev.example.json config-dev.json
-# Edit config-dev.json → fill in YOUR_ORG_URL, YOUR_TENANT_ID, YOUR_CLIENT_ID,
-# YOUR_CLOUD_ENV, YOUR_PUBLISHER_PREFIX, YOUR_SOLUTION_NAME
+# Edit config-dev.json → fill in andworx-development.crm.dynamics.com/, YOUR_TENANT_ID, YOUR_CLIENT_ID,
+#  commercial, andy, AgenticIoT
 ```
 
 ### 3. Verify Configuration
@@ -61,13 +61,13 @@ Each environment has a `config-{name}.json` file. See `config-dev.example.json` 
 
 ```json
 {
-  "environmentUrl": "https://YOUR_ORG_URL",
+  "environmentUrl": "https://andworx-development.crm.dynamics.com/",
   "apiVersion": "v9.2",
   "tenantId": "YOUR_TENANT_ID",
   "clientId": "YOUR_CLIENT_ID",
-  "cloudEnvironment": "YOUR_CLOUD_ENV",
-  "publisherPrefix": "YOUR_PUBLISHER_PREFIX",
-  "solutionUniqueName": "YOUR_SOLUTION_NAME"
+  "cloudEnvironment": " commercial",
+  "publisherPrefix": "andy",
+  "solutionUniqueName": "AgenticIoT"
 }
 ```
 
@@ -165,10 +165,10 @@ $env:DATAVERSE_CLIENT_SECRET_DEV = $secretFromKeyVault
 
 ## Output Structure
 
-All exports go to `scripts/exports/YOUR_SOLUTION_NAME/`:
+All exports go to `scripts/exports/AgenticIoT/`:
 
 ```
-exports/YOUR_SOLUTION_NAME/
+exports/AgenticIoT/
 ├── tables/             # Table, column, key definitions
 ├── relationships/      # 1:N and N:N relationship definitions
 ├── flows/              # Cloud flow definitions (JSON)

@@ -1,4 +1,4 @@
 {
-  "_comment": "Aggregated relationship definitions consumed by scripts/Import-Relationships.ps1. Each relationship must have an entry here AND an individual file in this folder (e.g. YOUR_PUBLISHER_PREFIX_account_contact.json). Add new entries in deployment order: referenced tables must exist before referencing tables.",
+  "_comment": "Aggregated relationship definitions consumed by scripts/Import-Relationships.ps1. Each relationship must have an entry here AND an individual file in this folder (e.g. andy_account_contact.json). Add new entries in deployment order: referenced tables must exist before referencing tables.",
   "relationships": []
 }

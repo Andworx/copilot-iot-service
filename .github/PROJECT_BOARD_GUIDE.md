@@ -1,6 +1,6 @@
-# YOUR_PROJECT_NAME Project Board Guide
+# AgenticIoT Project Board Guide
 
-This guide explains how to use the GitHub Project Board to track work on the YOUR_PROJECT_NAME solution.
+This guide explains how to use the GitHub Project Board to track work on the AgenticIoT solution.
 
 ## Quick Start
 
@@ -150,8 +150,8 @@ Once your PR is approved and merged:
 1. Go to your organisation on GitHub
 2. Click **Projects** → **New project**
 3. Choose **Board** layout
-4. Name it (e.g., `YOUR_PROJECT_NAME`)
-5. Note the project number from the URL (e.g., `https://github.com/orgs/YOUR_ORG_NAME/projects/2` → number is `2`)
+4. Name it (e.g., `AgenticIoT`)
+5. Note the project number from the URL (e.g., `https://github.com/orgs/andworx-development/projects/2` → number is `2`)
 6. Set `YOUR_PROJECT_NUMBER` in `project.tokens.json` and re-run `Apply-ProjectTokens.ps1`
 
 ### 2. Create Required Labels

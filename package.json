@@ -1,8 +1,8 @@
 {
-  "name": "YOUR_PROJECT_ID-tests",
+  "name": "AgenticIoT-tests",
   "version": "0.1.0",
   "private": true,
-  "description": "Playwright E2E tests for the YOUR_PROJECT_NAME power pages portal.",
+  "description": "Playwright E2E tests for the AgenticIoT power pages portal.",
   "scripts": {
     "test:e2e": "playwright test --project=contract",
     "test:e2e:all": "playwright test",

@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export security roles and their privileges from the YOUR_SOLUTION_NAME solution.
+    Export security roles and their privileges from the AgenticIoT solution.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/securityroles.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/securityroles.
 #>
 
 function Export-SecurityRoles {

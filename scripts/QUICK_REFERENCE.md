@@ -1,4 +1,4 @@
-# YOUR_PROJECT_NAME — Quick Reference
+# AgenticIoT — Quick Reference
 
 ## Baseline Template Sync (Downstream Repos)
 
@@ -89,7 +89,7 @@ cd scripts
 
 ## Output
 
-All exports → `scripts/exports/YOUR_SOLUTION_NAME/{component-type}/`
+All exports → `scripts/exports/AgenticIoT/{component-type}/`
 
 Each run generates an HTML report that auto-opens in your browser.
 
@@ -110,7 +110,7 @@ Project tokens support dev, test, and prod environments with environment-specifi
 .\Apply-ProjectTokens.ps1 -Environment prod
 
 # Apply single token for specific environment
-.\Apply-ProjectTokens.ps1 -Environment prod -Token YOUR_ORG_URL
+.\Apply-ProjectTokens.ps1 -Environment prod -Token andworx-development.crm.dynamics.com/
 
 # Preview without writing files
 .\Apply-ProjectTokens.ps1 -Environment prod -WhatIf
@@ -164,14 +164,14 @@ To add more files or sources, edit `scripts/remote-content.sources.json`.
 
 | Token | Example | Environment | Scope |
 |-------|---------|-------------|-------|
-| `YOUR_PROJECT_NAME` | My Project | All | Project identifier |
-| `YOUR_PROJECT_ID` | proj-001 | All | Unique project ID |
-| `YOUR_ORG_NAME` | Andworx | All | Organization name |
-| `YOUR_SOLUTION_NAME` | my_solution | All | Dataverse solution name |
-| `YOUR_PUBLISHER_PREFIX` | andworx | All | Publisher prefix |
-| `YOUR_ORG_URL` | https://org.crm.dynamics.com | Env-specific | Dataverse instance |
+| `AgenticIoT` | My Project | All | Project identifier |
+| `AgenticIoT` | proj-001 | All | Unique project ID |
+| `andworx-development` | Andworx | All | Organization name |
+| `AgenticIoT` | my_solution | All | Dataverse solution name |
+| `andy` | andworx | All | Publisher prefix |
+| `andworx-development.crm.dynamics.com/` | https://org.crm.dynamics.com | Env-specific | Dataverse instance |
 | `YOUR_TENANT_ID` | {guid} | Env-specific | Azure tenant |
-| `YOUR_CLOUD_ENV` | commercial | Env-specific | Cloud authority host selector (`commercial`, `gcc`, `gcch`, `dod`) |
+| ` commercial` | commercial | Env-specific | Cloud authority host selector (`commercial`, `gcc`, `gcch`, `dod`) |
 | `YOUR_CLIENT_ID` | {guid} | Optional | Service principal |
 | `YOUR_PORTAL_SLUG` | my-portal | Optional | Power Pages URL slug |
 | `YOUR_WEBSITE_ID` | {guid} | Optional | Power Pages website ID |

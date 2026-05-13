@@ -23,7 +23,7 @@ Use it when you need to create a new plugin assembly with the baseline structure
    - `DataversePluginTemplate` namespace
    - `SamplePlugin.cs` class name
 3. Run `./Generate-StrongNameKey.ps1` once to create your `.snk` file.
-4. Replace placeholder schema names (for example `YOUR_PUBLISHER_PREFIX_name`).
+4. Replace placeholder schema names (for example `andy_name`).
 5. Create registration documentation (`*_REGISTRATION.md`) with two sections only: **Add Plugin Assembly** and **Add Steps**. See `.github/instructions/plugin-development.instructions.md` for the minimal template structure.
 6. Build and register in your Dataverse environment.
 

@@ -16,6 +16,6 @@ Generic Power BI report template designed for reuse across projects.
 
 1. Copy this folder and rename it for your report.
 2. Rename `report-template.pbip` and matching Report/SemanticModel folders.
-3. Update placeholders (`YOUR_ORG_URL`, table names, measure names).
+3. Update placeholders (`andworx-development.crm.dynamics.com/`, table names, measure names).
 4. Open the copied `.pbip` file in Power BI Desktop.
 5. Validate refresh and visuals, then commit source files.

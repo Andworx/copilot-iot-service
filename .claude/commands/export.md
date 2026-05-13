@@ -28,7 +28,7 @@ Guide the user through exporting Power Platform components from the source envir
    ```
 
 4. **Review output**
-   - Exports land in `scripts/exports/YOUR_SOLUTION_NAME/<component-type>/`
+   - Exports land in `scripts/exports/AgenticIoT/<component-type>/`
    - Each export includes a `_summary.json`
    - Review the exported files for accuracy before committing
 

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Master orchestrator for YOUR_PROJECT_NAME Power Platform deployment jobs.
+    Master orchestrator for AgenticIoT Power Platform deployment jobs.
 .DESCRIPTION
     Central job runner with multi-environment support, production safety controls,
     dry-run preview, interactive menus, and HTML run report.
@@ -295,7 +295,7 @@ function Write-RunReport {
 
     $html = @"
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>YOUR_PROJECT_NAME — Run Report $timestamp</title>
+<html><head><meta charset="utf-8"><title>AgenticIoT — Run Report $timestamp</title>
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 2rem; background: #f8f9fa; }
 h1 { color: #343a40; } h2 { color: #495057; margin-top: 2rem; }
@@ -309,7 +309,7 @@ th { background: #343a40; color: white; padding: 0.75rem 1rem; text-align: left;
 td { padding: 0.75rem 1rem; border-bottom: 1px solid #dee2e6; }
 tr:last-child td { border-bottom: none; }
 </style></head><body>
-<h1>YOUR_PROJECT_NAME — Power Platform Run Report</h1>
+<h1>AgenticIoT — Power Platform Run Report</h1>
 <p><strong>Environment:</strong> $Environment | <strong>Job:</strong> $Job | <strong>Time:</strong> $timestamp</p>
 <div class="summary">
     <div class="card"><div class="value">$totalSteps</div><div class="label">Total Steps</div></div>
@@ -338,7 +338,7 @@ tr:last-child td { border-bottom: none; }
 Write-Host @"
 
   ╔══════════════════════════════════════════════════╗
-  ║   YOUR_PROJECT_NAME — Power Platform Deploy      ║
+  ║   AgenticIoT — Power Platform Deploy      ║
   ╚══════════════════════════════════════════════════╝
 
 "@ -ForegroundColor Cyan

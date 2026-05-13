@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export Power Automate cloud flows from the YOUR_SOLUTION_NAME solution.
+    Export Power Automate cloud flows from the AgenticIoT solution.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/flows.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/flows.
 #>
 
 function Export-Flows {

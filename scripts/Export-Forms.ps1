@@ -4,7 +4,7 @@
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/forms.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/forms.
 #>
 
 function Export-Forms {

@@ -41,7 +41,7 @@ reports/
 - Commit text-based source files (PBIP/TMDL/JSON/DAX/M).
 - Do not commit local Power BI generated cache/state files (`.pbi/`, cache artifacts, machine-local settings).
 - Do not commit secrets, tenant-specific credentials, or hardcoded sensitive identifiers.
-- Keep environment values tokenized when practical (`YOUR_ORG_URL`, `YOUR_ORG_NAME`, and related placeholders).
+- Keep environment values tokenized when practical (`andworx-development.crm.dynamics.com/`, `andworx-development`, and related placeholders).
 
 ## DAX Authoring Guidance
 

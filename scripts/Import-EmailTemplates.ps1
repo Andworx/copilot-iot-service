@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Imports and updates managed YOUR_PROJECT_NAME email templates in Dataverse.
+    Imports and updates managed AgenticIoT email templates in Dataverse.
 .DESCRIPTION
     Reads template metadata from automations/emails/templates.json and upserts
     records into the standard Dataverse template table using the template title as the key.
-    Supports dry run mode and enforces the YOUR_EMAIL_TEMPLATE_PREFIX naming prefix for managed assets.
+    Supports dry run mode and enforces the agenticiot naming prefix for managed assets.
 .PARAMETER Connection
     Dataverse connection object from Connect-Dataverse.
 .PARAMETER SourcePath
@@ -77,8 +77,8 @@ function Import-EmailTemplates {
             if (-not $template.name) {
                 throw "Template entry is missing 'name'."
             }
-            if ($template.name -notlike 'YOUR_EMAIL_TEMPLATE_PREFIX*') {
-                throw "Template '$($template.name)' is invalid. Managed template names must start with YOUR_EMAIL_TEMPLATE_PREFIX."
+            if ($template.name -notlike 'agenticiot*') {
+                throw "Template '$($template.name)' is invalid. Managed template names must start with agenticiot."
             }
             if (-not $template.subject) {
                 throw "Template '$($template.name)' is missing 'subject'."

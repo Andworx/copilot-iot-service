@@ -74,14 +74,14 @@ else {
         # Check if CLIENT_ID is set (needed for automations)
         $clientIdSet = $false
         if ($tokenDef.optional) {
-            $clientId = $tokenDef.optional.YOUR_CLIENT_ID
-            if ($clientId -and $clientId -ne 'YOUR_CLIENT_ID') {
+            $clientId = $tokenDef.optional.347aeaed-b2d1-4b76-a4ff-0d2b340f707e
+            if ($clientId -and $clientId -ne '347aeaed-b2d1-4b76-a4ff-0d2b340f707e') {
                 $clientIdSet = $true
             }
         }
 
         if (-not $clientIdSet -and $pendingTokens.Count -eq 0) {
-            Write-Warn "YOUR_CLIENT_ID not set" "Power Automate automations will not work. Add it to project.tokens.json and run Apply-ProjectTokens.ps1."
+            Write-Warn "347aeaed-b2d1-4b76-a4ff-0d2b340f707e not set" "Power Automate automations will not work. Add it to project.tokens.json and run Apply-ProjectTokens.ps1."
         }
 
         # Verify no YOUR_* placeholders remain in scanned file types

@@ -1,5 +1,9 @@
 # Secrets
 .env
+
+# Project token files — contain real tenant IDs, client IDs, and org URLs
+project.tokens.json
+project.tokens.applied.json
 # Local notes and scratch files
 .notes/
 

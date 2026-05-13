@@ -31,7 +31,7 @@ reports/
 
 1. Copy `starter-pbip-template/` to a new folder in `reports/`.
 2. Rename files and folders from `report-template` to your report name.
-3. Replace placeholders such as `YOUR_ORG_URL`, table names, and measure names.
+3. Replace placeholders such as `andworx-development.crm.dynamics.com/`, table names, and measure names.
 4. Open the `.pbip` file in Power BI Desktop and refresh connections.
 5. Commit source files (PBIP/TMDL/JSON/DAX/M), not local cache artifacts.
 

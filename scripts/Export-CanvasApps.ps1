@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Export canvas app metadata from the YOUR_SOLUTION_NAME solution.
+    Export canvas app metadata from the AgenticIoT solution.
 .DESCRIPTION
     Exports canvas app inventory and metadata. Full .msapp binary export
     requires the Power Apps Management API and is not included here.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/canvasapps.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/canvasapps.
 #>
 
 function Export-CanvasApps {

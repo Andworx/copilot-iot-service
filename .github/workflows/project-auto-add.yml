@@ -21,4 +21,4 @@ jobs:
         run: |
           # Add issue to org-level project (number: YOUR_PROJECT_NUMBER)
           # Note: Requires PAT_PROJECT secret with 'read:project' scope for org-level projects
-          gh project item-add YOUR_PROJECT_NUMBER --owner YOUR_ORG_NAME --url "$ISSUE_URL" || echo "Failed to add to project. See .github/PROJECT_BOARD_GUIDE.md for setup."
+          gh project item-add YOUR_PROJECT_NUMBER --owner andworx-development --url "$ISSUE_URL" || echo "Failed to add to project. See .github/PROJECT_BOARD_GUIDE.md for setup."

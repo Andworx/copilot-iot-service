@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export entity relationships (1:N, N:1, N:N) for all tables in the YOUR_SOLUTION_NAME solution.
+    Export entity relationships (1:N, N:1, N:N) for all tables in the AgenticIoT solution.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/relationships.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/relationships.
 #>
 
 function Export-Relationships {

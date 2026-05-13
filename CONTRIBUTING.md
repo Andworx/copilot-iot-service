@@ -1,4 +1,4 @@
-# Contributing to YOUR_PROJECT_NAME
+# Contributing to AgenticIoT
 
 All contributions — features, fixes, documentation, and configuration changes — must follow the branch-and-PR workflow described here. Direct pushes to `main` are not permitted.
 

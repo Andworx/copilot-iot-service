@@ -1,6 +1,6 @@
 ---
 name: Tracked Work Item
-about: Create a tracked work item for the YOUR_PROJECT_NAME project board
+about: Create a tracked work item for the AgenticIoT project board
 title: "[COMPONENT] Brief description of the work"
 labels: ["YOUR_PROJECT_LABEL", "status:backlog"]
 ---

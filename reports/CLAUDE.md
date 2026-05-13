@@ -1,4 +1,4 @@
-# YOUR_PROJECT_NAME - Reports Conventions
+# AgenticIoT - Reports Conventions
 
 ## Scope
 
@@ -21,7 +21,7 @@ Each report folder should include:
 - Commit PBIP and semantic model definition files.
 - Do not commit local Power BI cache/state files under `.pbi/`.
 - Do not commit temporary export outputs.
-- Keep organization values tokenized where practical (`YOUR_ORG_URL`, etc.).
+- Keep organization values tokenized where practical (`andworx-development.crm.dynamics.com/`, etc.).
 
 ## DAX and M Organization
 

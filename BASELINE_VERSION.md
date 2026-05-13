@@ -46,7 +46,7 @@ SVG icon support for Dataverse tables:
 ### v1.10.0 — April 2026
 
 Token and release-tag governance updates:
-- `project.tokens.json` now uses a top-level `project.required` section for identity tokens (`YOUR_PROJECT_NAME`, `YOUR_PROJECT_ID`, `YOUR_SOLUTION_NAME`, `YOUR_PUBLISHER_PREFIX`)
+- `project.tokens.json` now uses a top-level `project.required` section for identity tokens (`AgenticIoT`, `AgenticIoT`, `AgenticIoT`, `andy`)
 - `dev`, `test`, and `prod` now contain only environment-specific required tokens
 - `scripts/Apply-ProjectTokens.ps1` now processes project-scoped and environment-scoped tokens separately and persists project values in a dedicated `project` applied-state scope
 - `PROJECT.md` updated to document the new token entry-point flow
@@ -107,7 +107,7 @@ Incremental token stamping:
 - `project.tokens.json` as single source of truth for all token values
 - `project.tokens.applied.json` tracks last-applied values to enable updates
 - `scripts/Apply-ProjectTokens.ps1` for partial/incremental setup and value changes
-- Optional tokens: `YOUR_CLIENT_ID`, `YOUR_PORTAL_SLUG`, `YOUR_WEBSITE_ID`, `YOUR_PORTAL_FOLDER`
+- Optional tokens: `347aeaed-b2d1-4b76-a4ff-0d2b340f707e`, `YOUR_PORTAL_SLUG`, `YOUR_WEBSITE_ID`, `YOUR_PORTAL_FOLDER`
 - `Validate-DeploymentSetup.ps1` now checks for pending and unstamped tokens
 
 ### v1.0.0 — April 2026

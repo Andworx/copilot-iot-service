@@ -4,22 +4,22 @@ Applies to all files under `tables/`.
 
 ## Publisher Prefix
 
-All custom entities, columns, choices, and relationships use the `YOUR_PUBLISHER_PREFIX_` prefix. No exceptions.
+All custom entities, columns, choices, and relationships use the `andy_` prefix. No exceptions.
 
 ## Table Definition Schema
 
 ```json
 {
-  "schemaName": "YOUR_PUBLISHER_PREFIX_tablename",
+  "schemaName": "andy_tablename",
   "displayName": "Human Readable Name",
   "displayCollectionName": "Plural Name",
   "description": "Purpose",
-  "primaryNameColumn": "YOUR_PUBLISHER_PREFIX_name",
+  "primaryNameColumn": "andy_name",
   "ownership": "Organization",
   "isActivity": false,
   "changeTrackingEnabled": true,
   "iconSvgFile": "icon.svg",
-  "iconWebResourceName": "YOUR_PUBLISHER_PREFIX_tablename_icon",
+  "iconWebResourceName": "andy_tablename_icon",
   "columns": []
 }
 ```
@@ -31,7 +31,7 @@ All custom entities, columns, choices, and relationships use the `YOUR_PUBLISHER
 ## Table Icon (SVG)
 
 - Place `icon.svg` in the table folder alongside `definition.json`
-- Naming convention: `YOUR_PUBLISHER_PREFIX_<logical_name_without_prefix>_icon`
+- Naming convention: `andy_<logical_name_without_prefix>_icon`
   - Example: table `andy_serviceidentity` → `andy_serviceidentity_icon`
 - `Import-Tables.ps1` base64-encodes the SVG and upserts it as a type-11 web resource, then sets `IconVectorName` on the entity
 - Prefer **Fluent UI** SVG icons (MIT licence) from Iconify:
@@ -68,6 +68,6 @@ Format: `PREFIX-{YYYY}-{SEQNUM:5}` → produces `PREFIX-2026-00001`
 
 ## Relationships
 
-- `schemaName` format: `YOUR_PUBLISHER_PREFIX_parententity_childentity`
+- `schemaName` format: `andy_parententity_childentity`
 - Always specify `cascadeDelete` — prefer `Restrict` to prevent accidental data loss
 - Default other cascades to `NoCascade`

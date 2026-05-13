@@ -1,6 +1,6 @@
 # Copilot Studio Agents
 
-This folder contains Copilot Studio agent assets for `YOUR_PROJECT_NAME`.
+This folder contains Copilot Studio agent assets for `AgenticIoT`.
 
 ## Structure
 

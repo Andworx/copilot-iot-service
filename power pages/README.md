@@ -1,6 +1,6 @@
 # power pages Portal
 
-This folder contains the portal assets for `YOUR_PROJECT_NAME` managed by PAC CLI v2.
+This folder contains the portal assets for `AgenticIoT` managed by PAC CLI v2.
 
 ## Structure
 

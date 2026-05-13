@@ -1,10 +1,10 @@
 # Dataverse Table Definitions
 
-This folder contains all custom Dataverse table, column, choice, and relationship definitions for `YOUR_PROJECT_NAME`. These definitions are consumed by the PowerShell deployment scripts to provision schema in target environments.
+This folder contains all custom Dataverse table, column, choice, and relationship definitions for `AgenticIoT`. These definitions are consumed by the PowerShell deployment scripts to provision schema in target environments.
 
 ## Publisher Prefix
 
-All custom items use the **`YOUR_PUBLISHER_PREFIX_`** prefix. Set `publisherPrefix` in `scripts/config-dev.json` to match.
+All custom items use the **`andy_`** prefix. Set `publisherPrefix` in `scripts/config-dev.json` to match.
 
 ## Folder Structure
 
@@ -13,11 +13,11 @@ tables/
 ├── README.md                          ← You are here
 ├── choices/                           ← Global choice (option set) definitions
 │   ├── README.md
-│   └── YOUR_PUBLISHER_PREFIX_example.json
+│   └── andy_example.json
 ├── relationships/                     ← Cross-table relationships
 │   ├── README.md
 │   └── definitions.json
-└── YOUR_PUBLISHER_PREFIX_tablename/   ← One folder per table
+└── andy_tablename/   ← One folder per table
     ├── README.md
     ├── definition.json
     └── icon.svg                       ← Optional Fluent UI SVG icon (type-11 web resource)
@@ -27,19 +27,19 @@ tables/
 
 ```json
 {
-  "schemaName": "YOUR_PUBLISHER_PREFIX_tablename",
+  "schemaName": "andy_tablename",
   "displayName": "Human Readable Name",
   "displayCollectionName": "Plural Name",
   "description": "Purpose of this table",
-  "primaryNameColumn": "YOUR_PUBLISHER_PREFIX_name",
+  "primaryNameColumn": "andy_name",
   "ownership": "Organization",
   "isActivity": false,
   "changeTrackingEnabled": true,
   "iconSvgFile": "icon.svg",
-  "iconWebResourceName": "YOUR_PUBLISHER_PREFIX_tablename_icon",
+  "iconWebResourceName": "andy_tablename_icon",
   "columns": [
     {
-      "schemaName": "YOUR_PUBLISHER_PREFIX_name",
+      "schemaName": "andy_name",
       "displayName": "Name",
       "dataType": "String",
       "maxLength": 200,
@@ -55,7 +55,7 @@ tables/
 
 ```json
 {
-  "schemaName": "YOUR_PUBLISHER_PREFIX_examplechoice",
+  "schemaName": "andy_examplechoice",
   "displayName": "Example Choice",
   "description": "Purpose of this choice",
   "isGlobal": true,
@@ -133,11 +133,11 @@ Download the `.svg` response and save it as `icon.svg` in the table folder. Brow
 
 ```json
 {
-  "schemaName": "YOUR_PUBLISHER_PREFIX_parenttable_childtable",
+  "schemaName": "andy_parenttable_childtable",
   "type": "OneToMany",
-  "referencingEntity": "YOUR_PUBLISHER_PREFIX_childtable",
-  "referencingAttribute": "YOUR_PUBLISHER_PREFIX_parentid",
-  "referencedEntity": "YOUR_PUBLISHER_PREFIX_parenttable",
+  "referencingEntity": "andy_childtable",
+  "referencingAttribute": "andy_parentid",
+  "referencedEntity": "andy_parenttable",
   "cascadeDelete": "Restrict"
 }
 ```

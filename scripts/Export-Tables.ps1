@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export tables (entities), columns, and keys from the YOUR_SOLUTION_NAME solution.
+    Export tables (entities), columns, and keys from the AgenticIoT solution.
 .PARAMETER ConfigPath
     Path to environment config JSON.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/tables.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/tables.
 #>
 
 function Export-Tables {

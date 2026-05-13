@@ -1,17 +1,17 @@
 # Relationship Definitions
 
-This folder contains cross-table relationship definitions for `YOUR_PROJECT_NAME`.
+This folder contains cross-table relationship definitions for `AgenticIoT`.
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `definitions.json` | Aggregated manifest consumed by `scripts/Import-Relationships.ps1` |
-| `YOUR_PUBLISHER_PREFIX_*.json` | Individual relationship definition files (one per relationship) |
+| `andy_*.json` | Individual relationship definition files (one per relationship) |
 
 ## Adding a New Relationship
 
-1. Create an individual file in this folder (e.g. `YOUR_PUBLISHER_PREFIX_account_contact.json`) with the relationship definition.
+1. Create an individual file in this folder (e.g. `andy_account_contact.json`) with the relationship definition.
 2. **Also add an entry to `definitions.json`** — `Import-Relationships.ps1` reads only from `definitions.json` and will not see standalone files that are not listed there.
 
 > If you add an individual file but forget to add it to `definitions.json`, the relationship will never be deployed.
@@ -22,11 +22,11 @@ This folder contains cross-table relationship definitions for `YOUR_PROJECT_NAME
 {
   "relationships": [
     {
-      "schemaName": "YOUR_PUBLISHER_PREFIX_account_contact",
+      "schemaName": "andy_account_contact",
       "description": "Links Contact to parent Account",
       "referencedEntity": "account",
       "referencingEntity": "contact",
-      "referencingAttribute": "YOUR_PUBLISHER_PREFIX_accountid",
+      "referencingAttribute": "andy_accountid",
       "cascadeDelete": "RemoveLink",
       "cascadeAssign": "NoCascade",
       "cascadeReparent": "NoCascade",
@@ -41,7 +41,7 @@ This folder contains cross-table relationship definitions for `YOUR_PROJECT_NAME
 
 | Field | Required | Description |
 |---|---|---|
-| `schemaName` | ✅ | Unique name for the relationship. Must use the `YOUR_PUBLISHER_PREFIX_` prefix. |
+| `schemaName` | ✅ | Unique name for the relationship. Must use the `andy_` prefix. |
 | `description` | recommended | Human-readable description of the relationship purpose. |
 | `referencedEntity` | ✅ | Logical name of the primary (parent) table. |
 | `referencingEntity` | ✅ | Logical name of the related (child) table. |

@@ -1,12 +1,12 @@
 ---
-description: "Use when creating new work items, features, or tasks for YOUR_PROJECT_NAME. Ensures all requests are tracked as GitHub issues and added to the project board."
+description: "Use when creating new work items, features, or tasks for AgenticIoT. Ensures all requests are tracked as GitHub issues and added to the project board."
 ---
 
 # Project Board Workflow — Issue Creation & Tracking
 
 ## Overview
 
-All work on YOUR_PROJECT_NAME must be tracked as GitHub issues and automatically added to the project board at **https://github.com/orgs/YOUR_ORG_NAME/projects/YOUR_PROJECT_NUMBER**.
+All work on AgenticIoT must be tracked as GitHub issues and automatically added to the project board at **https://github.com/orgs/andworx-development/projects/YOUR_PROJECT_NUMBER**.
 
 This instruction ensures:
 - ✅ Every user request or task becomes a trackable issue
@@ -43,7 +43,7 @@ When a user makes a request in this chat, clarify:
 
 **Use the "Tracked Work Item" template:**
 
-1. Go to: https://github.com/YOUR_ORG_NAME/YOUR_PROJECT_ID/issues/new?template=tracked-work.md
+1. Go to: https://github.com/andworx-development/AgenticIoT/issues/new?template=tracked-work.md
 2. Fill in:
    - **Title**: Brief, descriptive title (max ~50 chars)
    - **Description**: Clear context and requirements
@@ -76,8 +76,8 @@ Once the issue is created, provide:
 **Example response:**
 ```
 ✅ Created issue #123: "Add document sync to capture flow"
-📋 Track it on the board: https://github.com/orgs/YOUR_ORG_NAME/projects/YOUR_PROJECT_NUMBER
-🔗 Issue: https://github.com/YOUR_ORG_NAME/YOUR_PROJECT_ID/issues/123
+📋 Track it on the board: https://github.com/orgs/andworx-development/projects/YOUR_PROJECT_NUMBER
+🔗 Issue: https://github.com/andworx-development/AgenticIoT/issues/123
 
 Next steps:
 1. Create a feature branch: git checkout -b feat/doc-sync
@@ -150,7 +150,7 @@ Three GitHub Actions workflows handle the board state automatically:
 
 ## References
 
-- **Project Board**: https://github.com/orgs/YOUR_ORG_NAME/projects/YOUR_PROJECT_NUMBER
-- **Issue Template**: https://github.com/YOUR_ORG_NAME/YOUR_PROJECT_ID/issues/new?template=tracked-work.md
+- **Project Board**: https://github.com/orgs/andworx-development/projects/YOUR_PROJECT_NUMBER
+- **Issue Template**: https://github.com/andworx-development/AgenticIoT/issues/new?template=tracked-work.md
 - **CONTRIBUTING.md**: Branch naming, commit conventions, PR workflow
 - **PROJECT_BOARD_GUIDE.md**: User guide for the project board

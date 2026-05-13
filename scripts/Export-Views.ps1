@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export saved queries (views) for all entities in the YOUR_SOLUTION_NAME solution.
+    Export saved queries (views) for all entities in the AgenticIoT solution.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/views.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/views.
 #>
 
 function Export-Views {

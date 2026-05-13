@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Export web resources (JS, CSS, HTML, images) from the YOUR_SOLUTION_NAME solution.
+    Export web resources (JS, CSS, HTML, images) from the AgenticIoT solution.
 .PARAMETER Connection
     Hashtable from Connect-Dataverse.
 .PARAMETER OutputPath
-    Root output folder. Defaults to scripts/exports/YOUR_SOLUTION_NAME/webresources.
+    Root output folder. Defaults to scripts/exports/AgenticIoT/webresources.
 #>
 
 function Export-WebResources {

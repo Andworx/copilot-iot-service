@@ -1,0 +1,31 @@
+[Unit]
+Description=AgenticIoT Auto-Deploy Service
+Documentation=https://github.com/Andworx/copilot-iot-service/blob/main/raspberry-pi/SSH_SETUP.md
+After=network-online.target
+Wants=network-online.target
+Requires=network.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/iot-monitor
+ExecStart=/usr/local/bin/auto-deploy.sh
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=300
+TimeoutStopSec=30
+
+# Security settings
+NoNewPrivileges=false
+PrivateTmp=false
+ProtectSystem=false
+ProtectHome=false
+
+# Environment
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/root
+
+[Install]
+WantedBy=multi-user.target

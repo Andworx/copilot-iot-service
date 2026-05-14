@@ -1,0 +1,10 @@
+# GPIO Control
+RPi.GPIO>=0.7.1
+
+# Local Web UI (Flask API server for monitoring)
+Flask>=3.0.0
+Flask-CORS>=4.0.0
+Werkzeug>=3.0.0
+
+# Azure IoT Hub device client (telemetry)
+azure-iot-device>=2.13.0

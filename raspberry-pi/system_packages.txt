@@ -1,0 +1,7 @@
+python3
+python3-pip
+git
+curl
+systemd
+build-essential
+python3-dev

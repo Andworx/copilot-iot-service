@@ -10,6 +10,11 @@ From Azure IoT Hub the data flows through Event Hub → Logic App → Azure Func
 
 ```
 raspberry-pi/
+├── main.py                # Entry point — monitoring loop, orchestrates all modules
+├── panel_controller.py    # GPIO reads (switches) and writes (LEDs); logic rule engine
+├── iot_client.py          # Azure IoT Hub client (MQTT/TLS telemetry)
+├── api_server.py          # Local Flask REST API (/api/status, /api/health)
+├── logic_map.json         # Switch-to-LED rules and feature flags (web_ui, iot_hub)
 ├── .env.template          # Template for IoT Hub connection string (safe to commit)
 ├── requirements.txt       # Python package dependencies
 ├── system_packages.txt    # System package list for apt-get
@@ -63,13 +68,28 @@ sudo reboot
 
 ### Credentials
 
-Copy `.env.template` to `/opt/iot-monitor/.env` and fill in `IOTHUB_DEVICE_CONNECTION_STRING`:
+Copy `.env.template` to `/opt/iot-monitor/.env` and fill in `IOT_HUB_CONNECTION_STRING`:
 
 ```
-IOTHUB_DEVICE_CONNECTION_STRING=HostName=<hub>.azure-devices.net;DeviceId=raspberry-pi-iotpanel;SharedAccessKey=<key>
+IOT_HUB_CONNECTION_STRING=HostName=<hub>.azure-devices.net;DeviceId=raspberry-pi-iotpanel;SharedAccessKey=<key>
 ```
 
 > **SECURITY**: Never commit `.env`. It is gitignored. Credentials are injected at runtime via systemd `EnvironmentFile`.
+
+### Configuration (`logic_map.json`)
+
+`logic_map.json` controls behaviour without code changes:
+
+| Section | Key | Effect |
+|---------|-----|--------|
+| `web_ui` | `enabled: true/false` | Start/stop the local Flask REST API |
+| `web_ui` | `port` | Port for `/api/status` and `/api/health` |
+| `iot_hub` | `enabled: true/false` | Enable/disable Azure IoT Hub telemetry |
+| `iot_hub` | `device_id` | IoT Hub device name (default `raspberry-pi-iotpanel`) |
+| `false_positives` | `enabled: true/false` | Inject random LED failures for Copilot agent demos |
+| `rules` | array | Switch combination → LED output mapping |
+
+The main loop hot-reloads `logic_map.json` every 20 seconds — no restart needed.
 
 ### Service Management
 

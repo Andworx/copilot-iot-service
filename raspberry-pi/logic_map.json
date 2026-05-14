@@ -1,0 +1,63 @@
+{
+  "description": "Digital logic mapping for AgenticIoT demo panel",
+  "version": "1.0",
+  "rules": [
+    {
+      "id": "all_lights_on",
+      "switches": [1, 3],
+      "leds": [0, 1, 2, 3],
+      "description": "Switches 1 & 3 active: all LEDs ON (target healthy state)"
+    },
+    {
+      "id": "single_light",
+      "switches": [2],
+      "leds": [2],
+      "description": "Switch 2 only: green LED (LED 3)"
+    },
+    {
+      "id": "pattern_lights",
+      "switches": [1, 2],
+      "leds": [0, 2],
+      "description": "Switches 1 & 2: blue + green LEDs"
+    },
+    {
+      "id": "diagnostic_mode",
+      "switches": [1, 2, 3],
+      "leds": [1, 3],
+      "description": "Switches 1, 2 & 3: orange + yellow LEDs"
+    },
+    {
+      "id": "shutdown_sequence",
+      "switches": [1, 2, 4],
+      "leds": [],
+      "description": "Switches 1, 2 & 4: all LEDs OFF"
+    },
+    {
+      "id": "switch_4_only",
+      "switches": [4],
+      "leds": [3],
+      "description": "Switch 4 only: yellow LED (LED 4)"
+    }
+  ],
+  "fallback": {
+    "leds": [0],
+    "description": "Default (no rule matched): blue LED (LED 1) only"
+  },
+  "false_positives": {
+    "enabled": false,
+    "probability": 0.15,
+    "description": "Simulate random hardware failures for Copilot agent demo"
+  },
+  "web_ui": {
+    "enabled": true,
+    "port": 8080,
+    "host": "0.0.0.0",
+    "description": "Local REST API for network monitoring. Disable to reduce overhead when IoT Hub is sufficient."
+  },
+  "iot_hub": {
+    "enabled": true,
+    "connection_string_env": "IOT_HUB_CONNECTION_STRING",
+    "device_id": "raspberry-pi-iotpanel",
+    "description": "Azure IoT Hub telemetry. Connection string read from the env var above (never stored here)."
+  }
+}

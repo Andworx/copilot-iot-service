@@ -1,6 +1,9 @@
 # GPIO Control
 RPi.GPIO>=0.7.1
 
+# Environment variable loading from .env file
+python-dotenv>=1.0.0
+
 # Local Web UI (Flask API server for monitoring)
 Flask>=3.0.0
 Flask-CORS>=4.0.0

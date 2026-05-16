@@ -81,8 +81,8 @@ $iotHubName      = "iothub-aw-iot-copilot"
 $dpsName         = "dps-aw-iot-copilot"
 $enrollmentId    = "iotpanel-fleet"
 
-# IoT Hub SKU: Free tier for dev/test (1 per subscription), S1 for prod
-$iotHubSku = if ($Environment -eq 'prod') { 'S1' } else { 'F1' }
+# IoT Hub SKU: S1 Standard for all environments (F1 free tier limited to 1 per subscription)
+$iotHubSku = 'S1'
 $iotHubUnits = 1
 
 $tags = "project=iot-copilot env=$Environment owner=andworx"
@@ -171,12 +171,7 @@ $hubExists = Test-AzResource -ResourceType "Microsoft.Devices/IotHubs" -Name $io
 if ($hubExists) {
     Write-Host "[Azure] IoT Hub '$iotHubName' already exists — skipping." -ForegroundColor Gray
 } else {
-    if ($iotHubSku -eq 'F1') {
-        Write-Host "  ℹ Free tier selected (F1). Note: only 1 Free IoT Hub allowed per subscription." -ForegroundColor Yellow
-        Write-Host "    If this fails, set Environment to 'prod' to use S1 SKU." -ForegroundColor Yellow
-    }
     Invoke-AzStep "Create IoT Hub '$iotHubName' (SKU: $iotHubSku)" {
-        # F1 free tier requires --partition-count 2 (default 4 is not supported)
         $partitions = if ($iotHubSku -eq 'F1') { 2 } else { 4 }
         az iot hub create `
             --name $iotHubName `

@@ -104,20 +104,22 @@ Write-Host ""
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 function Invoke-AzStep {
-    param([string]$Label, [scriptblock]$Action, [string]$SkipIf = "")
+    param([string]$Label, [scriptblock]$Action)
     Write-Host "[Azure] $Label..." -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY RUN] Would run: $Label" -ForegroundColor DarkGray
         return $null
     }
-    try {
-        $result = & $Action
-        Write-Host "  ✅ $Label" -ForegroundColor Green
-        return $result
-    } catch {
-        Write-Host "  ❌ $Label failed: $($_.Exception.Message)" -ForegroundColor Red
-        throw
+    # Capture both stdout and stderr; az CLI writes errors to stderr with non-zero exit code
+    $output = & $Action 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $errText = ($output | ForEach-Object { "$_" }) -join "`n"
+        Write-Host "  ❌ $Label failed (exit $LASTEXITCODE):" -ForegroundColor Red
+        Write-Host "     $errText" -ForegroundColor Red
+        throw "Azure CLI step failed: $Label"
     }
+    Write-Host "  ✅ $Label" -ForegroundColor Green
+    return $output
 }
 
 function Test-AzResource {
@@ -174,11 +176,14 @@ if ($hubExists) {
         Write-Host "    If this fails, set Environment to 'prod' to use S1 SKU." -ForegroundColor Yellow
     }
     Invoke-AzStep "Create IoT Hub '$iotHubName' (SKU: $iotHubSku)" {
+        # F1 free tier requires --partition-count 2 (default 4 is not supported)
+        $partitions = if ($iotHubSku -eq 'F1') { 2 } else { 4 }
         az iot hub create `
             --name $iotHubName `
             --resource-group $resourceGroup `
             --sku $iotHubSku `
             --unit $iotHubUnits `
+            --partition-count $partitions `
             --location $Location `
             --tags $tags `
             --output none
@@ -273,7 +278,7 @@ if ($SkipDpsEnrollment) {
                 --dps-name $dpsName `
                 --resource-group $resourceGroup `
                 --enrollment-id $enrollmentId `
-                --auth-type symmetricKey `
+                --auth-type key `
                 --output none
         }
     }

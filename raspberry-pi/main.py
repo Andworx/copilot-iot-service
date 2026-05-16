@@ -15,6 +15,7 @@ import logging
 import sys
 import os
 import json
+import threading
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
@@ -56,6 +57,7 @@ class SimpleMonitor:
         self.last_config_mtime = 0
         self.previous_switch_states = None
         self.last_heartbeat_time = 0
+        self._twin_updated = threading.Event()  # set by Device Twin patch callback
 
         if os.path.exists(ENV_PATH):
             load_dotenv(ENV_PATH)
@@ -140,6 +142,35 @@ class SimpleMonitor:
             self.iot_hub_client.disconnect()
             self.iot_hub_client = None
 
+    # ─── Device Twin config sync ──────────────────────────────────────────────
+
+    def _sync_twin_config(self):
+        """Fetch Device Twin on startup and register live-update callback.
+
+        If desired.logic_map exists in the twin, it overwrites local logic_map.json
+        and reloads all subsystems.  If the twin has no logic_map (e.g. first deploy),
+        the local file is used as-is — no disruption.
+        """
+        if not self.iot_hub_client:
+            return
+
+        synced = self.iot_hub_client.sync_config_from_twin(self.config_file)
+        if synced:
+            logger.info("Reloading subsystems with Device Twin config…")
+            config = self.load_config()
+            if config:
+                self.last_config_mtime = os.path.getmtime(self.config_file)
+                self.panel.logic_map = self.panel.load_logic_mapping(self.config_file)
+                self.manage_api_server(config.get("web_ui", {}))
+
+        def _on_twin_updated(_logic_map):
+            """Called from the SDK thread when a twin patch arrives."""
+            self._twin_updated.set()
+
+        self.iot_hub_client.register_twin_patch_callback(
+            self.config_file, on_config_updated=_on_twin_updated
+        )
+
     # ─── Main loop ────────────────────────────────────────────────────────────
 
     def start_monitoring(self):
@@ -151,6 +182,7 @@ class SimpleMonitor:
             self.last_config_mtime = os.path.getmtime(self.config_file)
             self.manage_api_server(config.get("web_ui", {}))
             self.manage_iot_hub(config.get("iot_hub", {}))
+            self._sync_twin_config()
 
         try:
             cycle_count = 0
@@ -166,6 +198,17 @@ class SimpleMonitor:
                 if cycle_count >= CONFIG_CHECK_CYCLES:
                     self.check_config_changes()
                     cycle_count = 0
+
+                # Device Twin push update (set from SDK callback thread)
+                if self._twin_updated.is_set():
+                    self._twin_updated.clear()
+                    logger.info("Device Twin config update received — reloading…")
+                    config = self.load_config()
+                    if config:
+                        self.last_config_mtime = os.path.getmtime(self.config_file)
+                        self.panel.logic_map = self.panel.load_logic_mapping(self.config_file)
+                        self.manage_api_server(config.get("web_ui", {}))
+                        self.manage_iot_hub(config.get("iot_hub", {}))
 
                 time.sleep(POLL_INTERVAL_SECS)
 

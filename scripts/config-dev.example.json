@@ -3,7 +3,21 @@
   "apiVersion": "v9.2",
   "tenantId": "YOUR_TENANT_ID",
   "clientId": "YOUR_CLIENT_ID",
-  "cloudEnvironment": " commercial",
+  "cloudEnvironment": "commercial",
   "publisherPrefix": "andy",
-  "solutionUniqueName": "AgenticIoT"
+  "solutionUniqueName": "AgenticIoT",
+  "azure": {
+    "resourceGroup": "rg-aw-azcom-iot-copilot",
+    "location": "eastus"
+  },
+  "iotHub": {
+    "name": "iothub-aw-iot-copilot",
+    "sku": "S1",
+    "defaultDeviceId": "raspberry-pi-iotpanel"
+  },
+  "dps": {
+    "name": "dps-aw-iot-copilot",
+    "idScope": "YOUR_DPS_ID_SCOPE",
+    "enrollmentGroupId": "iotpanel-fleet"
+  }
 }

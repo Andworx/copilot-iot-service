@@ -40,8 +40,13 @@ set -a
 source "$BOOT_CREDS"
 set +a
 
-if [ -z "$IOT_HUB_CONNECTION_STRING" ]; then
-    echo "[$(date)] ERROR: IOT_HUB_CONNECTION_STRING is empty — skipping IoT setup"
+if [ -z "$DPS_ID_SCOPE" ]; then
+    echo "[$(date)] ERROR: DPS_ID_SCOPE is empty — skipping IoT setup"
+    exit 0
+fi
+
+if [ -z "$DPS_GROUP_KEY" ]; then
+    echo "[$(date)] ERROR: DPS_GROUP_KEY is empty — skipping IoT setup"
     exit 0
 fi
 
@@ -59,7 +64,9 @@ done
 # ─── Run unattended bootstrap ─────────────────────────────────────────────────
 echo "[$(date)] Downloading and running unattended bootstrap..."
 
-export IOT_HUB_CONNECTION_STRING
+export DPS_ID_SCOPE
+export DPS_GROUP_KEY
+export DEVICE_ID
 
 curl -sSL \
     https://raw.githubusercontent.com/Andworx/copilot-iot-service/main/raspberry-pi/bootstrap-unattended.sh \

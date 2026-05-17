@@ -12,7 +12,7 @@
   },
   "iotHub": {
     "name": "iothub-aw-iot-copilot",
-    "sku": "F1",
+    "sku": "S1",
     "defaultDeviceId": "raspberry-pi-iotpanel"
   },
   "dps": {

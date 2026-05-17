@@ -1,9 +1,23 @@
 {
   "environmentUrl": "https://andworx-development.crm.dynamics.com/",
   "apiVersion": "v9.2",
-  "tenantId": "7cea0515-a5e4-4e8a-8f2a-6d1ad5d6b9f8",
-  "clientId": "347aeaed-b2d1-4b76-a4ff-0d2b340f707e",
-  "cloudEnvironment": " commercial",
+  "tenantId": "YOUR_TENANT_ID",
+  "clientId": "YOUR_CLIENT_ID",
+  "cloudEnvironment": "commercial",
   "publisherPrefix": "andy",
-  "solutionUniqueName": "AgenticIoT"
+  "solutionUniqueName": "AgenticIoT",
+  "azure": {
+    "resourceGroup": "rg-aw-azcom-iot-copilot",
+    "location": "eastus"
+  },
+  "iotHub": {
+    "name": "iothub-aw-iot-copilot",
+    "sku": "F1",
+    "defaultDeviceId": "raspberry-pi-iotpanel"
+  },
+  "dps": {
+    "name": "dps-aw-iot-copilot",
+    "idScope": "YOUR_DPS_ID_SCOPE",
+    "enrollmentGroupId": "iotpanel-fleet"
+  }
 }

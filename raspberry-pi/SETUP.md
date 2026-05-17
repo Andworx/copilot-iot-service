@@ -1,16 +1,13 @@
-# Raspberry Pi — Blank Device Setup Guide
+# Raspberry Pi — Setup Guide
 
-Zero-touch provisioning for the AgenticIoT IoT panel service.
+This guide covers two provisioning paths:
 
----
+| Path | When to use |
+|------|-------------|
+| **[Zero-touch](#zero-touch-provisioning-recommended)** ⭐ | New blank Pi — runs `New-PiBootConfig.ps1` on dev machine, plug in and boot |
+| **[Manual](#manual-provisioning-fallback)** | Re-provisioning existing Pi, dev/test, or troubleshooting |
 
-## Overview
-
-```
-Flash Pi OS → SSH in → bootstrap.sh → populate .env → push Device Twin → service runs
-```
-
-After setup, all config changes are made in Azure IoT Hub (Device Twin) and pushed to the Pi automatically — no SSH, no GitHub pulls needed.
+After setup (either path), all config changes are made in Azure IoT Hub (Device Twin) and pushed to the Pi automatically — no SSH, no GitHub pulls needed.
 
 ---
 
@@ -22,14 +19,91 @@ After setup, all config changes are made in Azure IoT Hub (Device Twin) and push
 - USB power supply (5V 3A for Pi 4; 5V 2.5A for Pi 3B+)
 - Panel wiring (see [wiring/README.md](wiring/README.md))
 
-### Accounts / Access
-- Azure subscription with IoT Hub provisioned (see [Issue #5](https://github.com/Andworx/copilot-iot-service/issues/5))
-- Azure IoT Hub device `raspberry-pi-iotpanel` registered (connection string ready)
-- Access to the `Andworx/copilot-iot-service` GitHub repo
+### Azure / Accounts
+- Azure IoT Hub provisioned (see [Issue #5](https://github.com/Andworx/copilot-iot-service/issues/5))
+- Device `raspberry-pi-iotpanel` registered in IoT Hub (connection string ready)
+- Device Twin `desired.logic_map` pushed (see [Step: Push Device Twin config](#push-device-twin-config))
 
 ---
 
-## Step 1 — Flash Raspberry Pi OS
+## Zero-Touch Provisioning (Recommended)
+
+Flash SD → write credentials with one script → plug in Pi → fully configured automatically.
+
+```
+Dev machine: flash SD → New-PiBootConfig.ps1 → eject
+Pi: boot → firstrun.sh → downloads bootstrap → writes .env → installs service → reboots
+Azure: Device Twin pushed → Pi picks up config on first connect
+```
+
+### ZT Step 1 — Flash Raspberry Pi OS
+
+1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+2. Select **Raspberry Pi OS Lite (64-bit)**
+3. Click the **⚙ gear icon** and set:
+
+   | Setting | Value |
+   |---------|-------|
+   | Hostname | `iotpanel` |
+   | Enable SSH | ✅ Password authentication |
+   | Username | `pi` |
+   | Password | *(strong password)* |
+   | Wi-Fi SSID / Password | *(your network)* |
+   | Wi-Fi Country | *(e.g. `US`)* |
+
+4. Flash to SD card (do **not** eject yet)
+
+### ZT Step 2 — Run `New-PiBootConfig.ps1`
+
+On your Windows dev machine, find the drive letter of the SD boot partition (the small FAT32 partition — typically `E:` or `F:`):
+
+```powershell
+# Get your connection string from Azure CLI
+$conn = az iot hub device-identity connection-string show `
+    --hub-name <your-hub> `
+    --device-id raspberry-pi-iotpanel `
+    --query connectionString -o tsv
+
+# Write zero-touch config to the SD boot partition
+.\scripts\New-PiBootConfig.ps1 -DriveLetter E -ConnectionString $conn
+```
+
+**What this writes to the SD card:**
+- `iot-credentials.env` — connection string (read once, then shredded by Pi)
+- `firstrun.sh` — first-boot script that bootstraps everything
+- `ssh` — empty file that enables SSH (if not already present)
+
+### ZT Step 3 — Boot the Pi
+
+1. Safely eject the SD card from Windows
+2. Insert into the Raspberry Pi
+3. Power on
+4. Wait ~5 minutes (Pi downloads and installs everything on first boot)
+5. Pi reboots automatically when done
+
+### ZT Step 4 — Verify
+
+```bash
+# SSH in
+ssh pi@iotpanel.local
+
+# Check first-boot log
+cat /var/log/iot-firstrun.log
+
+# Check service
+sudo systemctl status iot-monitor
+sudo journalctl -u iot-monitor -f
+```
+
+Then [push Device Twin config](#push-device-twin-config) if not already done.
+
+---
+
+## Manual Provisioning (Fallback)
+
+Use this path to re-provision an existing Pi, for dev/test machines, or when troubleshooting zero-touch issues.
+
+### Step 1 — Flash Raspberry Pi OS
 
 1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
 2. Select **Raspberry Pi OS Lite (64-bit)** (no desktop needed)
@@ -52,7 +126,7 @@ After setup, all config changes are made in Azure IoT Hub (Device Twin) and push
 
 ---
 
-## Step 2 — Find the Pi and SSH in
+### Step 2 — Find the Pi and SSH in
 
 ```bash
 # Option A: check your router for the IP of hostname "iotpanel"
@@ -67,7 +141,7 @@ ssh pi@<ip-address>
 
 ---
 
-## Step 3 — Run bootstrap.sh
+### Step 3 — Run bootstrap.sh
 
 Bootstrap installs all system dependencies, clones the repo, and installs the systemd service.
 
@@ -94,7 +168,7 @@ bash install-auto-deploy.sh
 
 ---
 
-## Step 4 — Populate the credentials file
+### Step 4 — Populate the credentials file
 
 The service reads the IoT Hub connection string from `/opt/iot-monitor/.env`.
 
@@ -129,9 +203,9 @@ Or in Azure Portal:
 
 ---
 
-## Step 5 — Push Device Twin config from Azure
+## Push Device Twin Config
 
-The service fetches its `logic_map.json` config from the Device Twin `desired` properties on startup, and receives live updates whenever you change the twin.
+This step applies to **both provisioning paths**. The Device Twin config must be pushed to Azure before (or shortly after) the Pi first connects.
 
 ### Option A — Azure Portal
 
@@ -235,7 +309,7 @@ az iot hub device-twin update \
 
 ---
 
-## Step 6 — Start the service
+### Step 5 — Start the service
 
 ```bash
 # Enable and start
@@ -255,7 +329,7 @@ Expected output:
 
 ---
 
-## Step 7 — Verify
+## Verify (Both Paths)
 
 ### Check logs
 ```bash

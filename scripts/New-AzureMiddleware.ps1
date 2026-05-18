@@ -211,20 +211,6 @@ Invoke-Az @(
 ) | Out-Null
 Write-Ok "CORS configured"
 
-# Enable SCM basic auth (disabled by default on new apps — required for Kudu zip deploy)
-Write-Step "Enabling SCM basic auth on Function App"
-if (-not $DryRun) {
-    $subId = (az account show --query id -o tsv 2>$null).Trim()
-    $scmPolicyId = "/subscriptions/$subId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/sites/$FuncAppName/basicPublishingCredentialsPolicies/scm"
-    Invoke-Az @(
-        'resource','update',
-        '--ids',$scmPolicyId,
-        '--set','properties.allow=true'
-    ) | Out-Null
-    Write-Ok "SCM basic auth enabled"
-} else {
-    Write-Host "  [DRY RUN] Would enable SCM basic auth" -ForegroundColor DarkGray
-}
 
 # ─── 5. Deploy Function App source ────────────────────────────────────────────
 if ($SkipFunctionDeploy) {
@@ -248,48 +234,70 @@ if ($SkipFunctionDeploy) {
             Pop-Location
         }
 
-        # Deploy via Kudu REST API — avoids az CLI SCM JSON parse bug with --build-remote
-        Write-Info "Deploying via Kudu zip deploy API..."
-        # Run az separately and filter out non-JSON warning lines before parsing
-        $rawCreds = az webapp deployment list-publishing-credentials `
-            --name $FuncAppName `
-            --resource-group $ResourceGroup `
-            --query '{user:publishingUserName,pass:publishingPassword}' `
-            -o json 2>$null
-        if ($LASTEXITCODE -ne 0) { throw "Failed to get publishing credentials" }
-        $publishProfile = $rawCreds | ConvertFrom-Json
-        $kuduBase64 = [Convert]::ToBase64String(
-            [Text.Encoding]::ASCII.GetBytes("$($publishProfile.user):$($publishProfile.pass)")
-        )
-        $kuduUri = "https://$FuncAppName.scm.azurewebsites.net/api/zipdeploy"
+        # Deploy via WEBSITE_RUN_FROM_PACKAGE — most reliable for Linux Consumption plans.
+        # Kudu-based deploys are unreliable on Linux Consumption (SCM basic auth off by default,
+        # az CLI --build-remote crashes with JSON parse bug, Kudu slow to start).
+        Write-Info "Uploading zip to Storage Account for WEBSITE_RUN_FROM_PACKAGE deploy..."
 
-        # Wait for Kudu SCM to be ready (fresh apps can return 503 for up to ~60s)
-        Write-Info "Waiting for Kudu SCM site to be ready..."
-        $kuduReady = $false
-        for ($w = 0; $w -lt 12; $w++) {
-            try {
-                $ping = Invoke-RestMethod `
-                    -Uri "https://$FuncAppName.scm.azurewebsites.net/api/settings" `
-                    -Method GET `
-                    -Headers @{ Authorization = "Basic $kuduBase64" } `
-                    -ErrorAction Stop
-                $kuduReady = $true
-                break
-            } catch {
-                Write-Info "  SCM not ready yet ($($w*10)s)..."
-                Start-Sleep -Seconds 10
-            }
+        # Ensure a deployment container exists
+        $deployContainer = 'function-releases'
+        $stExists = az storage container show `
+            --name $deployContainer `
+            --account-name $StorageName `
+            --auth-mode login 2>$null
+        if (-not $stExists) {
+            Invoke-Az @(
+                'storage','container','create',
+                '--name',$deployContainer,
+                '--account-name',$StorageName,
+                '--auth-mode','login'
+            ) | Out-Null
+            Write-Info "Created container: $deployContainer"
         }
-        if (-not $kuduReady) { throw "Kudu SCM site did not become ready after 120s" }
 
-        Write-Info "POST $kuduUri"
-        $null = Invoke-RestMethod `
-            -Uri $kuduUri `
-            -Method POST `
-            -Headers @{ Authorization = "Basic $kuduBase64" } `
-            -ContentType 'application/zip' `
-            -InFile $zipPath
-        Write-Ok "Function App deployed (Kudu)"
+        $blobName = "func-deploy-$(Get-Date -Format 'yyyyMMdd-HHmmss').zip"
+        Invoke-Az @(
+            'storage','blob','upload',
+            '--container-name',$deployContainer,
+            '--file',$zipPath,
+            '--name',$blobName,
+            '--account-name',$StorageName,
+            '--auth-mode','login',
+            '--overwrite'
+        ) | Out-Null
+        Write-Info "Blob uploaded: $blobName"
+
+        # Generate SAS URL valid for 1 year
+        $expiry = (Get-Date).AddYears(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
+        $sasToken = (az storage blob generate-sas `
+            --container-name $deployContainer `
+            --name $blobName `
+            --account-name $StorageName `
+            --permissions r `
+            --expiry $expiry `
+            --auth-mode login `
+            --as-user `
+            -o tsv 2>$null).Trim()
+        if (-not $sasToken) { throw "Failed to generate SAS token for deployment blob" }
+
+        $blobUrl = "https://$StorageName.blob.core.windows.net/$deployContainer/${blobName}?$sasToken"
+        Write-Info "SAS URL generated (expires $expiry)"
+
+        # Point Function App at the zip
+        Invoke-Az @(
+            'functionapp','config','appsettings','set',
+            '--name',$FuncAppName,
+            '--resource-group',$ResourceGroup,
+            '--settings',"WEBSITE_RUN_FROM_PACKAGE=$blobUrl"
+        ) | Out-Null
+
+        # Restart to pick up the new package
+        Invoke-Az @(
+            'functionapp','restart',
+            '--name',$FuncAppName,
+            '--resource-group',$ResourceGroup
+        ) | Out-Null
+        Write-Ok "Function App deployed (WEBSITE_RUN_FROM_PACKAGE)"
     } else {
         Write-Host "  [DRY RUN] Would npm install + Kudu zip deploy from $FuncSrcPath" -ForegroundColor DarkGray
     }

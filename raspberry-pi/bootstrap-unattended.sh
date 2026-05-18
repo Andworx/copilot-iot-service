@@ -32,7 +32,12 @@ log_info "========================================"
 log_info "Device ID : $DEVICE_ID"
 log_info "ID Scope  : $DPS_ID_SCOPE"
 
-REPO_URL="https://github.com/Andworx/copilot-iot-service.git"
+# Support private repo clone via GITHUB_TOKEN env var
+if [ -n "$GITHUB_TOKEN" ]; then
+    REPO_URL="https://${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
+else
+    REPO_URL="https://github.com/Andworx/copilot-iot-service.git"
+fi
 PROJECT_DIR="/opt/iot-monitor"
 ENV_FILE="$PROJECT_DIR/.env"
 

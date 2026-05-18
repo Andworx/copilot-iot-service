@@ -131,7 +131,7 @@ After `New-AzureMiddleware.ps1` runs, the Logic App needs a manual connection st
 
 | Resource | Name | SKU | Notes |
 |----------|------|-----|-------|
-| Function App | `func-aw-iot-copilot` | Consumption Y1 | Node.js 20, Linux |
+| Function App | `func-aw-iot-copilot` | Consumption Y1 | Node.js 24, Linux |
 | SignalR Service | `signalr-aw-iot-copilot` | Free_F1 | Serverless mode, 20 concurrent connections |
 | Logic App | `la-aw-iot-copilot` | Consumption | Polls Event Hub every 5s |
 | Storage Account | `stfuncawiotcopilot` | Standard LRS | Required by Function App |

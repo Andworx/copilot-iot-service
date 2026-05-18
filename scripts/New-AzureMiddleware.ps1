@@ -211,6 +211,21 @@ Invoke-Az @(
 ) | Out-Null
 Write-Ok "CORS configured"
 
+# Enable SCM basic auth (disabled by default on new apps — required for Kudu zip deploy)
+Write-Step "Enabling SCM basic auth on Function App"
+if (-not $DryRun) {
+    $subId = (az account show --query id -o tsv 2>$null).Trim()
+    $scmPolicyId = "/subscriptions/$subId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/sites/$FuncAppName/basicPublishingCredentialsPolicies/scm"
+    Invoke-Az @(
+        'resource','update',
+        '--ids',$scmPolicyId,
+        '--set','properties.allow=true'
+    ) | Out-Null
+    Write-Ok "SCM basic auth enabled"
+} else {
+    Write-Host "  [DRY RUN] Would enable SCM basic auth" -ForegroundColor DarkGray
+}
+
 # ─── 5. Deploy Function App source ────────────────────────────────────────────
 if ($SkipFunctionDeploy) {
     Write-Skip "Skipping Function App deployment (--SkipFunctionDeploy)"

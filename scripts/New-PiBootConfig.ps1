@@ -1,57 +1,68 @@
 <#
 .SYNOPSIS
-    Writes zero-touch provisioning files to a Raspberry Pi SD card boot partition.
+    Writes zero-touch DPS provisioning files to a Raspberry Pi SD card boot partition.
 
 .DESCRIPTION
     After flashing Raspberry Pi OS with Raspberry Pi Imager, this script writes two files
     to the FAT32 boot partition (accessible from Windows):
 
-      iot-credentials.env  — IoT Hub connection string (read by firstrun.sh on first boot)
+      iot-credentials.env  — DPS fleet credentials (read by firstrun.sh on first boot)
       firstrun.sh          — First boot automation script that installs the IoT service
 
     On first boot the Pi:
-      1. Detects iot-credentials.env on the boot partition
-      2. Downloads and runs the unattended bootstrap from GitHub
-      3. Connects to IoT Hub and fetches Device Twin config
-      4. Securely deletes the credentials from the boot partition
-      5. Reboots fully configured
+      1. Reads DPS_ID_SCOPE + DPS_GROUP_KEY from iot-credentials.env
+      2. Derives its own per-device symmetric key (HMAC-SHA256)
+      3. Registers with Azure DPS → receives assigned IoT Hub + connection string
+      4. Writes connection string to /opt/iot-monitor/.env
+      5. Securely deletes the credentials from the boot partition
+      6. Reboots fully configured
+
+    The SD card contains only FLEET credentials (same for all devices), not per-device secrets.
+    A compromised SD card does not expose any specific device's IoT Hub key.
 
 .PARAMETER DriveLetter
     Drive letter of the SD card boot partition (FAT32), e.g. "E" or "E:".
     The boot partition is the small FAT32 partition visible in Windows Explorer.
-    Typically the first partition on the SD card.
 
-.PARAMETER ConnectionString
-    Azure IoT Hub device connection string.
-    Format: HostName=<hub>.azure-devices.net;DeviceId=raspberry-pi-iotpanel;SharedAccessKey=<key>
-    Retrieve from Azure Portal: IoT Hub → Devices → raspberry-pi-iotpanel → Primary Connection String
-    Or via CLI: az iot hub device-identity connection-string show --hub-name <hub> --device-id raspberry-pi-iotpanel
+.PARAMETER IdScope
+    DPS ID Scope for your Device Provisioning Service instance.
+    Format: 0ne########  (11-character alphanumeric starting with 0ne)
+    Retrieve from: Azure Portal → DPS → Overview  OR
+    CLI: az iot dps show --name dps-aw-iot-copilot --query properties.idScope -o tsv
+
+.PARAMETER GroupKey
+    DPS group enrollment primary key (base64-encoded symmetric key).
+    Retrieve from: Azure Portal → DPS → Manage enrollments → iotpanel-fleet → Primary Key  OR
+    CLI: az iot dps enrollment-group show --dps-name dps-aw-iot-copilot --enrollment-id iotpanel-fleet --show-keys --query attestation.symmetricKey.primaryKey -o tsv
 
 .PARAMETER DeviceId
     IoT Hub device ID. Defaults to "raspberry-pi-iotpanel".
+    For fleet deployments, use a unique ID per device (e.g. based on MAC address).
 
 .PARAMETER Force
     Overwrite existing files on the boot partition without prompting.
 
 .EXAMPLE
-    .\New-PiBootConfig.ps1 -DriveLetter E -ConnectionString "HostName=myhub.azure-devices.net;DeviceId=raspberry-pi-iotpanel;SharedAccessKey=abc123=="
+    .\New-PiBootConfig.ps1 -DriveLetter E -IdScope "0ne011EB47B" -GroupKey "abc123=="
 
 .EXAMPLE
-    # Get the connection string from Azure CLI and pipe directly
-    $conn = az iot hub device-identity connection-string show --hub-name myhub --device-id raspberry-pi-iotpanel --query connectionString -o tsv
-    .\New-PiBootConfig.ps1 -DriveLetter E -ConnectionString $conn
+    # Fetch DPS values from Azure CLI and pipe directly
+    $scope = az iot dps show --name dps-aw-iot-copilot --query properties.idScope -o tsv
+    $key   = az iot dps enrollment-group show --dps-name dps-aw-iot-copilot --enrollment-id iotpanel-fleet --show-keys --query attestation.symmetricKey.primaryKey -o tsv
+    .\New-PiBootConfig.ps1 -DriveLetter E -IdScope $scope -GroupKey $key
 
 .NOTES
     SECURITY:
-    - The connection string is written to the SD card (iot-credentials.env)
-    - On first boot, firstrun.sh reads the file, runs the bootstrap, then shreds the file
-    - The connection string is NOT stored anywhere in the repo or in any committed file
+    - The SD card contains fleet credentials (DPS_ID_SCOPE + DPS_GROUP_KEY), not per-device secrets
+    - Per-device keys are derived at first boot and never written to the SD card
+    - On first boot, firstrun.sh reads iot-credentials.env, runs bootstrap, then shreds the file
     - Keep the SD card physically secure until provisioning is complete
 
     PREREQUISITES:
     - Raspberry Pi OS Lite (64-bit) flashed with Raspberry Pi Imager
     - Imager advanced options set: SSH enabled, user created, WiFi configured
     - SD card inserted and boot partition visible in Windows Explorer
+    - DPS + IoT Hub provisioned (run New-AzureIotInfrastructure.ps1 first)
 #>
 
 [CmdletBinding()]
@@ -61,11 +72,12 @@ param(
     [string] $DriveLetter,
 
     [Parameter(Mandatory)]
-    [ValidateScript({
-        if ($_ -match '^HostName=.+;DeviceId=.+;SharedAccessKey=.+$') { $true }
-        else { throw "ConnectionString must be in the format: HostName=...;DeviceId=...;SharedAccessKey=..." }
-    })]
-    [string] $ConnectionString,
+    [ValidatePattern('^0ne[A-Za-z0-9]{8}$')]
+    [string] $IdScope,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string] $GroupKey,
 
     [string] $DeviceId = "raspberry-pi-iotpanel",
 
@@ -113,21 +125,24 @@ foreach ($file in @($credsFile, $firstrunFile)) {
 }
 
 Write-Host ""
-Write-Host "AgenticIoT — Writing Pi Zero-Touch Config" -ForegroundColor Cyan
-Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host "AgenticIoT — Writing Pi Zero-Touch Config (DPS)" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "  Boot partition : ${drive}:\" -ForegroundColor Gray
 Write-Host "  Device ID      : $DeviceId" -ForegroundColor Gray
+Write-Host "  DPS ID Scope   : $IdScope" -ForegroundColor Gray
 Write-Host ""
 
 # ─── Write iot-credentials.env ───────────────────────────────────────────────
 Write-Host "Writing iot-credentials.env..." -ForegroundColor Yellow
 
 $credsContent = @"
-# AgenticIoT IoT Hub credentials
+# AgenticIoT DPS fleet credentials
 # Written by New-PiBootConfig.ps1 on $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 # This file is read once by firstrun.sh on first boot, then securely deleted.
+# Contains FLEET credentials — the same file works for any Pi in the fleet.
 # DO NOT commit this file or copy it elsewhere.
-IOT_HUB_CONNECTION_STRING=$ConnectionString
+DPS_ID_SCOPE=$IdScope
+DPS_GROUP_KEY=$GroupKey
 DEVICE_ID=$DeviceId
 "@
 
@@ -165,7 +180,7 @@ for c in /boot/firmware/iot-credentials.env /boot/iot-credentials.env; do
 done
 [ -z "$BOOT_CREDS" ] && exit 0
 set -a; source "$BOOT_CREDS"; set +a
-[ -z "$IOT_HUB_CONNECTION_STRING" ] && exit 0
+[ -z "$DPS_ID_SCOPE" ] && exit 0
 curl -sSL https://raw.githubusercontent.com/Andworx/copilot-iot-service/main/raspberry-pi/firstrun.sh | bash
 '@
     $fallbackFirstrun = $fallbackFirstrun.Replace("`r`n", "`n")
@@ -184,13 +199,20 @@ if (-not (Test-Path $sshFile)) {
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
 Write-Host ""
-Write-Host "✅ Boot partition configured for zero-touch provisioning." -ForegroundColor Green
+Write-Host "✅ Boot partition configured for zero-touch DPS provisioning." -ForegroundColor Green
+Write-Host ""
+Write-Host "What happens on first boot:" -ForegroundColor Cyan
+Write-Host "  1. Pi reads DPS fleet credentials from iot-credentials.env"
+Write-Host "  2. Derives its own per-device key (HMAC-SHA256)"
+Write-Host "  3. Registers with Azure DPS → receives IoT Hub connection string"
+Write-Host "  4. Installs iot-monitor service"
+Write-Host "  5. Shreds credentials from SD card, reboots"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Safely eject the SD card from Windows"
 Write-Host "  2. Insert into the Raspberry Pi"
 Write-Host "  3. Power on"
-Write-Host "  4. Wait ~5 minutes for first boot (bootstrap downloads and installs)"
+Write-Host "  4. Wait ~5 minutes for first boot"
 Write-Host "  5. The Pi will reboot once automatically when done"
 Write-Host ""
 Write-Host "Monitor progress (after Pi has an IP):" -ForegroundColor Cyan
@@ -199,8 +221,9 @@ Write-Host "  cat /var/log/iot-firstrun.log"
 Write-Host "  sudo journalctl -u iot-monitor -f"
 Write-Host ""
 Write-Host "Verify in Azure:" -ForegroundColor Cyan
-Write-Host "  az iot hub monitor-events --hub-name <hub> --device-id $DeviceId"
+Write-Host "  az iot hub device-identity list --hub-name iothub-aw-iot-copilot --output table"
+Write-Host "  az iot hub monitor-events --hub-name iothub-aw-iot-copilot --device-id $DeviceId"
 Write-Host ""
 Write-Host "REMINDER: Push Device Twin config if not already done:" -ForegroundColor Yellow
-Write-Host "  See raspberry-pi/SETUP.md Step 5 for the twin JSON"
+Write-Host "  See raspberry-pi/SETUP.md — Device Twin configuration section"
 Write-Host ""

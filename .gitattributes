@@ -1,0 +1,30 @@
+# Default — normalize to LF on commit
+* text=auto eol=lf
+
+# Shell scripts must always be LF
+*.sh text eol=lf
+
+# PowerShell can use CRLF on Windows
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+
+# Windows batch files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# JSON, YAML, Markdown — LF
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+
+# Binary files — no line ending conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.tar binary

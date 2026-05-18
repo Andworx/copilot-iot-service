@@ -45,18 +45,42 @@ Store these in Azure Key Vault immediately after provisioning.
 
 ### New-PiBootConfig.ps1
 
-Writes zero-touch provisioning credentials to a Raspberry Pi SD card boot partition.
-
-> **Note:** Currently writes `IOT_HUB_CONNECTION_STRING`. Will be updated in [issue #67](https://github.com/Andworx/copilot-iot-service/issues/67) to use DPS credentials (`-IdScope` / `-GroupKey`).
+Writes zero-touch DPS provisioning credentials to a Raspberry Pi SD card boot partition.
+The SD card gets **fleet credentials** (same for all Pis) — per-device keys are derived at first boot.
 
 ```powershell
-# Current (connection string — pre-DPS)
-$conn = az iot hub device-identity connection-string show `
-    --hub-name iothub-aw-iot-copilot `
-    --device-id raspberry-pi-iotpanel `
-    --query connectionString -o tsv
-.\New-PiBootConfig.ps1 -DriveLetter E -ConnectionString $conn
+# Fetch DPS values from Azure CLI
+$scope = az iot dps show `
+    --name dps-aw-iot-copilot `
+    --query properties.idScope -o tsv
+
+$key = az iot dps enrollment-group show `
+    --dps-name dps-aw-iot-copilot `
+    --enrollment-id iotpanel-fleet `
+    --show-keys `
+    --query attestation.symmetricKey.primaryKey -o tsv
+
+# Write to SD card (E: = boot partition drive letter)
+.\New-PiBootConfig.ps1 -DriveLetter E -IdScope $scope -GroupKey $key
+
+# Custom device ID (for fleet with unique names)
+.\New-PiBootConfig.ps1 -DriveLetter E -IdScope $scope -GroupKey $key -DeviceId "pi-panel-02"
 ```
+
+**What gets written to the SD card:**
+| File | Contents |
+|------|----------|
+| `iot-credentials.env` | `DPS_ID_SCOPE`, `DPS_GROUP_KEY`, `DEVICE_ID` — shredded on first boot |
+| `firstrun.sh` | First-boot script (downloaded from GitHub main) |
+| `ssh` | Empty file — enables SSH |
+
+**What happens on first boot (automatic):**
+1. Pi reads fleet credentials from `iot-credentials.env`
+2. Derives per-device key: `HMAC-SHA256(GROUP_KEY, DEVICE_ID)`
+3. Registers with Azure DPS → receives assigned IoT Hub + connection string
+4. Writes connection string to `/opt/iot-monitor/.env`
+5. Installs and enables `iot-monitor` service
+6. Shreds credentials from SD card, reboots
 
 ---
 

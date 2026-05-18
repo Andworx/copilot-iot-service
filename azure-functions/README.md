@@ -94,9 +94,11 @@ Sent when `needs_help === true` (mismatch detected or rule ≠ `all_lights_on`).
 ### Deploy code only (after infrastructure exists)
 
 ```bash
-cd azure-functions/iot-signalr-func
+# From azure-functions/iot-signalr-func
 npm install --omit=dev
-func azure functionapp publish func-aw-iot-copilot --node
+# Zip and deploy via az CLI (no func CLI required)
+Compress-Archive -Path * -DestinationPath "$env:TEMP\func-deploy.zip" -Force
+az functionapp deployment source config-zip --name func-aw-iot-copilot --resource-group rg-aw-azcom-iot-copilot --src "$env:TEMP\func-deploy.zip" --build-remote true
 ```
 
 ### Local development

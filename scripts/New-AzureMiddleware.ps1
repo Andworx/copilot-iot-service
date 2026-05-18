@@ -235,17 +235,20 @@ if ($SkipFunctionDeploy) {
 
         # Deploy via Kudu REST API — avoids az CLI SCM JSON parse bug with --build-remote
         Write-Info "Deploying via Kudu zip deploy API..."
-        $publishProfile = (az webapp deployment list-publishing-credentials `
+        # Run az separately and filter out non-JSON warning lines before parsing
+        $rawCreds = az webapp deployment list-publishing-credentials `
             --name $FuncAppName `
             --resource-group $ResourceGroup `
             --query '{user:publishingUserName,pass:publishingPassword}' `
-            -o json 2>&1 | ConvertFrom-Json)
+            -o json 2>$null
+        if ($LASTEXITCODE -ne 0) { throw "Failed to get publishing credentials" }
+        $publishProfile = $rawCreds | ConvertFrom-Json
         $kuduBase64 = [Convert]::ToBase64String(
             [Text.Encoding]::ASCII.GetBytes("$($publishProfile.user):$($publishProfile.pass)")
         )
         $kuduUri = "https://$FuncAppName.scm.azurewebsites.net/api/zipdeploy"
         Write-Info "POST $kuduUri"
-        $response = Invoke-RestMethod `
+        $null = Invoke-RestMethod `
             -Uri $kuduUri `
             -Method POST `
             -Headers @{ Authorization = "Basic $kuduBase64" } `

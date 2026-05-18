@@ -239,18 +239,25 @@ if ($SkipFunctionDeploy) {
         # az CLI --build-remote crashes with JSON parse bug, Kudu slow to start).
         Write-Info "Uploading zip to Storage Account for WEBSITE_RUN_FROM_PACKAGE deploy..."
 
+        # Fetch account key once — avoids RBAC data-plane role requirement of --auth-mode login
+        $stKey = (az storage account keys list `
+            --account-name $StorageName `
+            --resource-group $ResourceGroup `
+            --query '[0].value' -o tsv 2>$null).Trim()
+        if (-not $stKey) { throw "Could not retrieve storage account key for $StorageName" }
+
         # Ensure a deployment container exists
         $deployContainer = 'function-releases'
         $stExists = az storage container show `
             --name $deployContainer `
             --account-name $StorageName `
-            --auth-mode login 2>$null
+            --account-key $stKey 2>$null
         if (-not $stExists) {
             Invoke-Az @(
                 'storage','container','create',
                 '--name',$deployContainer,
                 '--account-name',$StorageName,
-                '--auth-mode','login'
+                '--account-key',$stKey
             ) | Out-Null
             Write-Info "Created container: $deployContainer"
         }
@@ -262,7 +269,7 @@ if ($SkipFunctionDeploy) {
             '--file',$zipPath,
             '--name',$blobName,
             '--account-name',$StorageName,
-            '--auth-mode','login',
+            '--account-key',$stKey,
             '--overwrite'
         ) | Out-Null
         Write-Info "Blob uploaded: $blobName"
@@ -273,10 +280,9 @@ if ($SkipFunctionDeploy) {
             --container-name $deployContainer `
             --name $blobName `
             --account-name $StorageName `
+            --account-key $stKey `
             --permissions r `
             --expiry $expiry `
-            --auth-mode login `
-            --as-user `
             -o tsv 2>$null).Trim()
         if (-not $sasToken) { throw "Failed to generate SAS token for deployment blob" }
 

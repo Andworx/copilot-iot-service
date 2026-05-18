@@ -6,7 +6,7 @@
     Creates or verifies (idempotent) the following resources in rg-aw-azcom-iot-copilot:
 
       - Azure SignalR Service  : signalr-aw-iot-copilot  (Free tier, Serverless mode)
-      - Azure Function App     : func-aw-iot-copilot      (Consumption, Node.js 20)
+      - Azure Function App     : func-aw-iot-copilot      (Consumption, Node.js 24)
       - App Service Plan       : plan-func-aw-iot-copilot (Y1 Consumption)
       - Storage Account        : stfuncawiotcopilot        (LRS, required by Functions)
       - Logic App              : la-aw-iot-copilot         (Consumption, polls Event Hub → HTTP POST to Function)
@@ -184,7 +184,7 @@ if ($fa) {
         '--resource-group',$ResourceGroup,
         '--consumption-plan-location',$Location,
         '--runtime','node',
-        '--runtime-version','20',
+        '--runtime-version','24',
         '--functions-version','4',
         '--storage-account',$StorageName,
         '--os-type','Linux'

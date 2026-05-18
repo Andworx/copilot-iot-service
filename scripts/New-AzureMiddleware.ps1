@@ -247,6 +247,26 @@ if ($SkipFunctionDeploy) {
             [Text.Encoding]::ASCII.GetBytes("$($publishProfile.user):$($publishProfile.pass)")
         )
         $kuduUri = "https://$FuncAppName.scm.azurewebsites.net/api/zipdeploy"
+
+        # Wait for Kudu SCM to be ready (fresh apps can return 503 for up to ~60s)
+        Write-Info "Waiting for Kudu SCM site to be ready..."
+        $kuduReady = $false
+        for ($w = 0; $w -lt 12; $w++) {
+            try {
+                $ping = Invoke-RestMethod `
+                    -Uri "https://$FuncAppName.scm.azurewebsites.net/api/settings" `
+                    -Method GET `
+                    -Headers @{ Authorization = "Basic $kuduBase64" } `
+                    -ErrorAction Stop
+                $kuduReady = $true
+                break
+            } catch {
+                Write-Info "  SCM not ready yet ($($w*10)s)..."
+                Start-Sleep -Seconds 10
+            }
+        }
+        if (-not $kuduReady) { throw "Kudu SCM site did not become ready after 120s" }
+
         Write-Info "POST $kuduUri"
         $null = Invoke-RestMethod `
             -Uri $kuduUri `

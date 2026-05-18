@@ -17,7 +17,7 @@ After setup (either path), all config changes are made in Azure IoT Hub (Device 
 - Raspberry Pi 3B+, 4, or Zero 2 W
 - microSD card (8 GB+, Class 10)
 - USB power supply (5V 3A for Pi 4; 5V 2.5A for Pi 3B+)
-- Panel wiring (see [wiring/README.md](wiring/README.md))
+- Panel wiring: 4× momentary switches + 4× LEDs + 8× 330 Ω resistors (see [docs/wiring/README.md](docs/wiring/README.md))
 
 ### Azure / Accounts
 - Resource group `rg-aw-azcom-iot-copilot`, IoT Hub `iothub-aw-iot-copilot`, and DPS `dps-aw-iot-copilot` provisioned
@@ -421,6 +421,54 @@ az iot dps enrollment-group show `
 ```
 
 > **Security:** Store the Group Key in Azure Key Vault. Treat it like a password — anyone with it can register devices in your DPS instance.
+
+---
+
+## Hardware Wiring
+
+See **[docs/wiring/README.md](docs/wiring/README.md)** for the full pin map, resistor values, and schematic.
+
+Quick reference:
+
+| Index | GPIO (BCM) | Physical Pin | Role    | Notes                     |
+|-------|-----------|--------------|---------|---------------------------|
+| SW0   | GPIO 5    | Pin 29       | Switch  | Pull-up; LOW when pressed |
+| SW1   | GPIO 6    | Pin 31       | Switch  | Pull-up; LOW when pressed |
+| SW2   | GPIO 13   | Pin 33       | Switch  | Pull-up; LOW when pressed |
+| SW3   | GPIO 19   | Pin 35       | Switch  | Pull-up; LOW when pressed |
+| LED0  | GPIO 18   | Pin 12       | LED out | 330 Ω series resistor     |
+| LED1  | GPIO 24   | Pin 18       | LED out | 330 Ω series resistor     |
+| LED2  | GPIO 25   | Pin 22       | LED out | 330 Ω series resistor     |
+| LED3  | GPIO 12   | Pin 32       | LED out | 330 Ω series resistor     |
+
+> Connect all LED cathodes and switch commons to any GND pin.
+
+### Hardware Smoke Test
+
+Run this on the Pi once wired to verify each switch → LED mapping:
+
+```bash
+# 1. Service running?
+systemctl status iot-monitor
+
+# 2. Check live logs while pressing switches
+journalctl -u iot-monitor -f
+
+# 3. Check the local API reflects hardware state
+curl http://localhost:5000/api/status
+```
+
+Expected `logic_map.json` mappings:
+
+| Press      | Expected LEDs on           |
+|------------|---------------------------|
+| SW1 only   | *(fallback)* LED0 only    |
+| SW2 only   | LED2                      |
+| SW4 only   | LED3                      |
+| SW1 + SW3  | All 4 LEDs                |
+| SW1 + SW2  | LED0 + LED2               |
+| SW1+SW2+SW3| LED1 + LED3               |
+| SW1+SW2+SW4| All LEDs OFF              |
 
 ---
 

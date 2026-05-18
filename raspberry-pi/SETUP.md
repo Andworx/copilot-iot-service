@@ -20,9 +20,11 @@ After setup (either path), all config changes are made in Azure IoT Hub (Device 
 - Panel wiring (see [wiring/README.md](wiring/README.md))
 
 ### Azure / Accounts
-- Azure IoT Hub provisioned (see [Issue #5](https://github.com/Andworx/copilot-iot-service/issues/5))
-- Device `raspberry-pi-iotpanel` registered in IoT Hub (connection string ready)
-- Device Twin `desired.logic_map` pushed (see [Step: Push Device Twin config](#push-device-twin-config))
+- Resource group `rg-aw-azcom-iot-copilot`, IoT Hub `iothub-aw-iot-copilot`, and DPS `dps-aw-iot-copilot` provisioned
+  → Run `.\scripts\New-AzureIotInfrastructure.ps1 -Environment dev` if not done yet
+- DPS group enrollment `iotpanel-fleet` exists (created by the script above)
+- **DPS ID Scope** and **DPS Group Primary Key** on hand — see [Getting DPS credentials](#getting-dps-credentials) below
+- Device Twin `desired.logic_map` pushed after first boot (see [Push Device Twin config](#push-device-twin-config))
 
 ---
 
@@ -58,18 +60,28 @@ Azure: Device Twin pushed → Pi picks up config on first connect
 On your Windows dev machine, find the drive letter of the SD boot partition (the small FAT32 partition — typically `E:` or `F:`):
 
 ```powershell
-# Get your connection string from Azure CLI
-$conn = az iot hub device-identity connection-string show `
-    --hub-name <your-hub> `
-    --device-id raspberry-pi-iotpanel `
-    --query connectionString -o tsv
+# Fetch DPS fleet credentials from Azure CLI
+$scope = az iot dps show `
+    --name dps-aw-iot-copilot `
+    --resource-group rg-aw-azcom-iot-copilot `
+    --query properties.idScope -o tsv
 
-# Write zero-touch config to the SD boot partition
-.\scripts\New-PiBootConfig.ps1 -DriveLetter E -ConnectionString $conn
+$key = az iot dps enrollment-group show `
+    --dps-name dps-aw-iot-copilot `
+    --resource-group rg-aw-azcom-iot-copilot `
+    --enrollment-id iotpanel-fleet `
+    --show-keys `
+    --query attestation.symmetricKey.primaryKey -o tsv
+
+# Write zero-touch DPS credentials to the SD boot partition
+.\scripts\New-PiBootConfig.ps1 -DriveLetter E -IdScope $scope -GroupKey $key
 ```
 
+> **Fleet credentials** — the same `$scope` and `$key` work for every Pi in your fleet.
+> Per-device keys are derived automatically at first boot using the device ID.
+
 **What this writes to the SD card:**
-- `iot-credentials.env` — connection string (read once, then shredded by Pi)
+- `iot-credentials.env` — fleet DPS credentials (shredded by Pi after first boot)
 - `firstrun.sh` — first-boot script that bootstraps everything
 - `ssh` — empty file that enables SSH (if not already present)
 
@@ -388,6 +400,30 @@ No SSH, no restart.
 
 ---
 
+## Getting DPS Credentials
+
+Run these on your dev machine (requires `az login` and the `azure-iot` extension):
+
+```powershell
+# ID Scope — identifies your DPS instance
+az iot dps show `
+    --name dps-aw-iot-copilot `
+    --resource-group rg-aw-azcom-iot-copilot `
+    --query properties.idScope -o tsv
+
+# Group Primary Key — fleet shared secret
+az iot dps enrollment-group show `
+    --dps-name dps-aw-iot-copilot `
+    --resource-group rg-aw-azcom-iot-copilot `
+    --enrollment-id iotpanel-fleet `
+    --show-keys `
+    --query attestation.symmetricKey.primaryKey -o tsv
+```
+
+> **Security:** Store the Group Key in Azure Key Vault. Treat it like a password — anyone with it can register devices in your DPS instance.
+
+---
+
 ## Troubleshooting
 
 ### Service fails to start
@@ -397,8 +433,8 @@ journalctl -u iot-monitor -n 50 --no-pager
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `.env not found` | `/opt/iot-monitor/.env` missing | Follow Step 4 |
-| `IoT Hub connect failed` | Bad connection string | Re-check string from Azure Portal |
+| `.env not found` | `/opt/iot-monitor/.env` missing | Manual path: follow Step 4; zero-touch: check `/var/log/iot-firstrun.log` for DPS errors |
+| `IoT Hub connect failed` | Bad connection string | Run `New-PiBootConfig.ps1` again with correct credentials and re-flash |
 | `Permission denied: /dev/gpiomem` | Service user not in `gpio` group | `sudo usermod -aG gpio <service-user>` then reboot |
 | `ModuleNotFoundError: RPi.GPIO` | Package not installed | `pip install RPi.GPIO` in the venv |
 | Twin sync returns False | No `logic_map` in desired twin | Follow Step 5 to push config |

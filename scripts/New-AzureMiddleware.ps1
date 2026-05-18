@@ -44,7 +44,8 @@
     PREREQUISITES:
     - Azure CLI installed and logged in: az login
     - Azure IoT extension: az extension add --name azure-iot
-    - (Optional) Azure Functions Core Tools: npm install -g azure-functions-core-tools@4
+    - Node.js + npm: for building function app deps locally before zip deploy
+    - (Optional) Azure Functions Core Tools not required — zip deploy is used
 
     OUTPUTS (printed at end):
     - Function App URL
@@ -82,13 +83,17 @@ function Write-Skip([string]$msg) { Write-Host "  ⏭  $msg" -ForegroundColor Ye
 function Write-Info([string]$msg) { Write-Host "  ℹ  $msg" }
 
 function Invoke-Az {
-    param([string[]]$Args)
+    param([string[]]$AzArgs)
     if ($DryRun) {
-        Write-Host "  [DRY RUN] az $($Args -join ' ')" -ForegroundColor DarkGray
+        Write-Host "  [DRY RUN] az $($AzArgs -join ' ')" -ForegroundColor DarkGray
         return $null
     }
-    $result = az @Args 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "az $($Args[0..1] -join ' ') failed: $result" }
+    $result = az @AzArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  ❌ az $($AzArgs[0..1] -join ' ') failed (exit $LASTEXITCODE):" -ForegroundColor Red
+        $result | ForEach-Object { Write-Host "     $_" -ForegroundColor Red }
+        throw "az $($AzArgs[0..1] -join ' ') failed — see output above"
+    }
     return $result
 }
 
@@ -121,10 +126,20 @@ if ($sr) {
         '--resource-group',$ResourceGroup,
         '--location',$Location,
         '--sku','Free_F1',
-        '--service-mode','Serverless',
-        '--allowed-origins','*'
+        '--service-mode','Serverless'
     ) | Out-Null
     Write-Ok "Created"
+}
+
+# Set CORS on SignalR (separate from create)
+if (-not $DryRun) {
+    Invoke-Az @(
+        'signalr','cors','update',
+        '--name',$SignalRName,
+        '--resource-group',$ResourceGroup,
+        '--allowed-origins','*'
+    ) | Out-Null
+    Write-Ok "SignalR CORS set (*)"
 }
 
 if (-not $DryRun) {
@@ -202,18 +217,34 @@ if ($SkipFunctionDeploy) {
 } else {
     Write-Step "Deploying Function App from $FuncSrcPath"
     if (-not $DryRun) {
+        $zipPath = Join-Path $env:TEMP 'func-aw-iot-copilot-deploy.zip'
         Push-Location $FuncSrcPath
         try {
-            Write-Info "npm install..."
-            npm install --omit=dev 2>&1 | Write-Host
-            Write-Info "func azure functionapp publish..."
-            func azure functionapp publish $FuncAppName --node 2>&1 | Write-Host
+            Write-Info "npm install (production deps)..."
+            npm install --omit=dev 2>&1 | ForEach-Object { Write-Host "    $_" }
+            if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
+
+            Write-Info "Creating deployment zip..."
+            if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+            # Zip everything except .git
+            $items = Get-ChildItem -Path . | Where-Object { $_.Name -ne '.git' }
+            Compress-Archive -Path $items.FullName -DestinationPath $zipPath -Force
+            Write-Info "Zip created: $zipPath ($([math]::Round((Get-Item $zipPath).Length/1KB))KB)"
+
+            Write-Info "Deploying via az webapp deploy (zip)..."
+            Invoke-Az @(
+                'functionapp','deployment','source','config-zip',
+                '--name',$FuncAppName,
+                '--resource-group',$ResourceGroup,
+                '--src',$zipPath,
+                '--build-remote','true'
+            ) | Out-Null
         } finally {
             Pop-Location
         }
         Write-Ok "Function App deployed"
     } else {
-        Write-Host "  [DRY RUN] Would run npm install + func publish in $FuncSrcPath" -ForegroundColor DarkGray
+        Write-Host "  [DRY RUN] Would npm install + zip deploy from $FuncSrcPath" -ForegroundColor DarkGray
     }
 }
 

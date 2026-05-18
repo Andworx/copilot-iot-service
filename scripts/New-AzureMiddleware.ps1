@@ -226,25 +226,34 @@ if ($SkipFunctionDeploy) {
 
             Write-Info "Creating deployment zip..."
             if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-            # Zip everything except .git
-            $items = Get-ChildItem -Path . | Where-Object { $_.Name -ne '.git' }
+            $items = Get-ChildItem -Path . | Where-Object { $_.Name -notin @('.git') }
             Compress-Archive -Path $items.FullName -DestinationPath $zipPath -Force
             Write-Info "Zip created: $zipPath ($([math]::Round((Get-Item $zipPath).Length/1KB))KB)"
-
-            Write-Info "Deploying via az webapp deploy (zip)..."
-            Invoke-Az @(
-                'functionapp','deployment','source','config-zip',
-                '--name',$FuncAppName,
-                '--resource-group',$ResourceGroup,
-                '--src',$zipPath,
-                '--build-remote','true'
-            ) | Out-Null
         } finally {
             Pop-Location
         }
-        Write-Ok "Function App deployed"
+
+        # Deploy via Kudu REST API — avoids az CLI SCM JSON parse bug with --build-remote
+        Write-Info "Deploying via Kudu zip deploy API..."
+        $publishProfile = (az webapp deployment list-publishing-credentials `
+            --name $FuncAppName `
+            --resource-group $ResourceGroup `
+            --query '{user:publishingUserName,pass:publishingPassword}' `
+            -o json 2>&1 | ConvertFrom-Json)
+        $kuduBase64 = [Convert]::ToBase64String(
+            [Text.Encoding]::ASCII.GetBytes("$($publishProfile.user):$($publishProfile.pass)")
+        )
+        $kuduUri = "https://$FuncAppName.scm.azurewebsites.net/api/zipdeploy"
+        Write-Info "POST $kuduUri"
+        $response = Invoke-RestMethod `
+            -Uri $kuduUri `
+            -Method POST `
+            -Headers @{ Authorization = "Basic $kuduBase64" } `
+            -ContentType 'application/zip' `
+            -InFile $zipPath
+        Write-Ok "Function App deployed (Kudu)"
     } else {
-        Write-Host "  [DRY RUN] Would npm install + zip deploy from $FuncSrcPath" -ForegroundColor DarkGray
+        Write-Host "  [DRY RUN] Would npm install + Kudu zip deploy from $FuncSrcPath" -ForegroundColor DarkGray
     }
 }
 

@@ -22,6 +22,9 @@ raspberry-pi/
 ├── iot-auto-deploy.service # systemd unit for auto-deploy oneshot
 ├── install.sh             # One-time installer for all services
 ├── setup_ssh.sh           # SSH key setup for GitHub auth (run once manually)
+├── docs/
+│   └── wiring/
+│       └── README.md      # GPIO pin map, resistor values, logic map reference
 └── README.md              # This file
 ```
 

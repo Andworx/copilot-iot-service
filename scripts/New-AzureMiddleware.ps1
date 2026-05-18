@@ -289,13 +289,37 @@ if ($SkipFunctionDeploy) {
         $blobUrl = "https://$StorageName.blob.core.windows.net/$deployContainer/${blobName}?$sasToken"
         Write-Info "SAS URL generated (expires $expiry)"
 
-        # Point Function App at the zip
-        Invoke-Az @(
-            'functionapp','config','appsettings','set',
-            '--name',$FuncAppName,
-            '--resource-group',$ResourceGroup,
-            '--settings',"WEBSITE_RUN_FROM_PACKAGE=$blobUrl"
-        ) | Out-Null
+        # Point Function App at the zip via ARM REST API to avoid Windows
+        # shell splitting the SAS token on '&' through the az .cmd wrapper
+        Write-Host "  ℹ  Setting WEBSITE_RUN_FROM_PACKAGE via ARM API..." -ForegroundColor Cyan
+        $armToken  = (az account get-access-token --query accessToken -o tsv 2>$null).Trim()
+        $armSubId  = (az account show --query id -o tsv 2>$null).Trim()
+        $armBase   = "https://management.azure.com/subscriptions/$armSubId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/sites/$FuncAppName"
+        $armApiVer = "api-version=2022-03-01"
+        $armHeaders = @{ Authorization = "Bearer $armToken"; 'Content-Type' = 'application/json' }
+
+        # GET current settings (POST /config/appsettings/list)
+        $curSettings = (Invoke-RestMethod `
+            -Uri     "$armBase/config/appsettings/list?$armApiVer" `
+            -Method  POST `
+            -Headers $armHeaders).properties
+
+        # Merge: preserve existing settings, set/override WEBSITE_RUN_FROM_PACKAGE
+        $newProps = @{}
+        if ($curSettings) {
+            foreach ($prop in $curSettings.PSObject.Properties) {
+                $newProps[$prop.Name] = $prop.Value
+            }
+        }
+        $newProps['WEBSITE_RUN_FROM_PACKAGE'] = $blobUrl
+
+        $settingsBody = ([pscustomobject]@{ properties = $newProps }) | ConvertTo-Json -Depth 5
+
+        Invoke-RestMethod `
+            -Uri     "$armBase/config/appsettings?$armApiVer" `
+            -Method  PUT `
+            -Headers $armHeaders `
+            -Body    $settingsBody | Out-Null
 
         # Restart to pick up the new package
         Invoke-Az @(

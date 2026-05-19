@@ -336,18 +336,31 @@ if ($SkipFunctionDeploy) {
 # ─── 6. Get Function key ──────────────────────────────────────────────────────
 Write-Step "Retrieving Function App key"
 if (-not $DryRun) {
-    # Allow up to 60s for keys to be available after fresh deploy
+    # Use ARM REST API to avoid az 32-bit Python warning corrupting output.
+    # Allow up to 120s for a cold Consumption plan to initialise after deploy.
+    $armToken  = (az account get-access-token --query accessToken -o tsv 2>$null).Trim()
+    $armSubId  = (az account show --query id -o tsv 2>$null).Trim()
+    $armBase   = "https://management.azure.com/subscriptions/$armSubId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/sites/$FuncAppName"
+    $armApiVer = "api-version=2022-03-01"
+    $armHeaders = @{ Authorization = "Bearer $armToken"; 'Content-Type' = 'application/json' }
+
     $funcKey = $null
-    for ($i = 0; $i -lt 6; $i++) {
-        $funcKey = (az functionapp keys list `
-            --name $FuncAppName `
-            --resource-group $ResourceGroup `
-            --query 'functionKeys.default' -o tsv 2>$null)
-        if ($funcKey) { break }
+    for ($i = 0; $i -lt 12; $i++) {
+        try {
+            $keyResult = Invoke-RestMethod `
+                -Uri     "$armBase/host/default/listKeys?$armApiVer" `
+                -Method  POST `
+                -Headers $armHeaders `
+                -ErrorAction Stop
+            # Prefer the default function key; fall back to master key
+            $funcKey = $keyResult.functionKeys.default
+            if (-not $funcKey) { $funcKey = $keyResult.masterKey }
+            if ($funcKey) { break }
+        } catch { <# not ready yet #> }
         Write-Info "Waiting for function key... ($($i*10)s)"
         Start-Sleep -Seconds 10
     }
-    if (-not $funcKey) { throw "Could not retrieve function key after 60s" }
+    if (-not $funcKey) { throw "Could not retrieve function key after 120s" }
     $FuncUrl = "https://$FuncAppName.azurewebsites.net"
     $TelemetryUrl = "$FuncUrl/api/telemetry?code=$funcKey"
     Write-Ok "Function key retrieved"

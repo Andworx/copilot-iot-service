@@ -14,7 +14,7 @@
     After provisioning:
       - Function App source is deployed from azure-functions/iot-signalr-func/
       - Logic App is configured with the Function App URL and key automatically
-      - IoT Hub route for device 'raspberry-pi-iotpanel' → built-in Event Hub endpoint is verified
+      - IoT Hub route for device 'raspberry-pi-iotpanel' → dedicated Event Hub (evhns-aw-iot-copilot / iot-telemetry)
 
 .PARAMETER Environment
     Target environment: dev, test, or prod.
@@ -71,6 +71,8 @@ $SignalRName      = 'signalr-aw-iot-copilot'
 $FuncAppName     = 'func-aw-iot-copilot'
 $StorageName     = 'stfuncawiotcopilot'   # max 24 chars, lowercase, no hyphens
 $LogicAppName    = 'la-aw-iot-copilot'
+$EvhNsName       = 'evhns-aw-iot-copilot'  # Event Hub namespace
+$EvhName         = 'iot-telemetry'          # Event Hub inside the namespace
 $DeviceId        = 'raspberry-pi-iotpanel'
 
 $FuncSrcPath     = Join-Path $PSScriptRoot '..\azure-functions\iot-signalr-func'
@@ -172,7 +174,107 @@ if ($st) {
     Write-Ok "Created"
 }
 
-# ─── 4. Function App (Windows Consumption, Node.js 20) ───────────────────────
+# ─── 4. Event Hub Namespace + Event Hub ──────────────────────────────────────
+# A dedicated Event Hub receives IoT Hub messages via a custom endpoint + route.
+# Logic Apps connects to this hub with a standard SAS connection string,
+# avoiding the 401 issues when connecting directly to IoT Hub's built-in endpoint.
+Write-Step "Event Hub Namespace: $EvhNsName"
+$evhns = az eventhubs namespace show --name $EvhNsName --resource-group $ResourceGroup 2>$null
+if ($evhns) {
+    Write-Skip "Already exists"
+} else {
+    Invoke-Az @(
+        'eventhubs','namespace','create',
+        '--name',$EvhNsName,
+        '--resource-group',$ResourceGroup,
+        '--location',$Location,
+        '--sku','Basic'
+    ) | Out-Null
+    Write-Ok "Created"
+}
+
+Write-Step "Event Hub: $EvhName"
+$evh = az eventhubs eventhub show --name $EvhName --namespace-name $EvhNsName --resource-group $ResourceGroup 2>$null
+if ($evh) {
+    Write-Skip "Already exists"
+} else {
+    Invoke-Az @(
+        'eventhubs','eventhub','create',
+        '--name',$EvhName,
+        '--namespace-name',$EvhNsName,
+        '--resource-group',$ResourceGroup,
+        '--partition-count','2',
+        '--retention-time','1'
+    ) | Out-Null
+    Write-Ok "Created"
+}
+
+# Get Event Hub connection string for Logic App and IoT Hub custom endpoint
+$evhConnStr = if (-not $DryRun) {
+    (Invoke-Az @(
+        'eventhubs','namespace','authorization-rule','keys','list',
+        '--name','RootManageSharedAccessKey',
+        '--namespace-name',$EvhNsName,
+        '--resource-group',$ResourceGroup,
+        '--query','primaryConnectionString','-o','tsv'
+    )).Trim()
+} else {
+    'Endpoint=sb://placeholder.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=placeholder'
+}
+Write-Ok "Event Hub connection string retrieved"
+
+# ─── 5. IoT Hub custom endpoint + message route → Event Hub ──────────────────
+Write-Step "IoT Hub custom endpoint → $EvhName"
+if (-not $DryRun) {
+    $existingEp = az iot hub routing-endpoint list `
+        --hub-name $IotHubName `
+        --resource-group $ResourceGroup `
+        --endpoint-type EventHub 2>$null | ConvertFrom-Json |
+        Where-Object { $_.name -eq 'endpoint-iotpanel' }
+    if ($existingEp) {
+        Write-Skip "Custom endpoint 'endpoint-iotpanel' already exists"
+    } else {
+        $evhResourceId = (az eventhubs eventhub show `
+            --name $EvhName `
+            --namespace-name $EvhNsName `
+            --resource-group $ResourceGroup `
+            --query 'id' -o tsv 2>$null).Trim()
+
+        Invoke-Az @(
+            'iot','hub','routing-endpoint','create',
+            '--hub-name',$IotHubName,
+            '--resource-group',$ResourceGroup,
+            '--endpoint-name','endpoint-iotpanel',
+            '--endpoint-type','EventHub',
+            '--endpoint-resource-group',$ResourceGroup,
+            '--endpoint-subscription-id',(az account show --query id -o tsv 2>$null).Trim(),
+            '--connection-string',"$evhConnStr;EntityPath=$EvhName"
+        ) | Out-Null
+        Write-Ok "Custom endpoint created"
+    }
+
+    $existingRoute = az iot hub route list `
+        --hub-name $IotHubName `
+        --resource-group $ResourceGroup 2>$null | ConvertFrom-Json |
+        Where-Object { $_.name -eq 'route-iotpanel' }
+    if ($existingRoute) {
+        Write-Skip "Route 'route-iotpanel' already exists — endpoint: $($existingRoute.endpointNames)"
+    } else {
+        Invoke-Az @(
+            'iot','hub','route','create',
+            '--hub-name',$IotHubName,
+            '--resource-group',$ResourceGroup,
+            '--route-name','route-iotpanel',
+            '--source','DeviceMessages',
+            '--endpoint-name','endpoint-iotpanel',
+            '--condition','true',
+            '--enabled','true'
+        ) | Out-Null
+        Write-Ok "Route created (all device messages → Event Hub)"
+    }
+}
+
+# ─── 6. Function App (Windows Consumption, Node.js 20) ───────────────────────
 # Note: Windows Consumption is used to match the reference implementation.
 # WEBSITE_RUN_FROM_PACKAGE (URL mode) is reliable on Windows; Linux Consumption
 # has Kudu/host startup issues with this deploy pattern.
@@ -226,7 +328,7 @@ Invoke-Az @(
 Write-Ok "CORS configured"
 
 
-# ─── 5. Deploy Function App source ────────────────────────────────────────────
+# ─── 7. Deploy Function App source ────────────────────────────────────────────
 if ($SkipFunctionDeploy) {
     Write-Skip "Skipping Function App deployment (--SkipFunctionDeploy)"
 } else {
@@ -346,7 +448,7 @@ if ($SkipFunctionDeploy) {
     }
 }
 
-# ─── 6. Get Function key ──────────────────────────────────────────────────────
+# ─── 8. Get Function key ──────────────────────────────────────────────────────
 Write-Step "Retrieving Function App key"
 if (-not $DryRun) {
     # Use ARM REST API to avoid az 32-bit Python warning corrupting output.
@@ -383,28 +485,14 @@ if (-not $DryRun) {
     $TelemetryUrl = "$FuncUrl/api/telemetry?code=$funcKey"
 }
 
-# ─── 7. Logic App ─────────────────────────────────────────────────────────────
+# ─── 9. Logic App ─────────────────────────────────────────────────────────────
 Write-Step "Logic App: $LogicAppName (Consumption)"
 
-# Get IoT Hub built-in Event Hub connection string
-Write-Info "Retrieving IoT Hub Event Hub-compatible endpoint..."
-if (-not $DryRun) {
-    $ehConnStr = (az iot hub connection-string show `
-        --hub-name $IotHubName `
-        --resource-group $ResourceGroup `
-        --default-eventhub `
-        --query 'connectionString' -o tsv 2>&1)
-    if ($LASTEXITCODE -ne 0) {
-        # Fallback: get from IoT Hub properties
-        $ehConnStr = (az iot hub show `
-            --name $IotHubName `
-            --resource-group $ResourceGroup `
-            --query 'properties.eventHubEndpoints.events.endpoint' -o tsv)
-        Write-Info "Using Event Hub endpoint: $ehConnStr"
-    }
-} else {
-    $ehConnStr = 'Endpoint=sb://placeholder.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=placeholder'
+# Use the dedicated Event Hub connection string (set earlier in section 4)
+$ehConnStr = if (-not $DryRun) { $evhConnStr } else {
+    'Endpoint=sb://placeholder.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=placeholder'
 }
+Write-Info "Using Event Hub: $EvhNsName / $EvhName"
 
 # Logic App ARM template (inline — Consumption, Event Hub trigger → HTTP POST)
 $laDefinition = @{
@@ -421,7 +509,7 @@ $laDefinition = @{
             inputs       = @{
                 host       = @{ connection = @{ name = "@parameters('`$connections')['eventhubs']['connectionId']" } }
                 method     = 'get'
-                path       = "/@{encodeURIComponent('messages/events')}/content"
+                path       = "/@{encodeURIComponent('$EvhName')}/events/batch/Head"
                 queries    = @{ consumerGroupName = '$Default'; contentType = 'application/octet-stream'; maximumEventsCount = 10 }
             }
         }
@@ -485,44 +573,32 @@ if ($la) {
 
 Remove-Item $templateFile -Force -ErrorAction SilentlyContinue
 
-# ─── 8. Verify IoT Hub route ──────────────────────────────────────────────────
-Write-Step "Verifying IoT Hub route for device: $DeviceId"
-if (-not $DryRun) {
-    $routes = az iot hub route list --hub-name $IotHubName --resource-group $ResourceGroup 2>$null | ConvertFrom-Json
-    $panelRoute = $routes | Where-Object { $_.condition -like "*$DeviceId*" -or $_.name -like '*panel*' }
-    if ($panelRoute) {
-        Write-Ok "Route '$($panelRoute.name)' exists — condition: $($panelRoute.condition)"
-    } else {
-        Write-Info "No device-specific route found — creating route for $DeviceId"
-        Invoke-Az @(
-            'iot','hub','route','create',
-            '--hub-name',$IotHubName,
-            '--resource-group',$ResourceGroup,
-            '--route-name','route-iotpanel',
-            '--source','DeviceMessages',
-            '--endpoint-name','events',
-            '--condition',"`$connectionDeviceId = `"$DeviceId`"",
-            '--enabled','true'
-        ) | Out-Null
-        Write-Ok "Route created"
-    }
-}
-
 # ─── Summary ──────────────────────────────────────────────────────────────────
 Write-Host "`n============================================================" -ForegroundColor Green
 Write-Host " AgenticIoT Middleware — Provisioning Complete" -ForegroundColor Green
 Write-Host "============================================================`n" -ForegroundColor Green
-Write-Host "  Function App URL : $FuncUrl"
-Write-Host "  Health check     : $FuncUrl/api/health"
-Write-Host "  Telemetry URL    : $TelemetryUrl"
-Write-Host "  Logic App        : https://portal.azure.com (search '$LogicAppName')"
-Write-Host "  SignalR name     : $SignalRName"
+Write-Host "  Function App URL  : $FuncUrl"
+Write-Host "  Health check      : $FuncUrl/api/health"
+Write-Host "  Telemetry URL     : $TelemetryUrl"
+Write-Host "  Logic App         : https://portal.azure.com (search '$LogicAppName')"
+Write-Host "  SignalR name      : $SignalRName"
+Write-Host "  Event Hub NS      : $EvhNsName"
+Write-Host "  Event Hub         : $EvhName"
 Write-Host ""
-Write-Host "  Next steps:"
-Write-Host "  1. Open Logic App in portal — add Event Hub connection with IoT Hub built-in endpoint"
-Write-Host "  2. Test: curl $FuncUrl/api/health"
-Write-Host "  3. Press a Pi switch — check Logic App run history for messages"
-Write-Host "  4. Connect Power Pages to $FuncUrl/api/negotiate"
+Write-Host "  ⚠  Manual step required — Logic App Event Hub connection:" -ForegroundColor Yellow
+Write-Host "  1. Open '$LogicAppName' in Azure Portal → Logic App Designer" -ForegroundColor Yellow
+Write-Host "  2. Click the Event Hub trigger → 'Add new' connection" -ForegroundColor Yellow
+Write-Host "  3. Paste connection string (WITHOUT EntityPath):" -ForegroundColor Yellow
+if (-not $DryRun) {
+    Write-Host "     $evhConnStr" -ForegroundColor Cyan
+}
+Write-Host "  4. Set Event Hub name: $EvhName" -ForegroundColor Yellow
+Write-Host "  5. Save and enable the Logic App" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  Next steps after manual connection:"
+Write-Host "  A. Test: curl $FuncUrl/api/health"
+Write-Host "  B. Press a Pi switch — check Logic App run history for messages"
+Write-Host "  C. Connect Power Pages to $FuncUrl/api/negotiate"
 Write-Host ""
 if ($DryRun) {
     Write-Host "  (DRY RUN — no resources were created)" -ForegroundColor Yellow

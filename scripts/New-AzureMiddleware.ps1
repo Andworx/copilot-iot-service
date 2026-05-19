@@ -172,12 +172,26 @@ if ($st) {
     Write-Ok "Created"
 }
 
-# ─── 4. Function App (Consumption, Node.js 20) ────────────────────────────────
+# ─── 4. Function App (Windows Consumption, Node.js 20) ───────────────────────
+# Note: Windows Consumption is used to match the reference implementation.
+# WEBSITE_RUN_FROM_PACKAGE (URL mode) is reliable on Windows; Linux Consumption
+# has Kudu/host startup issues with this deploy pattern.
 Write-Step "Function App: $FuncAppName"
 $fa = az functionapp show --name $FuncAppName --resource-group $ResourceGroup 2>$null
 if ($fa) {
-    Write-Skip "Already exists"
-} else {
+    $faOs = (az functionapp show --name $FuncAppName --resource-group $ResourceGroup --query 'kind' -o tsv 2>$null)
+    if ($faOs -match 'linux') {
+        Write-Host "  ⚠  Existing app is Linux — deleting and recreating as Windows..." -ForegroundColor Yellow
+        az functionapp delete --name $FuncAppName --resource-group $ResourceGroup --yes 2>$null | Out-Null
+        Start-Sleep -Seconds 10
+        # fall through to create
+    } else {
+        Write-Skip "Already exists (Windows)"
+        $fa = $true
+    }
+}
+
+if (-not $fa -or ($fa -and $faOs -match 'linux')) {
     Invoke-Az @(
         'functionapp','create',
         '--name',$FuncAppName,
@@ -187,9 +201,9 @@ if ($fa) {
         '--runtime-version','24',
         '--functions-version','4',
         '--storage-account',$StorageName,
-        '--os-type','Linux'
+        '--os-type','Windows'
     ) | Out-Null
-    Write-Ok "Created"
+    Write-Ok "Created (Windows Consumption, Node 20)"
 }
 
 Write-Step "Configuring Function App settings (SignalR connection string)"
@@ -234,9 +248,7 @@ if ($SkipFunctionDeploy) {
             Pop-Location
         }
 
-        # Deploy via WEBSITE_RUN_FROM_PACKAGE — most reliable for Linux Consumption plans.
-        # Kudu-based deploys are unreliable on Linux Consumption (SCM basic auth off by default,
-        # az CLI --build-remote crashes with JSON parse bug, Kudu slow to start).
+        # Deploy via WEBSITE_RUN_FROM_PACKAGE — reliable on Windows Consumption plans.
         Write-Info "Uploading zip to Storage Account for WEBSITE_RUN_FROM_PACKAGE deploy..."
 
         # Fetch account key once — avoids RBAC data-plane role requirement of --auth-mode login
@@ -311,7 +323,8 @@ if ($SkipFunctionDeploy) {
                 $newProps[$prop.Name] = $prop.Value
             }
         }
-        $newProps['WEBSITE_RUN_FROM_PACKAGE'] = $blobUrl
+        $newProps['WEBSITE_RUN_FROM_PACKAGE']     = $blobUrl
+        $newProps['WEBSITE_NODE_DEFAULT_VERSION'] = '~24'   # Windows Consumption Node version
 
         $settingsBody = ([pscustomobject]@{ properties = $newProps }) | ConvertTo-Json -Depth 5
 
@@ -428,7 +441,7 @@ $laDefinition = @{
 }
 
 $laTemplate = @{
-    '`$schema'         = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
+    '$schema'          = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
     contentVersion    = '1.0.0.0'
     resources         = @(
         @{
@@ -452,12 +465,12 @@ $laTemplate | ConvertTo-Json -Depth 20 | Set-Content $templateFile -Encoding UTF
 
 $la = az logic workflow show --name $LogicAppName --resource-group $ResourceGroup 2>$null
 if ($la) {
-    Write-Skip "Logic App already exists — updating definition"
+    Write-Skip "Logic App already exists — redeploying via ARM template"
     Invoke-Az @(
-        'logic','workflow','update',
-        '--name',$LogicAppName,
+        'deployment','group','create',
         '--resource-group',$ResourceGroup,
-        '--definition',(Get-Content $templateFile -Raw)
+        '--template-file',$templateFile,
+        '--mode','Incremental'
     ) | Out-Null
     Write-Ok "Updated"
 } else {

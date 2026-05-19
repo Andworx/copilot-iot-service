@@ -204,7 +204,8 @@ if ($evh) {
         '--namespace-name',$EvhNsName,
         '--resource-group',$ResourceGroup,
         '--partition-count','2',
-        '--retention-time','1'
+        '--retention-time','1',
+        '--cleanup-policy','Delete'
     ) | Out-Null
     Write-Ok "Created"
 }

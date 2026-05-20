@@ -1,6 +1,6 @@
 /* =============================================
    IoT Panel Dashboard — Design Tokens
-   Minimal & Clean + Technical & Precise
+   Industrial Dark Theme
    ============================================= */
 
 *,*::before,*::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -8,23 +8,27 @@
 :root {
   /* Typography */
   --font-heading: 'IBM Plex Mono', monospace;
-  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-body: 'IBM Plex Mono', monospace;
 
-  /* Color palette */
-  --color-bg: #F8F9FA;
-  --color-surface: #FFFFFF;
-  --color-surface-2: #F3F4F6;
-  --color-primary: #0066CC;
-  --color-primary-hover: #0052A3;
-  --color-accent: #00C49A;
-  --color-accent-glow: rgba(0, 196, 154, 0.25);
-  --color-text: #0D1117;
-  --color-text-muted: #6B7280;
-  --color-border: #E5E7EB;
-  --color-border-strong: #D1D5DB;
+  /* Color palette — industrial dark */
+  --color-bg: #080C08;
+  --color-surface: #0F160F;
+  --color-surface-2: #161E16;
+  --color-surface-3: #1C261C;
+  --color-primary: #F59E0B;
+  --color-primary-hover: #D97706;
+  --color-accent: #22C55E;
+  --color-accent-glow: rgba(34, 197, 94, 0.20);
+  --color-amber-glow: rgba(245, 158, 11, 0.20);
+  --color-text: #C8D4C8;
+  --color-text-muted: #526052;
+  --color-text-bright: #E8F0E8;
+  --color-border: #1A261A;
+  --color-border-strong: #243224;
   --color-danger: #EF4444;
+  --color-danger-glow: rgba(239, 68, 68, 0.20);
   --color-warning: #F59E0B;
-  --color-success: #10B981;
+  --color-success: #22C55E;
 
   /* Spacing scale */
   --sp-1: 4px;
@@ -36,23 +40,29 @@
   --sp-7: 48px;
   --sp-8: 64px;
 
-  /* Borders */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Borders — sharp industrial corners */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
 
   /* Shadows */
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+  --shadow-glow-accent: 0 0 12px rgba(34, 197, 94, 0.25);
+  --shadow-glow-danger: 0 0 12px rgba(239, 68, 68, 0.30);
+  --shadow-glow-amber: 0 0 12px rgba(245, 158, 11, 0.30);
 }
 
 html, body {
   width: 100%; min-height: 100%;
   font-family: var(--font-body);
-  background: var(--color-bg);
+  /* Dot-grid background texture */
+  background-color: var(--color-bg);
+  background-image: radial-gradient(circle, #1a261a 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--color-text);
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -60,29 +70,69 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 600;
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-bright);
 }
+
+/* Horizontal rule / divider */
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border-strong);
+  margin: var(--sp-5) 0;
+}
+
+/* Panel / card base */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+/* Status label pill */
+.status-ok    { color: var(--color-accent);  }
+.status-error { color: var(--color-danger);  }
+.status-warn  { color: var(--color-warning); }
 
 /* Page-load stagger animation */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-in {
-  animation: fadeInUp 0.5s ease-out both;
+  animation: fadeInUp 0.3s ease-out both;
 }
-.animate-in:nth-child(1) { animation-delay: 0.05s; }
-.animate-in:nth-child(2) { animation-delay: 0.10s; }
-.animate-in:nth-child(3) { animation-delay: 0.15s; }
-.animate-in:nth-child(4) { animation-delay: 0.20s; }
-.animate-in:nth-child(5) { animation-delay: 0.25s; }
-.animate-in:nth-child(6) { animation-delay: 0.30s; }
+.animate-in:nth-child(1) { animation-delay: 0.03s; }
+.animate-in:nth-child(2) { animation-delay: 0.06s; }
+.animate-in:nth-child(3) { animation-delay: 0.09s; }
+.animate-in:nth-child(4) { animation-delay: 0.12s; }
+.animate-in:nth-child(5) { animation-delay: 0.15s; }
+.animate-in:nth-child(6) { animation-delay: 0.18s; }
 
-/* LED pulse glow */
+/* LED pulse glow — green (OK) */
 @keyframes ledPulse {
   0%, 100% { box-shadow: 0 0 4px 1px var(--color-accent-glow); }
-  50%       { box-shadow: 0 0 10px 3px var(--color-accent-glow); }
+  50%       { box-shadow: 0 0 10px 4px var(--color-accent-glow); }
+}
+
+/* LED pulse glow — red (error) */
+@keyframes ledPulseError {
+  0%, 100% { box-shadow: 0 0 4px 1px var(--color-danger-glow); }
+  50%       { box-shadow: 0 0 12px 4px var(--color-danger-glow); }
+}
+
+/* Amber pulse for Help Now button */
+@keyframes amberPulse {
+  0%, 100% { box-shadow: 0 0 8px 2px var(--color-amber-glow); }
+  50%       { box-shadow: 0 0 20px 6px var(--color-amber-glow); }
+}
+
+/* Scanline overlay for HUD effect */
+@keyframes scanline {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100%; }
 }
 
 /* Shimmer for loading state */
@@ -91,7 +141,7 @@ h1, h2, h3, h4, h5, h6 {
   to   { background-position: 400px 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-border) 50%, var(--color-surface-2) 75%);
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-3) 50%, var(--color-surface) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }

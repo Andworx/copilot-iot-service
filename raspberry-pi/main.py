@@ -225,14 +225,13 @@ class SimpleMonitor:
         if not self.iot_hub_client:
             return
 
-        now = time.time()
         state_changed = (
             self.previous_switch_states is None
             or switch_states != self.previous_switch_states
         )
-        heartbeat_due = (now - self.last_heartbeat_time) >= HEARTBEAT_INTERVAL_SECS
 
-        if not (state_changed or heartbeat_due):
+        # Only publish telemetry when the physical switch state changes.
+        if not state_changed:
             return
 
         try:
@@ -252,7 +251,7 @@ class SimpleMonitor:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "deviceId": self.iot_hub_device_id,
                 "source": "iot-hub",
-                "message_type": "change" if state_changed else "heartbeat",
+                "message_type": "change",
                 "timestamps": {
                     "pi_generated": datetime.now(timezone.utc).isoformat()
                 },
@@ -260,13 +259,9 @@ class SimpleMonitor:
 
             self.iot_hub_client.send_message(payload)
 
-            if state_changed:
-                logger.info("State change → telemetry sent (rule: %s)", rule_id)
-            else:
-                logger.debug("Heartbeat sent (rule: %s)", rule_id)
+            logger.info("State change → telemetry sent (rule: %s)", rule_id)
 
             self.previous_switch_states = switch_states.copy()
-            self.last_heartbeat_time = now
 
         except Exception as e:
             logger.error("Failed to send telemetry: %s", e)

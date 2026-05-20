@@ -20,6 +20,7 @@ Config files (`config-dev.json`, `config-test.json`, `config-prod.json`) are git
 | Script | Purpose |
 |--------|---------|
 | `New-AzureIotInfrastructure.ps1` | Provision resource group, IoT Hub, DPS, and group enrollment |
+| `New-AzureMiddleware.ps1` | Provision Event Hub routing, SignalR, Function App, and Logic App middleware |
 | `New-PiBootConfig.ps1` | Write zero-touch credentials to Raspberry Pi SD card boot partition |
 
 ### New-AzureIotInfrastructure.ps1
@@ -81,6 +82,26 @@ $key = az iot dps enrollment-group show `
 4. Writes connection string to `/opt/iot-monitor/.env`
 5. Installs and enables `iot-monitor` service
 6. Shreds credentials from SD card, reboots
+
+### New-AzureMiddleware.ps1
+
+Idempotent — safe to re-run. Provisions and redeploys the Azure middleware stack in `rg-aw-azcom-iot-copilot`.
+
+```powershell
+.\New-AzureMiddleware.ps1 -Environment dev
+.\New-AzureMiddleware.ps1 -Environment dev -DryRun
+.\New-AzureMiddleware.ps1 -Environment dev -SkipFunctionDeploy
+.\New-AzureMiddleware.ps1 -Environment dev -RefreshLogicAppResources
+```
+
+**Source-controlled assets used by the script:**
+- Function App code: `azure infrastructure/azure-functions/iot-signalr-func/`
+- Logic App workflow: `azure infrastructure/azure-logic apps/la-aw-iot-copilot/workflow.json`
+
+**When to use `-RefreshLogicAppResources`:**
+- The portal designer shows the Event Hubs trigger as broken or disconnected
+- You need to rebuild the managed Event Hubs connection instead of updating it in place
+- You want to rule out stale portal metadata on an existing Logic App resource
 
 ---
 

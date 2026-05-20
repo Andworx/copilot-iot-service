@@ -1,0 +1,4 @@
+description: Determines if faceted search is used for this portal.
+id: 4fc9ada7-94f3-4a6d-a811-3a0d4524b2ed
+name: Search/FacetedView
+value: True

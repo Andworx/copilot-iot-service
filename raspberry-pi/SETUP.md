@@ -374,7 +374,7 @@ az iot hub monitor-events \
   --device-id raspberry-pi-iotpanel
 ```
 
-You should see telemetry within 30 seconds (heartbeat), or immediately when you press a switch.
+You should see telemetry only when you press a switch (no periodic heartbeat messages).
 
 ---
 

@@ -37,26 +37,39 @@
       "inputs": "@json(base64ToString(triggerBody()?['ContentData']))",
       "runAfter": {}
     },
-    "Post_telemetry_to_Function": {
-      "type": "Http",
-      "type": "Http",
-      "inputs": {
-        "method": "POST",
-        "uri": "__TELEMETRY_URL__",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": "@outputs('Compose_-_pi_messages')"
+    "Condition_-_only_switch_change": {
+      "type": "If",
+      "expression": {
+        "equals": [
+          "@outputs('Compose_-_pi_messages')?['message_type']",
+          "change"
+        ]
+      },
+      "actions": {
+        "Post_telemetry_to_Function": {
+          "type": "Http",
+          "inputs": {
+            "method": "POST",
+            "uri": "__TELEMETRY_URL__",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body": "@outputs('Compose_-_pi_messages')"
+          },
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          }
+        }
+      },
+      "else": {
+        "actions": {}
       },
       "runAfter": {
         "Compose_-_pi_messages": [
           "Succeeded"
         ]
-      },
-      "runtimeConfiguration": {
-        "contentTransfer": {
-          "transferMode": "Chunked"
-        }
       }
     }
   },

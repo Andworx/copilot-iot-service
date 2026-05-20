@@ -23,21 +23,34 @@ interface TelemetrySnapshot {
   lastUpdated: Date | null;
 }
 
-/* ── Stub data (replace with SignalR + Dataverse WebAPI) ─── */
+/*
+ * Stub data — single RPi panel wired per raspberry-pi/docs/wiring/README.md
+ * Replace with SignalR + Dataverse WebAPI (Issue #12)
+ *
+ * Switches (BCM, pull-up, LOW when pressed):
+ *   SW1  GPIO  5  Physical 29
+ *   SW2  GPIO  6  Physical 31
+ *   SW3  GPIO 13  Physical 33
+ *   SW4  GPIO 19  Physical 35
+ *
+ * LEDs (active HIGH, 330 Ω series):
+ *   LED0  GPIO 18  Physical 12  blue    -> Power
+ *   LED1  GPIO 24  Physical 18  orange  -> Status
+ *   LED2  GPIO 25  Physical 22  green   -> Network
+ *   LED3  GPIO 12  Physical 32  yellow  -> Warning
+ */
 const MOCK_SWITCHES: SwitchState[] = [
-  { id: 'sw-1', label: 'Relay 1', deviceId: 'RPi-Node-01', on: true },
-  { id: 'sw-2', label: 'Relay 2', deviceId: 'RPi-Node-01', on: false },
-  { id: 'sw-3', label: 'Fan Circuit', deviceId: 'RPi-Node-02', on: true },
-  { id: 'sw-4', label: 'Pump', deviceId: 'RPi-Node-02', on: false },
+  { id: 'sw-1', label: 'SW1 — Main',     deviceId: 'raspberry-pi-iotpanel', on: true  },
+  { id: 'sw-2', label: 'SW2 — Aux',      deviceId: 'raspberry-pi-iotpanel', on: false },
+  { id: 'sw-3', label: 'SW3 — Run',      deviceId: 'raspberry-pi-iotpanel', on: true  },
+  { id: 'sw-4', label: 'SW4 — Override', deviceId: 'raspberry-pi-iotpanel', on: false },
 ];
 
 const MOCK_LEDS: LedState[] = [
-  { id: 'led-1', label: 'Power', deviceId: 'RPi-Node-01', on: true },
-  { id: 'led-2', label: 'Status', deviceId: 'RPi-Node-01', on: true },
-  { id: 'led-3', label: 'Error', deviceId: 'RPi-Node-01', on: false },
-  { id: 'led-4', label: 'Power', deviceId: 'RPi-Node-02', on: true },
-  { id: 'led-5', label: 'Status', deviceId: 'RPi-Node-02', on: false },
-  { id: 'led-6', label: 'Error', deviceId: 'RPi-Node-02', on: false },
+  { id: 'led-0', label: 'Power',   deviceId: 'raspberry-pi-iotpanel', on: true  },
+  { id: 'led-1', label: 'Status',  deviceId: 'raspberry-pi-iotpanel', on: true  },
+  { id: 'led-2', label: 'Network', deviceId: 'raspberry-pi-iotpanel', on: true  },
+  { id: 'led-3', label: 'Warning', deviceId: 'raspberry-pi-iotpanel', on: false },
 ];
 
 /* ── Component ─────────────────────────────── */
@@ -71,7 +84,7 @@ export default function Dashboard() {
         <div>
           <h1 style={{ fontSize: '22px', marginBottom: '4px' }}>Live Dashboard</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
-            Real-time switch and LED state from connected IoT nodes
+            raspberry-pi-iotpanel · GPIO switches to LED logic (logic_map.json)
           </p>
         </div>
         {snapshot.lastUpdated && (
@@ -87,9 +100,9 @@ export default function Dashboard() {
         aria-label="Telemetry summary"
       >
         {[
-          { label: 'Switches Active', value: loading ? '—' : `${onCount} / ${snapshot.switches.length}`, accent: onCount > 0 },
-          { label: 'LEDs On', value: loading ? '—' : `${ledOnCount} / ${snapshot.leds.length}`, accent: ledOnCount > 0 },
-          { label: 'Nodes Online', value: loading ? '—' : '2', accent: true },
+          { label: 'Switches Active', value: loading ? '-' : `${onCount} / ${snapshot.switches.length}`, accent: onCount > 0 },
+          { label: 'LEDs On',         value: loading ? '-' : `${ledOnCount} / ${snapshot.leds.length}`,   accent: ledOnCount > 0 },
+          { label: 'Device Online',   value: loading ? '-' : '1',                                          accent: true },
         ].map(({ label, value, accent }) => (
           <div
             key={label}
@@ -116,7 +129,7 @@ export default function Dashboard() {
         {/* Switches */}
         <section aria-labelledby="switches-heading">
           <h2 id="switches-heading" style={{ fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)' }}>
-            Switches
+            Switches / GPIO 5 6 13 19
           </h2>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -138,16 +151,16 @@ export default function Dashboard() {
         {/* LEDs */}
         <section aria-labelledby="leds-heading">
           <h2 id="leds-heading" style={{ fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)' }}>
-            LED Indicators
+            LEDs / GPIO 18 24 25 12
           </h2>
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-3)' }}>
-              {[1,2,3,4,5,6].map(i => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)' }}>
+              {[1,2,3,4].map(i => (
                 <div key={i} className="shimmer" style={{ height: '96px', borderRadius: 'var(--radius-md)' }} />
               ))}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-3)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)' }}>
               {snapshot.leds.map(led => (
                 <div key={led.id} className="animate-in">
                   <LedIndicator label={led.label} on={led.on} deviceId={led.deviceId} />
@@ -160,9 +173,8 @@ export default function Dashboard() {
 
       {/* SignalR stub notice */}
       <p style={{ marginTop: 'var(--sp-7)', fontFamily: 'var(--font-heading)', fontSize: '11px', color: 'var(--color-border-strong)', textAlign: 'center' }}>
-        Live updates via SignalR — Issue #12 · Dataverse: andy_iottelemetryevent
+        Live updates via SignalR - Issue #12 · Dataverse: andy_iottelemetryevent
       </p>
     </div>
   );
 }
-

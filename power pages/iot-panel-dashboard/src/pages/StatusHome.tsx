@@ -6,7 +6,8 @@ interface LedState {
   id: string;
   label: string;
   deviceId: string;
-  /** 'ok' | 'error' | 'warning' | 'off' */
+  gpio: number;
+  color: string;
   state: 'ok' | 'error' | 'warning' | 'off';
 }
 
@@ -18,38 +19,35 @@ interface ErrorMessage {
   severity: 'error' | 'warning';
 }
 
-/* ── Stub data (replace with SignalR + Dataverse WebAPI — Issue #12) ── */
+/*
+ * Stub data - single RPi panel wired per raspberry-pi/docs/wiring/README.md
+ * Replace with SignalR + Dataverse WebAPI (Issue #12)
+ *
+ * LED0  GPIO 18  Physical 12  blue    -> Power
+ * LED1  GPIO 24  Physical 18  orange  -> Status
+ * LED2  GPIO 25  Physical 22  green   -> Network
+ * LED3  GPIO 12  Physical 32  yellow  -> Warning
+ */
 const MOCK_LEDS: LedState[] = [
-  { id: 'led-01-pwr',  label: 'Power',   deviceId: 'RPi-Node-01', state: 'ok'      },
-  { id: 'led-01-sts',  label: 'Status',  deviceId: 'RPi-Node-01', state: 'ok'      },
-  { id: 'led-01-err',  label: 'Error',   deviceId: 'RPi-Node-01', state: 'off'     },
-  { id: 'led-01-net',  label: 'Network', deviceId: 'RPi-Node-01', state: 'warning' },
-  { id: 'led-02-pwr',  label: 'Power',   deviceId: 'RPi-Node-02', state: 'ok'      },
-  { id: 'led-02-sts',  label: 'Status',  deviceId: 'RPi-Node-02', state: 'error'   },
-  { id: 'led-02-err',  label: 'Error',   deviceId: 'RPi-Node-02', state: 'error'   },
-  { id: 'led-02-net',  label: 'Network', deviceId: 'RPi-Node-02', state: 'ok'      },
+  { id: 'led-0', label: 'Power',   gpio: 18, color: '#3B82F6', deviceId: 'raspberry-pi-iotpanel', state: 'ok'      },
+  { id: 'led-1', label: 'Status',  gpio: 24, color: '#F59E0B', deviceId: 'raspberry-pi-iotpanel', state: 'warning' },
+  { id: 'led-2', label: 'Network', gpio: 25, color: '#22C55E', deviceId: 'raspberry-pi-iotpanel', state: 'ok'      },
+  { id: 'led-3', label: 'Warning', gpio: 12, color: '#EAB308', deviceId: 'raspberry-pi-iotpanel', state: 'error'   },
 ];
 
 const MOCK_ERRORS: ErrorMessage[] = [
   {
     id: 'err-1',
-    deviceId: 'RPi-Node-02',
-    message: 'Sensor read timeout — temperature probe unresponsive',
+    deviceId: 'raspberry-pi-iotpanel',
+    message: 'GPIO 12 - Warning LED driver fault (LED3 stuck HIGH)',
     timestamp: new Date(Date.now() - 3 * 60 * 1000),
     severity: 'error',
   },
   {
     id: 'err-2',
-    deviceId: 'RPi-Node-02',
-    message: 'Status LED driver fault detected',
-    timestamp: new Date(Date.now() - 7 * 60 * 1000),
-    severity: 'error',
-  },
-  {
-    id: 'err-3',
-    deviceId: 'RPi-Node-01',
-    message: 'Network packet loss > 5% — connectivity degraded',
-    timestamp: new Date(Date.now() - 14 * 60 * 1000),
+    deviceId: 'raspberry-pi-iotpanel',
+    message: 'GPIO 24 - Status LED reporting degraded state (LED1)',
+    timestamp: new Date(Date.now() - 11 * 60 * 1000),
     severity: 'warning',
   },
 ];
@@ -70,10 +68,11 @@ function formatAgo(date: Date): string {
   return `${Math.floor(m / 60)}h ago`;
 }
 
-/* ── Sub-components ─────────────────────────── */
+/* ── LED status card ────────────────────────── */
 function LedStatusCard({ led }: { led: LedState }) {
   const meta = STATE_META[led.state];
   const isActive = led.state !== 'off';
+  const dotColor = led.state === 'off' ? 'var(--color-border-strong)' : led.color;
   return (
     <div
       className="animate-in"
@@ -88,7 +87,6 @@ function LedStatusCard({ led }: { led: LedState }) {
         boxShadow: isActive && meta.glow ? meta.glow : 'var(--shadow-card)',
       }}
     >
-      {/* LED dot */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div
           aria-hidden="true"
@@ -96,7 +94,7 @@ function LedStatusCard({ led }: { led: LedState }) {
             width: '10px',
             height: '10px',
             borderRadius: '50%',
-            background: meta.color,
+            background: dotColor,
             flexShrink: 0,
             animation: led.state === 'ok' ? 'ledPulse 2.5s ease-in-out infinite'
               : led.state === 'error' ? 'ledPulseError 1.2s ease-in-out infinite'
@@ -114,29 +112,29 @@ function LedStatusCard({ led }: { led: LedState }) {
         </span>
       </div>
 
-      {/* Label */}
       <div style={{
         fontFamily: 'var(--font-heading)',
-        fontSize: '12px',
+        fontSize: '13px',
+        fontWeight: 600,
         color: 'var(--color-text-bright)',
         letterSpacing: '0.04em',
       }}>
         {led.label}
       </div>
 
-      {/* Device ID */}
       <div style={{
         fontSize: '10px',
         color: 'var(--color-text-muted)',
-        letterSpacing: '0.04em',
+        letterSpacing: '0.06em',
+        fontFamily: 'var(--font-heading)',
       }}>
-        {led.deviceId}
+        GPIO {led.gpio}
       </div>
     </div>
   );
 }
 
-/* ── Main Component ─────────────────────────── */
+/* ── Page ───────────────────────────────────── */
 export default function StatusHome() {
   const [leds, setLeds] = useState<LedState[]>([]);
   const [errors, setErrors] = useState<ErrorMessage[]>([]);
@@ -154,13 +152,9 @@ export default function StatusHome() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Derive issue state for AgentButton
   const hasIssues = errors.length > 0 || leds.some(l => l.state === 'error');
-
-  // Group LEDs by device
   const devices = [...new Set(leds.map(l => l.deviceId))];
 
-  // Overall system status
   const hasErrors   = leds.some(l => l.state === 'error');
   const hasWarnings = leds.some(l => l.state === 'warning');
   const systemStatus = hasErrors ? 'error' : hasWarnings ? 'warning' : 'ok';
@@ -185,11 +179,10 @@ export default function StatusHome() {
         <div>
           <h1 style={{ fontSize: '18px', marginBottom: '4px' }}>System Status</h1>
           <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-            IoT node LED indicators and active fault log
+            raspberry-pi-iotpanel · 4 LED indicators · 4 GPIO switches
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
-          {/* Overall status badge */}
           {!loading && (
             <div style={{
               display: 'flex',
@@ -234,23 +227,18 @@ export default function StatusHome() {
         </div>
       </div>
 
-      {/* LED Status Board — grouped by device */}
+      {/* LED Status Board */}
       <section aria-labelledby="led-board-heading" style={{ marginBottom: 'var(--sp-6)' }}>
         <h2
           id="led-board-heading"
-          style={{
-            fontSize: '11px',
-            letterSpacing: '0.12em',
-            color: 'var(--color-text-muted)',
-            marginBottom: 'var(--sp-4)',
-          }}
+          style={{ fontSize: '11px', letterSpacing: '0.12em', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)' }}
         >
           LED Status Board
         </h2>
 
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 'var(--sp-3)' }}>
-            {Array.from({ length: 8 }).map((_, i) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)' }}>
+            {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="shimmer" style={{ height: '80px', borderRadius: 'var(--radius-md)' }} />
             ))}
           </div>
@@ -258,7 +246,6 @@ export default function StatusHome() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {devices.map(deviceId => (
               <div key={deviceId}>
-                {/* Device node label */}
                 <div style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: '10px',
@@ -272,16 +259,17 @@ export default function StatusHome() {
                 }}>
                   <span style={{
                     display: 'inline-block',
-                    width: '4px', height: '4px',
+                    width: '6px', height: '6px',
                     borderRadius: '50%',
-                    background: 'var(--color-text-muted)',
+                    background: 'var(--color-success)',
+                    animation: 'ledPulse 3s ease-in-out infinite',
                   }} />
                   {deviceId}
                 </div>
 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: 'var(--sp-3)',
                 }}>
                   {leds.filter(l => l.deviceId === deviceId).map(led => (
@@ -294,16 +282,11 @@ export default function StatusHome() {
         )}
       </section>
 
-      {/* Error / Warning Log */}
+      {/* Active Fault Log */}
       <section aria-labelledby="error-log-heading">
         <h2
           id="error-log-heading"
-          style={{
-            fontSize: '11px',
-            letterSpacing: '0.12em',
-            color: 'var(--color-text-muted)',
-            marginBottom: 'var(--sp-4)',
-          }}
+          style={{ fontSize: '11px', letterSpacing: '0.12em', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)' }}
         >
           Active Fault Log
         </h2>
@@ -340,7 +323,7 @@ export default function StatusHome() {
               color: 'var(--color-success)',
               letterSpacing: '0.06em',
             }}>
-              No active faults — all systems nominal
+              No active faults - all systems nominal
             </span>
           </div>
         ) : (
@@ -361,7 +344,6 @@ export default function StatusHome() {
                   boxShadow: err.severity === 'error' ? 'var(--shadow-glow-danger)' : 'var(--shadow-glow-amber)',
                 }}
               >
-                {/* Severity dot */}
                 <div style={{
                   width: '8px', height: '8px', borderRadius: '50%', marginTop: '3px',
                   background: err.severity === 'error' ? 'var(--color-danger)' : 'var(--color-warning)',
@@ -369,7 +351,6 @@ export default function StatusHome() {
                   flexShrink: 0,
                 }} />
 
-                {/* Message */}
                 <div>
                   <div style={{
                     fontFamily: 'var(--font-heading)',
@@ -385,7 +366,6 @@ export default function StatusHome() {
                   </div>
                 </div>
 
-                {/* Timestamp */}
                 <div style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: '10px',
@@ -402,7 +382,6 @@ export default function StatusHome() {
         )}
       </section>
 
-      {/* Stub notice */}
       <p style={{
         marginTop: 'var(--sp-7)',
         fontFamily: 'var(--font-heading)',
@@ -411,10 +390,9 @@ export default function StatusHome() {
         textAlign: 'center',
         letterSpacing: '0.04em',
       }}>
-        Live data via SignalR — Issue #12 · Dataverse: andy_iottelemetryevent
+        Live data via SignalR - Issue #12 · Dataverse: andy_iottelemetryevent
       </p>
 
-      {/* Conditional agent button — renders only when issues exist */}
       <AgentButton hasIssues={hasIssues} />
     </div>
   );

@@ -41,7 +41,6 @@ logger = logging.getLogger("IoTMonitor")
 ENV_PATH = "/opt/iot-monitor/.env"
 CONFIG_CHECK_CYCLES = 10   # check for config changes every N poll cycles
 POLL_INTERVAL_SECS = 2     # seconds between GPIO polls
-HEARTBEAT_INTERVAL_SECS = 30
 
 
 class SimpleMonitor:
@@ -56,7 +55,6 @@ class SimpleMonitor:
         self.config_file = os.path.join(os.path.dirname(__file__), "logic_map.json")
         self.last_config_mtime = 0
         self.previous_switch_states = None
-        self.last_heartbeat_time = 0
         self._twin_updated = threading.Event()  # set by Device Twin patch callback
 
         if os.path.exists(ENV_PATH):
@@ -225,13 +223,21 @@ class SimpleMonitor:
         if not self.iot_hub_client:
             return
 
-        state_changed = (
-            self.previous_switch_states is None
-            or switch_states != self.previous_switch_states
+        # Prime baseline state on startup without sending any telemetry.
+        if self.previous_switch_states is None:
+            self.previous_switch_states = switch_states.copy()
+            return
+
+        # Emit only when any switch transitions from not-pressed to pressed.
+        switch_pressed = any(
+            (not previous) and current
+            for previous, current in zip(self.previous_switch_states, switch_states)
         )
 
-        # Only publish telemetry when the physical switch state changes.
-        if not state_changed:
+        # Always roll baseline forward so release events do not emit,
+        # but future press events are still detected correctly.
+        self.previous_switch_states = switch_states.copy()
+        if not switch_pressed:
             return
 
         try:
@@ -259,9 +265,7 @@ class SimpleMonitor:
 
             self.iot_hub_client.send_message(payload)
 
-            logger.info("State change → telemetry sent (rule: %s)", rule_id)
-
-            self.previous_switch_states = switch_states.copy()
+            logger.info("Switch press → telemetry sent (rule: %s)", rule_id)
 
         except Exception as e:
             logger.error("Failed to send telemetry: %s", e)

@@ -111,16 +111,34 @@ hr {
 .animate-in:nth-child(5) { animation-delay: 0.15s; }
 .animate-in:nth-child(6) { animation-delay: 0.18s; }
 
-/* LED pulse glow — green (OK) */
+/* LED pulse glow — green (OK / Network) */
 @keyframes ledPulse {
-  0%, 100% { box-shadow: 0 0 4px 1px var(--color-accent-glow); }
-  50%       { box-shadow: 0 0 10px 4px var(--color-accent-glow); }
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(34, 197, 94, 0.20); }
+  50%       { box-shadow: 0 0 10px 4px rgba(34, 197, 94, 0.40); }
 }
 
 /* LED pulse glow — red (error) */
 @keyframes ledPulseError {
   0%, 100% { box-shadow: 0 0 4px 1px var(--color-danger-glow); }
   50%       { box-shadow: 0 0 12px 4px var(--color-danger-glow); }
+}
+
+/* LED pulse glow — blue (Power) */
+@keyframes ledPulseBlue {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(59, 130, 246, 0.20); }
+  50%       { box-shadow: 0 0 10px 4px rgba(59, 130, 246, 0.40); }
+}
+
+/* LED pulse glow — orange/amber (Status) */
+@keyframes ledPulseOrange {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(245, 158, 11, 0.20); }
+  50%       { box-shadow: 0 0 10px 4px rgba(245, 158, 11, 0.40); }
+}
+
+/* LED pulse glow — yellow (Warning/Error LED) */
+@keyframes ledPulseYellow {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(234, 179, 8, 0.20); }
+  50%       { box-shadow: 0 0 10px 4px rgba(234, 179, 8, 0.40); }
 }
 
 /* Amber pulse for Help Now button */

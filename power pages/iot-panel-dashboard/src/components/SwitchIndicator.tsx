@@ -3,10 +3,12 @@ import React from 'react';
 interface SwitchIndicatorProps {
   label: string;
   on: boolean;
+  /** BCM GPIO pin number */
+  gpio?: number;
   deviceId?: string;
 }
 
-export const SwitchIndicator: React.FC<SwitchIndicatorProps> = ({ label, on, deviceId }) => (
+export const SwitchIndicator: React.FC<SwitchIndicatorProps> = ({ label, on, gpio, deviceId }) => (
   <div
     role="status"
     aria-label={`${label}: ${on ? 'on' : 'off'}`}
@@ -16,30 +18,41 @@ export const SwitchIndicator: React.FC<SwitchIndicatorProps> = ({ label, on, dev
       justifyContent: 'space-between',
       padding: '12px 16px',
       background: 'var(--color-surface)',
-      border: `1px solid ${on ? 'var(--color-accent)' : 'var(--color-border)'}`,
+      border: `1px solid ${on ? 'var(--color-primary)' : 'var(--color-border-strong)'}`,
       borderRadius: 'var(--radius-md)',
-      boxShadow: on ? '0 0 0 1px var(--color-accent)' : 'none',
+      boxShadow: on ? 'var(--shadow-glow-amber)' : 'var(--shadow-card)',
       transition: 'border-color 0.2s, box-shadow 0.2s',
       gap: '12px',
     }}
   >
     <div>
-      <div style={{ fontFamily: 'var(--font-heading)', fontSize: '13px', fontWeight: 500, color: 'var(--color-text)' }}>
+      <div style={{
+        fontFamily: 'var(--font-heading)',
+        fontSize: '12px',
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        color: on ? 'var(--color-primary)' : 'var(--color-text)',
+      }}>
         {label}
       </div>
-      {deviceId && (
-        <div style={{ fontFamily: 'var(--font-heading)', fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-          {deviceId}
-        </div>
-      )}
+      <div style={{
+        fontFamily: 'var(--font-heading)',
+        fontSize: '10px',
+        color: 'var(--color-text-muted)',
+        marginTop: '2px',
+        letterSpacing: '0.04em',
+      }}>
+        {gpio !== undefined ? `GPIO ${gpio}` : ''}{deviceId ? ` · ${deviceId}` : ''}
+      </div>
     </div>
     {/* Toggle track (read-only) */}
     <div
       aria-hidden="true"
       style={{
-        width: '40px', height: '22px',
-        borderRadius: '11px',
-        background: on ? 'var(--color-accent)' : 'var(--color-border-strong)',
+        width: '36px', height: '20px',
+        borderRadius: '2px',
+        background: on ? 'var(--color-primary)' : 'var(--color-surface-3)',
+        border: `1px solid ${on ? 'var(--color-primary)' : 'var(--color-border-strong)'}`,
         position: 'relative',
         flexShrink: 0,
         transition: 'background 0.2s',
@@ -47,12 +60,11 @@ export const SwitchIndicator: React.FC<SwitchIndicatorProps> = ({ label, on, dev
     >
       <div style={{
         position: 'absolute',
-        top: '3px', left: on ? '21px' : '3px',
-        width: '16px', height: '16px',
-        borderRadius: '50%',
-        background: '#fff',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-        transition: 'left 0.2s',
+        top: '2px', left: on ? '18px' : '2px',
+        width: '14px', height: '14px',
+        borderRadius: '1px',
+        background: on ? '#0A0F0A' : 'var(--color-text-muted)',
+        transition: 'left 0.15s',
       }} />
     </div>
   </div>

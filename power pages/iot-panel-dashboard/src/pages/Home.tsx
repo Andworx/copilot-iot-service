@@ -1,85 +1,176 @@
 import { useState, useEffect } from 'react';
-import { SwitchIndicator } from '../components/SwitchIndicator';
-import { LedIndicator } from '../components/LedIndicator';
 
-/* ── Types ─────────────────────────────────── */
-interface SwitchState {
-  id: string;
-  label: string;
-  gpio: number;
-  physicalPin: number;
-  on: boolean;
-}
-
-interface LedState {
-  id: string;
-  label: string;
-  gpio: number;
-  physicalPin: number;
-  ledColor: 'blue' | 'orange' | 'green' | 'yellow';
-  on: boolean;
-}
-
-interface TelemetrySnapshot {
-  switches: SwitchState[];
-  leds: LedState[];
+/* ── Types ─────────────────────────────────────────────────── */
+interface PiHealth {
+  connected: boolean;
+  uptime: string;
+  cpuTempC: number;
+  cpuLoadPct: number;
+  memUsedPct: number;
   activeRule: string | null;
-  lastUpdated: Date | null;
+  switchesActive: number;
+  ledsOn: number;
 }
 
-/*
- * Hardware layout (raspberry-pi/panel_controller.py)
- * Switches: GPIO 5, 6, 13, 19  — BCM, pull-up, LOW when pressed
- * LEDs:     GPIO 18, 24, 25, 12 — BCM, active HIGH via 330Ω resistor
- * Device:   raspberry-pi-iotpanel
- */
+interface PageHealth {
+  status: 'online' | 'degraded' | 'offline';
+  responseMs: number;
+  environment: string;
+  lastDeployed: Date;
+}
 
 /* ── Stub data (replace with SignalR + Dataverse WebAPI — Issue #12) ── */
-const MOCK_SWITCHES: SwitchState[] = [
-  { id: 'sw-1', label: 'SW1', gpio: 5,  physicalPin: 29, on: true  },
-  { id: 'sw-2', label: 'SW2', gpio: 6,  physicalPin: 31, on: false },
-  { id: 'sw-3', label: 'SW3', gpio: 13, physicalPin: 33, on: true  },
-  { id: 'sw-4', label: 'SW4', gpio: 19, physicalPin: 35, on: false },
-];
+const MOCK_PI: PiHealth = {
+  connected: true,
+  uptime: '3d 14h 22m',
+  cpuTempC: 54.2,
+  cpuLoadPct: 18,
+  memUsedPct: 41,
+  activeRule: 'all_lights_on',
+  switchesActive: 2,
+  ledsOn: 4,
+};
 
-// SW1 + SW3 active → rule: all_lights_on → all 4 LEDs on
-const MOCK_LEDS: LedState[] = [
-  { id: 'led-0', label: 'Power',   gpio: 18, physicalPin: 12, ledColor: 'blue',   on: true  },
-  { id: 'led-1', label: 'Status',  gpio: 24, physicalPin: 18, ledColor: 'orange', on: true  },
-  { id: 'led-2', label: 'Network', gpio: 25, physicalPin: 22, ledColor: 'green',  on: true  },
-  { id: 'led-3', label: 'Error',   gpio: 12, physicalPin: 32, ledColor: 'yellow', on: true  },
-];
+const MOCK_PAGE: PageHealth = {
+  status: 'online',
+  responseMs: 182,
+  environment: 'IoT-Agents',
+  lastDeployed: new Date(Date.now() - 1000 * 60 * 60 * 2),
+};
 
-/* ── Component ─────────────────────────────── */
+/* ── Helpers ────────────────────────────────────────────────── */
+function formatAgo(d: Date): string {
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      style={{
+        fontSize: '10px',
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: 'var(--color-text-muted)',
+        marginBottom: 'var(--sp-3)',
+        fontFamily: 'var(--font-heading)',
+        fontWeight: 600,
+      }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+interface HealthBarProps {
+  label: string;
+  value: number;
+  max: number;
+  unit: string;
+  warnAt: number;
+  critAt: number;
+}
+
+function HealthBar({ label, value, max, unit, warnAt, critAt }: HealthBarProps) {
+  const pct = Math.min((value / max) * 100, 100);
+  const color =
+    value >= critAt ? 'var(--color-danger)' :
+    value >= warnAt ? 'var(--color-warning)' :
+    'var(--color-accent)';
+
+  return (
+    <div style={{ marginBottom: 'var(--sp-4)' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        marginBottom: '4px',
+        fontFamily: 'var(--font-heading)',
+        fontSize: '11px',
+      }}>
+        <span style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+        <span style={{ color }}>{value}{unit}</span>
+      </div>
+      <div style={{
+        height: '4px',
+        background: 'var(--color-border-strong)',
+        borderRadius: '2px',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${pct}%`,
+          height: '100%',
+          background: color,
+          borderRadius: '2px',
+          transition: 'width 0.4s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  active?: boolean;
+}
+
+function StatCard({ label, value, active = true }: StatCardProps) {
+  return (
+    <div
+      className="animate-in"
+      style={{
+        background: 'var(--color-surface)',
+        border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border-strong)'}`,
+        borderRadius: 'var(--radius-md)',
+        padding: 'var(--sp-4) var(--sp-5)',
+        boxShadow: active ? 'var(--shadow-glow-accent)' : 'var(--shadow-card)',
+      }}
+    >
+      <div style={{
+        fontFamily: 'var(--font-heading)',
+        fontSize: '22px',
+        fontWeight: 700,
+        color: active ? 'var(--color-accent)' : 'var(--color-text)',
+        letterSpacing: '0.02em',
+      }}>
+        {value}
+      </div>
+      <div style={{
+        fontSize: '11px',
+        color: 'var(--color-text-muted)',
+        marginTop: '4px',
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+        fontFamily: 'var(--font-heading)',
+      }}>
+        {label}
+      </div>
+    </div>
+  );
+}
+
+/* ── Component ──────────────────────────────────────────────── */
 export default function Dashboard() {
-  const [snapshot, setSnapshot] = useState<TelemetrySnapshot>({
-    switches: [],
-    leds: [],
-    activeRule: null,
-    lastUpdated: null,
-  });
+  const [pi, setPi] = useState<PiHealth | null>(null);
+  const [page, setPage] = useState<PageHealth | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Stub: replace with real SignalR + Dataverse WebAPI call (Issue #12)
+  // Stub: replace with SignalR + Dataverse WebAPI (Issue #12)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSnapshot({
-        switches: MOCK_SWITCHES,
-        leds: MOCK_LEDS,
-        activeRule: 'all_lights_on',
-        lastUpdated: new Date(),
-      });
+    const t = setTimeout(() => {
+      setPi(MOCK_PI);
+      setPage(MOCK_PAGE);
       setLoading(false);
     }, 600);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
   }, []);
-
-  const swOnCount  = snapshot.switches.filter(s => s.on).length;
-  const ledOnCount = snapshot.leds.filter(l => l.on).length;
 
   return (
     <div>
-      {/* Header */}
+      {/* Page header */}
       <div
         className="animate-in"
         style={{
@@ -94,150 +185,112 @@ export default function Dashboard() {
         }}
       >
         <div>
-          <h1 style={{ fontSize: '18px', marginBottom: '4px' }}>Live Dashboard</h1>
+          <h1 style={{ fontSize: '18px', marginBottom: '4px' }}>System Health</h1>
           <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-            GPIO switch states and LED outputs — raspberry-pi-iotpanel
+            Device and portal health — raspberry-pi-iotpanel
           </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
-          {snapshot.activeRule && (
-            <span style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '10px',
-              color: 'var(--color-primary)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              border: '1px solid var(--color-primary)',
-              padding: '3px 8px',
-              borderRadius: 'var(--radius-sm)',
-            }}>
-              rule: {snapshot.activeRule}
-            </span>
-          )}
-          {snapshot.lastUpdated && (
-            <span style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '10px',
-              color: 'var(--color-text-muted)',
-              letterSpacing: '0.04em',
-            }}>
-              {snapshot.lastUpdated.toLocaleTimeString()}
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary stat cards */}
       <div
         style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--sp-3)', marginBottom: 'var(--sp-6)' }}
-        aria-label="Telemetry summary"
+        aria-label="Health summary"
       >
-        {[
-          { label: 'Switches Active', value: loading ? '—' : `${swOnCount} / ${snapshot.switches.length}`, active: swOnCount > 0 },
-          { label: 'LEDs On',         value: loading ? '—' : `${ledOnCount} / ${snapshot.leds.length}`,    active: ledOnCount > 0 },
-          { label: 'Device Online',   value: loading ? '—' : '1',                                           active: true },
-        ].map(({ label, value, active }) => (
+        {loading ? (
+          [1, 2, 3, 4].map(i => (
+            <div key={i} className="shimmer" style={{ height: '72px', borderRadius: 'var(--radius-md)' }} />
+          ))
+        ) : pi ? (
+          <>
+            <StatCard label="Pi Status"         value={pi.connected ? 'ONLINE' : 'OFFLINE'} active={pi.connected} />
+            <StatCard label="Uptime"             value={pi.uptime}                            active />
+            <StatCard label="Switches Active"    value={`${pi.switchesActive} / 4`}           active={pi.switchesActive > 0} />
+            <StatCard label="LEDs On"            value={`${pi.ledsOn} / 4`}                   active={pi.ledsOn > 0} />
+          </>
+        ) : null}
+      </div>
+
+      {/* Pi resource bars */}
+      <section aria-labelledby="pi-health-heading" style={{ marginBottom: 'var(--sp-6)' }}>
+        <SectionHeading>
+          <span id="pi-health-heading">Raspberry Pi — raspberry-pi-iotpanel</span>
+        </SectionHeading>
+
+        {loading ? (
+          <div className="shimmer" style={{ height: '140px', borderRadius: 'var(--radius-md)' }} />
+        ) : pi ? (
           <div
-            key={label}
             className="animate-in"
             style={{
               background: 'var(--color-surface)',
-              border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border-strong)'}`,
+              border: `1px solid ${pi.connected ? 'var(--color-success)' : 'var(--color-danger)'}`,
               borderRadius: 'var(--radius-md)',
-              padding: 'var(--sp-4) var(--sp-5)',
-              boxShadow: active ? 'var(--shadow-glow-accent)' : 'var(--shadow-card)',
+              padding: 'var(--sp-5)',
+              boxShadow: pi.connected ? 'var(--shadow-glow-accent)' : 'var(--shadow-glow-danger)',
             }}
           >
-            <div style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '22px',
-              fontWeight: 700,
-              color: active ? 'var(--color-accent)' : 'var(--color-text)',
-              letterSpacing: '0.02em',
-            }}>
-              {value}
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              {label}
-            </div>
+            {pi.activeRule && (
+              <div style={{ marginBottom: 'var(--sp-4)' }}>
+                <span style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: '10px',
+                  color: 'var(--color-primary)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  border: '1px solid var(--color-primary)',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                }}>
+                  active rule: {pi.activeRule}
+                </span>
+              </div>
+            )}
+            <HealthBar label="CPU Temperature" value={pi.cpuTempC}    max={85}  unit="°C" warnAt={70} critAt={80} />
+            <HealthBar label="CPU Load"         value={pi.cpuLoadPct}  max={100} unit="%"  warnAt={70} critAt={90} />
+            <HealthBar label="Memory Used"      value={pi.memUsedPct}  max={100} unit="%"  warnAt={75} critAt={90} />
           </div>
-        ))}
-      </div>
+        ) : null}
+      </section>
 
-      {/* Two-column grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-6)', alignItems: 'start' }}>
+      {/* Power Pages health */}
+      <section aria-labelledby="page-health-heading">
+        <SectionHeading>
+          <span id="page-health-heading">Power Pages Health</span>
+        </SectionHeading>
 
-        {/* Switches */}
-        <section aria-labelledby="switches-heading">
-          <h2 id="switches-heading" style={{
-            fontSize: '10px',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            marginBottom: 'var(--sp-3)',
-          }}>
-            Switches — Pull-up, LOW when pressed
-          </h2>
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-              {[1,2,3,4].map(i => (
-                <div key={i} className="shimmer" style={{ height: '58px', borderRadius: 'var(--radius-md)' }} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-              {snapshot.switches.map(sw => (
-                <div key={sw.id} className="animate-in">
-                  <SwitchIndicator label={sw.label} on={sw.on} gpio={sw.gpio} />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {loading ? (
+          <div className="shimmer" style={{ height: '80px', borderRadius: 'var(--radius-md)' }} />
+        ) : page ? (
+          <div
+            className="animate-in"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 'var(--sp-5)',
+              background: 'var(--color-surface)',
+              border: `1px solid ${page.status === 'online' ? 'var(--color-success)' : page.status === 'degraded' ? 'var(--color-warning)' : 'var(--color-danger)'}`,
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--sp-4) var(--sp-5)',
+              boxShadow: page.status === 'online' ? 'var(--shadow-glow-accent)' : 'var(--shadow-glow-danger)',
+            }}
+          >
+            {[
+              { k: 'Status',        v: page.status.toUpperCase(),    color: page.status === 'online' ? 'var(--color-success)' : 'var(--color-danger)' },
+              { k: 'Response Time', v: `${page.responseMs} ms`,      color: page.responseMs > 500 ? 'var(--color-warning)' : 'var(--color-text-bright)' },
+              { k: 'Environment',   v: page.environment,             color: 'var(--color-text-bright)' },
+              { k: 'Last Deployed', v: formatAgo(page.lastDeployed), color: 'var(--color-text-bright)' },
+            ].map(({ k, v, color }) => (
+              <div key={k}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)', marginBottom: '4px' }}>{k}</div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '14px', fontWeight: 600, color }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
-        {/* LEDs */}
-        <section aria-labelledby="leds-heading">
-          <h2 id="leds-heading" style={{
-            fontSize: '10px',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            marginBottom: 'var(--sp-3)',
-          }}>
-            LEDs — 330Ω, Active HIGH
-          </h2>
-          {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--sp-2)' }}>
-              {[1,2,3,4].map(i => (
-                <div key={i} className="shimmer" style={{ height: '100px', borderRadius: 'var(--radius-md)' }} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--sp-2)' }}>
-              {snapshot.leds.map(led => (
-                <div key={led.id} className="animate-in">
-                  <LedIndicator
-                    label={led.label}
-                    on={led.on}
-                    ledColor={led.ledColor}
-                    gpio={led.gpio}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-
-      {/* SignalR stub notice */}
-      <p style={{
-        marginTop: 'var(--sp-7)',
-        fontFamily: 'var(--font-heading)',
-        fontSize: '10px',
-        color: 'var(--color-border-strong)',
-        textAlign: 'center',
-        letterSpacing: '0.04em',
-      }}>
+      <p style={{ marginTop: 'var(--sp-7)', fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-border-strong)', textAlign: 'center', letterSpacing: '0.04em' }}>
         Live data via SignalR — Issue #12 · Device: raspberry-pi-iotpanel
       </p>
     </div>

@@ -36,7 +36,7 @@ Azure Function App  ──── Azure SignalR Service ──── Browser (Pow
 | **Device connectivity** | Azure IoT Hub (Standard S1) | MQTT device-to-cloud messaging |
 | **Message buffer** | Azure Event Hub | Decouples IoT Hub from the processing pipeline |
 | **Message forwarder** | Azure Logic App | Polls Event Hub every 5 s, POSTs to Function |
-| **Real-time backend** | Azure Function App (Node.js 20) | SignalR broadcaster + telemetry endpoint |
+| **Real-time backend** | Azure Function App (Node.js 24) | SignalR broadcaster + telemetry endpoint |
 | **Real-time transport** | Azure SignalR Service (Serverless) | WebSocket push to browser |
 | **Data store** | Dataverse | IoT devices, telemetry events, panel state tables |
 | **Automation** | Power Automate | Ingests telemetry from Azure into Dataverse |
@@ -50,8 +50,9 @@ Azure Function App  ──── Azure SignalR Service ──── Browser (Pow
 ```
 copilot-iot-service/
 ├── raspberry-pi/               # Pi GPIO service, IoT client, auto-deploy scripts
-├── azure-configs/              # Azure Function source + Azure service documentation
-│   └── iot-signalr-func/       # Node.js Azure Function (SignalR broadcaster)
+├── azure infrastructure/       # Azure middleware source and deployment documentation
+│   ├── azure-functions/        # Node.js Azure Function (SignalR broadcaster)
+│   └── azure-logic apps/       # Logic App workflow definitions
 ├── tables/                     # Dataverse table definitions (JSON)
 ├── flows/                      # Power Automate flow definitions
 ├── power pages/                # Power Pages portal (PAC CLI v2 format)
@@ -120,10 +121,10 @@ Provision in order:
 1. Azure IoT Hub → register device `raspberry-pi-iotpanel`
 2. Azure Event Hub → namespace + hub `andworxiotagenteventhub`
 3. Azure SignalR Service → Serverless mode
-4. Azure Function App → deploy from `azure-configs/iot-signalr-func/`
+4. Azure Function App → deploy from `azure infrastructure/azure-functions/iot-signalr-func/`
 5. Azure Logic App → Event Hub trigger → HTTP POST to Function
 
-See `azure-configs/README.md` for detailed configuration and known issues.
+See `azure infrastructure/README.md` for detailed Azure middleware configuration and source layout.
 
 ### 4 — Deploy Power Platform components
 

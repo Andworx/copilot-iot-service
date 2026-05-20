@@ -1,15 +1,17 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
-import Home from './pages/Home'
-import About from './pages/About'
+import Dashboard from './pages/Home'
+import History from './pages/History'
+import DeviceStatus from './pages/DeviceStatus'
 
 export default function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/devices" element={<DeviceStatus />} />
+      </Route>
+    </Routes>
   )
 }

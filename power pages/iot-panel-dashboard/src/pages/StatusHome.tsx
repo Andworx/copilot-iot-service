@@ -39,10 +39,10 @@ interface FaultMessage {
  * Switches: GPIO 5 (SW1), 6 (SW2), 13 (SW3), 19 (SW4) — pull-up, LOW when pressed
  */
 const MOCK_LEDS: LedState[] = [
-  { id: 'led-0', label: 'Power',   gpio: 18, physicalPin: 12, color: '#3B82F6', on: true  },
-  { id: 'led-1', label: 'Status',  gpio: 24, physicalPin: 18, color: '#F59E0B', on: true  },
-  { id: 'led-2', label: 'Network', gpio: 25, physicalPin: 22, color: '#22C55E', on: true  },
-  { id: 'led-3', label: 'Error',   gpio: 12, physicalPin: 32, color: '#EAB308', on: false },
+  { id: 'led-0', label: 'GPIO 18', gpio: 18, physicalPin: 12, color: '#3B82F6', on: true  },
+  { id: 'led-1', label: 'GPIO 24', gpio: 24, physicalPin: 18, color: '#F59E0B', on: true  },
+  { id: 'led-2', label: 'GPIO 25', gpio: 25, physicalPin: 22, color: '#22C55E', on: true  },
+  { id: 'led-3', label: 'GPIO 12', gpio: 12, physicalPin: 32, color: '#EAB308', on: false },
 ];
 
 const MOCK_SWITCHES: SwitchState[] = [
@@ -129,17 +129,17 @@ function BigLed({ led }: { led: LedState }) {
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           color: led.on ? brightColor : 'var(--color-text-muted)',
-          marginBottom: '4px',
         }}>
           {led.label}
         </div>
         <div style={{
           fontFamily: 'var(--font-heading)',
           fontSize: '10px',
-          letterSpacing: '0.06em',
+          letterSpacing: '0.04em',
           color: 'var(--color-text-muted)',
+          marginTop: '2px',
         }}>
-          GPIO {led.gpio}
+          Pin {led.physicalPin}
         </div>
       </div>
 

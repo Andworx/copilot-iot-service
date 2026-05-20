@@ -74,10 +74,9 @@ export const Navbar: React.FC<NavbarProps> = ({ connectionStatus }) => (
       {/* Nav links */}
       <ul role="list" style={{ display: 'flex', gap: 'var(--sp-5)', listStyle: 'none', alignItems: 'center' }}>
         {[
-          { to: '/',          label: 'Status'    },
-          { to: '/dashboard', label: 'Dashboard' },
-          { to: '/history',   label: 'History'   },
-          { to: '/devices',   label: 'Devices'   },
+          { to: '/',        label: 'Status'  },
+          { to: '/history', label: 'History' },
+          { to: '/devices', label: 'Devices' },
         ].map(({ to, label }) => (
           <li key={to}>
             <NavLink

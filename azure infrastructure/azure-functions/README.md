@@ -28,14 +28,18 @@ Power Pages Browser Dashboard
 ## Structure
 
 ```
-azure-functions/
-└── iot-signalr-func/
-    ├── src/
-    │   └── app.js                     # All function handlers (negotiate, telemetry, test, health)
-    ├── host.json                      # Functions runtime config (v4, extension bundle 4.x)
-    ├── package.json                   # Node.js dependencies
-    ├── local.settings.json.template   # Copy → local.settings.json for local dev
-    └── .gitignore                     # Excludes node_modules, local.settings.json
+azure infrastructure/
+├── azure-functions/
+│   └── iot-signalr-func/
+│       ├── src/
+│       │   └── app.js                     # All function handlers (negotiate, telemetry, test, health)
+│       ├── host.json                      # Functions runtime config (v4, extension bundle 4.x)
+│       ├── package.json                   # Node.js dependencies
+│       ├── local.settings.json.template   # Copy → local.settings.json for local dev
+│       └── .gitignore                     # Excludes node_modules, local.settings.json
+└── azure-logic apps/
+  └── la-aw-iot-copilot/
+    └── workflow.json                  # Source-controlled Logic App workflow definition
 ```
 
 ## Endpoints
@@ -94,7 +98,7 @@ Sent when `needs_help === true` (mismatch detected or rule ≠ `all_lights_on`).
 ### Deploy code only (after infrastructure exists)
 
 ```bash
-# From azure-functions/iot-signalr-func
+# From azure infrastructure/azure-functions/iot-signalr-func
 npm install --omit=dev
 # Zip and deploy via az CLI (no func CLI required)
 Compress-Archive -Path * -DestinationPath "$env:TEMP\func-deploy.zip" -Force
@@ -104,26 +108,23 @@ az functionapp deployment source config-zip --name func-aw-iot-copilot --resourc
 ### Local development
 
 ```bash
-cd azure-functions/iot-signalr-func
+cd "azure infrastructure/azure-functions/iot-signalr-func"
 cp local.settings.json.template local.settings.json
 # Edit local.settings.json — add AzureSignalRConnectionString
 npm install
 npm start
 ```
 
-## Logic App — Event Hub Connection
+## Logic App Source
 
-After `New-AzureMiddleware.ps1` runs, the Logic App needs a manual connection step in the portal (first time only):
+The paired Logic App workflow now lives in `../azure-logic apps/la-aw-iot-copilot/workflow.json` and is deployed by `scripts/New-AzureMiddleware.ps1`.
 
-1. Open **la-aw-iot-copilot** in Azure Portal
-2. Open **Logic App Designer**
-3. Click the trigger → **Add new connection**
-4. Connection string: IoT Hub built-in Event Hub endpoint
-   ```powershell
-   az iot hub connection-string show --hub-name iothub-aw-iot-copilot --resource-group rg-aw-azcom-iot-copilot --default-eventhub --query connectionString -o tsv
-   ```
-5. Consumer group: `$Default`
-6. **Save**
+The workflow definition uses two placeholders that the deployment script injects at deploy time:
+
+- `__EVENT_HUB_NAME__` → `iot-telemetry`
+- `__TELEMETRY_URL__` → the function endpoint including the host key
+
+If the Event Hubs trigger still shows a broken connection after deployment, open the Logic App in the portal and verify the managed API connection named `eventhubs`.
 
 > **Why Logic App?** Event Hub triggers on Consumption Function Apps suffer cold-start issues. Logic App provides reliable 5-second polling with built-in retry and run history for debugging.
 
@@ -131,7 +132,7 @@ After `New-AzureMiddleware.ps1` runs, the Logic App needs a manual connection st
 
 | Resource | Name | SKU | Notes |
 |----------|------|-----|-------|
-| Function App | `func-aw-iot-copilot` | Consumption Y1 | Node.js 24, Linux |
+| Function App | `func-aw-iot-copilot` | Consumption Y1 | Node.js 24, Windows |
 | SignalR Service | `signalr-aw-iot-copilot` | Free_F1 | Serverless mode, 20 concurrent connections |
 | Logic App | `la-aw-iot-copilot` | Consumption | Polls Event Hub every 5s |
 | Storage Account | `stfuncawiotcopilot` | Standard LRS | Required by Function App |

@@ -1,101 +1,124 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSignalR } from '../hooks/useSignalR';
+import type { TelemetryEvent } from '../types/telemetry';
 
-/* ── Types ─────────────────────────────────── */
-interface TelemetryEvent {
+/* ── Display event type ─────────────────────── */
+interface DisplayEvent {
+  id: string;
+  timestamp: string;
+  deviceId: string;
+  eventType: string;
+  gpio: string;
+  value: string;
+  highlight?: string; // optional CSS color
+}
+
+const LED_COLORS = ['#3B82F6', '#F59E0B', '#22C55E', '#EAB308'];
+
+function signalREventToDisplay(e: TelemetryEvent): DisplayEvent {
+  if (e.eventType === 'help-triggered') {
+    return {
+      id: e.id,
+      timestamp: e.timestamp,
+      deviceId: e.deviceId,
+      eventType: 'help-triggered',
+      gpio: '—',
+      value: e.mismatch ? 'MISMATCH' : '—',
+      highlight: 'var(--color-danger)',
+    };
+  }
+  // For telemetry: emit one entry per LED that changed
+  return {
+    id: e.id,
+    timestamp: e.timestamp,
+    deviceId: e.deviceId,
+    eventType: 'telemetry-snapshot',
+    gpio: (e.leds ?? []).map((on, i) => on ? `GPIO ${[18,24,25,12][i]}` : '').filter(Boolean).join(', ') || '—',
+    value: e.mismatch ? 'MISMATCH' : 'OK',
+    highlight: e.mismatch ? 'var(--color-warning)' : undefined,
+  };
+}
+
+/* ── Dataverse event → display ──────────────── */
+interface DataverseRecord {
   andy_iottelemetryeventid: string;
   andy_deviceid: string;
   andy_eventtype: string;
-  andy_gpiopin: number;
-  andy_value: string;
+  andy_gpiopin?: number;
+  andy_value?: string;
   createdon: string;
 }
 
-/*
- * GPIO map for raspberry-pi-iotpanel:
- * Switches: GPIO 5 (SW1), 6 (SW2), 13 (SW3), 19 (SW4)
- * LEDs:     GPIO 18 (Power/Blue), 24 (Status/Orange), 25 (Network/Green), 12 (Error/Yellow)
- */
-const EVENT_TYPES = [
-  'sw1_pressed', 'sw1_released',
-  'sw2_pressed', 'sw2_released',
-  'sw3_pressed', 'sw3_released',
-  'sw4_pressed', 'sw4_released',
-  'led_power_on', 'led_power_off',
-  'led_status_on', 'led_status_off',
-  'led_network_on', 'led_network_off',
-  'led_error_on', 'led_error_off',
-] as const;
-type EventType = typeof EVENT_TYPES[number];
-
-const GPIO_FOR_EVENT: Record<EventType, number> = {
-  sw1_pressed: 5, sw1_released: 5,
-  sw2_pressed: 6, sw2_released: 6,
-  sw3_pressed: 13, sw3_released: 13,
-  sw4_pressed: 19, sw4_released: 19,
-  led_power_on: 18, led_power_off: 18,
-  led_status_on: 24, led_status_off: 24,
-  led_network_on: 25, led_network_off: 25,
-  led_error_on: 12, led_error_off: 12,
-};
-
-const EVENT_COLOR: Partial<Record<EventType, string>> = {
-  sw1_pressed:    'var(--color-accent)',
-  sw2_pressed:    'var(--color-accent)',
-  sw3_pressed:    'var(--color-accent)',
-  sw4_pressed:    'var(--color-accent)',
-  led_power_on:   '#3B82F6',
-  led_status_on:  '#F59E0B',
-  led_network_on: 'var(--color-accent)',
-  led_error_on:   '#EAB308',
-};
-
-/* ── Stub data (replace with Dataverse WebAPI — Issue #12) ── */
-const EVENT_POOL: EventType[] = [
-  'sw1_pressed', 'sw1_released', 'sw3_pressed', 'sw3_released',
-  'led_power_on', 'led_status_on', 'led_network_on',
-  'led_error_on', 'led_error_off', 'sw2_pressed', 'sw2_released',
-];
-
-const MOCK_EVENTS: TelemetryEvent[] = Array.from({ length: 40 }, (_, i) => {
-  const et = EVENT_POOL[i % EVENT_POOL.length] as EventType;
+function dataverseRecordToDisplay(r: DataverseRecord): DisplayEvent {
+  const isFault = r.andy_eventtype?.includes('error') || r.andy_eventtype?.includes('mismatch');
+  const isLedOn = r.andy_eventtype?.endsWith('_on');
+  const ledIdx = [18, 24, 25, 12].indexOf(r.andy_gpiopin ?? -1);
   return {
-    andy_iottelemetryeventid: `mock-${i}`,
-    andy_deviceid: 'raspberry-pi-iotpanel',
-    andy_eventtype: et,
-    andy_gpiopin: GPIO_FOR_EVENT[et],
-    andy_value: et.endsWith('_pressed') || et.endsWith('_on') ? '1' : '0',
-    createdon: new Date(Date.now() - i * 2 * 60 * 1000).toISOString(),
+    id: r.andy_iottelemetryeventid,
+    timestamp: r.createdon,
+    deviceId: r.andy_deviceid,
+    eventType: r.andy_eventtype,
+    gpio: r.andy_gpiopin != null ? `GPIO ${r.andy_gpiopin}` : '—',
+    value: r.andy_value ?? '—',
+    highlight: isFault ? 'var(--color-danger)' : isLedOn && ledIdx >= 0 ? LED_COLORS[ledIdx] : undefined,
   };
-});
+}
 
 const PAGE_SIZE = 10;
 
+/* ── Fetch Dataverse events ─────────────────── */
+async function fetchDataverseEvents(): Promise<DisplayEvent[]> {
+  try {
+    // Relative URL works in Power Pages portal context; absolute in dev with proxy
+    const url = '/api/data/v9.2/andy_iottelemetryevents?$orderby=createdon desc&$top=100&$select=andy_iottelemetryeventid,andy_deviceid,andy_eventtype,andy_gpiopin,andy_value,createdon';
+    const res = await fetch(url, {
+      headers: { 'OData-MaxVersion': '4.0', 'OData-Version': '4.0', 'Accept': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Dataverse HTTP ${res.status}`);
+    const json = await res.json();
+    return ((json.value ?? []) as DataverseRecord[]).map(dataverseRecordToDisplay);
+  } catch {
+    return []; // Portal may not have the table yet — silently fall back to live events
+  }
+}
+
 /* ── Component ─────────────────────────────── */
 export default function History() {
-  const [events, setEvents] = useState<TelemetryEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const { events: signalREvents } = useSignalR();
 
-  // Stub: replace with Dataverse WebAPI call (Issue #12)
+  const [baseEvents, setBaseEvents] = useState<DisplayEvent[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [page, setPage]             = useState(0);
+  const [typeFilter, setTypeFilter] = useState('');
+  const loadedRef = useRef(false);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setEvents(MOCK_EVENTS);
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    fetchDataverseEvents().then(rows => {
+      setBaseEvents(rows);
       setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    });
   }, []);
 
-  const filtered = typeFilter
-    ? events.filter(e => e.andy_eventtype === typeFilter)
-    : events;
+  // Merge: live SignalR events on top, Dataverse records below (deduplicated by id)
+  const liveDisplayEvents = signalREvents.map(signalREventToDisplay);
+  const baseIds = new Set(baseEvents.map(e => e.id));
+  const merged: DisplayEvent[] = [
+    ...liveDisplayEvents.filter(e => !baseIds.has(e.id)),
+    ...baseEvents,
+  ];
 
+  const filtered = typeFilter ? merged.filter(e => e.eventType === typeFilter) : merged;
+  const uniqueTypes = Array.from(new Set(merged.map(e => e.eventType))).sort();
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const pageSlice = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const pageSlice  = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const formatTime = (iso: string) => {
-    const d = new Date(iso);
-    return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    try {
+      const d = new Date(iso);
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    } catch { return iso; }
   };
 
   return (
@@ -111,7 +134,7 @@ export default function History() {
       {/* Filter bar */}
       <div className="animate-in" style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)', flexWrap: 'wrap', alignItems: 'center' }}>
         <label htmlFor="type-filter" style={{ fontFamily: 'var(--font-heading)', fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-          Filter event
+          Filter type
         </label>
         <select
           id="type-filter"
@@ -130,12 +153,10 @@ export default function History() {
           }}
         >
           <option value="">All events</option>
-          {EVENT_TYPES.map(et => (
-            <option key={et} value={et}>{et}</option>
-          ))}
+          {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <span style={{ fontFamily: 'var(--font-heading)', fontSize: '12px', color: 'var(--color-text-muted)', marginLeft: 'auto' }}>
-          {loading ? '…' : `${filtered.length} events`}
+          {loading ? 'Loading…' : `${filtered.length} events`}
         </span>
       </div>
 
@@ -171,27 +192,32 @@ export default function History() {
                 ))
               : pageSlice.map(event => (
                   <tr
-                    key={event.andy_iottelemetryeventid}
+                    key={event.id}
                     style={{ borderBottom: '1px solid var(--color-border)', transition: 'background 0.1s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-2)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)' }}>
-                      {formatTime(event.createdon)}
+                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+                      {formatTime(event.timestamp)}
                     </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 500 }}>{event.andy_deviceid}</td>
+                    <td style={{ padding: '12px 16px', fontWeight: 500 }}>{event.deviceId}</td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ color: EVENT_COLOR[event.andy_eventtype as EventType] ?? 'var(--color-text)', fontWeight: 500 }}>
-                        {event.andy_eventtype}
+                      <span style={{ color: event.highlight ?? 'var(--color-text)', fontWeight: event.highlight ? 600 : 400 }}>
+                        {event.eventType}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)' }}>
-                      GPIO {event.andy_gpiopin}
-                    </td>
-                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)' }}>{event.andy_value}</td>
+                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)' }}>{event.gpio}</td>
+                    <td style={{ padding: '12px 16px', color: event.highlight ?? 'var(--color-text-muted)' }}>{event.value}</td>
                   </tr>
                 ))
             }
+            {!loading && pageSlice.length === 0 && (
+              <tr>
+                <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', fontSize: '12px' }}>
+                  No events recorded yet — waiting for telemetry from the Pi
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

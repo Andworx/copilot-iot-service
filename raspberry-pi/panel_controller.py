@@ -128,11 +128,11 @@ class PanelController:
 
         for rule in self.logic_map["rules"]:
             if set(rule["switches"]) == active:
-                logger.debug("Rule matched: %s — %s", rule["id"], rule["description"])
+                logger.debug("Rule matched: %s — %s", rule["id"], rule.get("description", ""))
                 return rule["leds"], rule["id"]
 
         fallback = self.logic_map["fallback"]
-        logger.debug("Fallback rule: %s", fallback["description"])
+        logger.debug("Fallback rule: %s", fallback.get("description", "default"))
         return fallback["leds"], "fallback"
 
     def update_leds(self, led_indices):

@@ -12,9 +12,9 @@ export const config = {
   // Target device ID (single Pi)
   targetDeviceId: import.meta.env.VITE_TARGET_DEVICE_ID as string || 'raspberry-pi-iotpanel',
 
-  // Copilot Studio Direct Line token endpoint URL
-  // Get from: Copilot Studio → your agent → Channels → Direct Line → Copy Token URL
-  copilotDirectLineTokenUrl: import.meta.env.VITE_COPILOT_DIRECTLINE_TOKEN_URL as string,
+  // Copilot Studio Direct Line secret
+  // Get from: Copilot Studio → your agent → Channels → Direct Line → copy the Secret
+  copilotDirectLineSecret: import.meta.env.VITE_COPILOT_DIRECTLINE_SECRET as string,
 } as const;
 
 export const isDev = import.meta.env.DEV;

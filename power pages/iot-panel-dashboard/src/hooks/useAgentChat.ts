@@ -2,8 +2,8 @@ import { useState, useCallback, useRef } from 'react';
 import { config } from '../config';
 
 const DIRECTLINE_BASE = 'https://directline.botframework.com/v3/directline';
-const POLL_INTERVAL_MS = 1500;
-const MAX_POLL_ATTEMPTS = 20; // ~30 s max
+const POLL_INTERVAL_MS = 2500;
+const MAX_POLL_ATTEMPTS = 24; // ~60 s max
 
 interface DLActivity {
   type: string;
@@ -42,8 +42,9 @@ export function useAgentChat(): AgentChatState {
   }, []);
 
   const sendPrompt = useCallback(async (prompt: string) => {
-    if (!config.copilotDirectLineTokenUrl) {
-      setError('Copilot agent not configured. Set VITE_COPILOT_DIRECTLINE_TOKEN_URL in .env.local.');
+    const secret = config.copilotDirectLineSecret;
+    if (!secret) {
+      setError('Copilot agent not configured. Set VITE_COPILOT_DIRECTLINE_SECRET in .env.local.');
       setStatus('error');
       return;
     }
@@ -54,41 +55,33 @@ export function useAgentChat(): AgentChatState {
     setError(null);
 
     try {
-      // 1. Fetch Direct Line token from Copilot Studio
-      const tokenRes = await fetch(config.copilotDirectLineTokenUrl);
-      if (!tokenRes.ok) throw new Error(`Token fetch failed (${tokenRes.status})`);
-      const tokenData = await tokenRes.json() as { token: string };
-      const dlToken = tokenData.token;
-
-      if (abortRef.current) return;
-
-      // 2. Start a fresh Direct Line conversation
+      // 1. Start a Direct Line conversation using the secret as the Bearer token
       const convRes = await fetch(`${DIRECTLINE_BASE}/conversations`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${dlToken}` },
+        headers: { Authorization: `Bearer ${secret}` },
       });
       if (!convRes.ok) throw new Error(`Start conversation failed (${convRes.status})`);
       const conv = await convRes.json() as { conversationId: string; token: string };
-      const { conversationId } = conv;
+      const { conversationId, token } = conv;
 
       if (abortRef.current) return;
 
-      // 3. Get initial watermark — skip any bot greeting that fires on open
+      // 2. Get initial watermark — skip any greeting the bot fires on open
       const initRes = await fetch(`${DIRECTLINE_BASE}/conversations/${conversationId}/activities`, {
-        headers: { Authorization: `Bearer ${dlToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const initData = await initRes.json() as DLActivities;
       let watermark = initData.watermark ?? '0';
 
       if (abortRef.current) return;
 
-      // 4. Send the user's prompt
+      // 3. Send the user's prompt
       const sendRes = await fetch(
         `${DIRECTLINE_BASE}/conversations/${conversationId}/activities`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${dlToken}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -102,7 +95,7 @@ export function useAgentChat(): AgentChatState {
 
       if (abortRef.current) return;
 
-      // 5. Poll for the bot's response
+      // 4. Poll for the bot's response
       for (let i = 0; i < MAX_POLL_ATTEMPTS; i++) {
         if (abortRef.current) return;
 
@@ -110,7 +103,7 @@ export function useAgentChat(): AgentChatState {
 
         const pollRes = await fetch(
           `${DIRECTLINE_BASE}/conversations/${conversationId}/activities?watermark=${watermark}`,
-          { headers: { Authorization: `Bearer ${dlToken}` } },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         if (!pollRes.ok) throw new Error(`Poll failed (${pollRes.status})`);
 

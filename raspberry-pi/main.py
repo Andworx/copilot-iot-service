@@ -42,6 +42,13 @@ ENV_PATH = "/opt/iot-monitor/.env"
 CONFIG_CHECK_CYCLES = 10   # check for config changes every N poll cycles
 POLL_INTERVAL_SECS = 2     # seconds between GPIO polls
 
+# Runtime state directory — writable by the service user, separate from the
+# source directory so that Device Twin config writes survive auto-deploy (which
+# runs as root and resets source-dir permissions).  Created by systemd
+# StateDirectory=iot-monitor or by the install/auto-deploy scripts.
+RUNTIME_CONFIG_DIR = "/var/lib/iot-monitor"
+RUNTIME_CONFIG_PATH = os.path.join(RUNTIME_CONFIG_DIR, "logic_map.json")
+
 
 class SimpleMonitor:
     """Main monitoring loop: GPIO → logic rules → LEDs → IoT Hub telemetry."""
@@ -52,10 +59,11 @@ class SimpleMonitor:
         self.api_server = None
         self.iot_hub_client = None
         self.iot_hub_device_id = None
-        self.config_file = os.path.join(os.path.dirname(__file__), "logic_map.json")
+        self.config_file = RUNTIME_CONFIG_PATH
         self.last_config_mtime = 0
         self.previous_switch_states = None
         self._twin_updated = threading.Event()  # set by Device Twin patch callback
+        self._needs_connect_telemetry = False   # set after IoT Hub connects (#94)
 
         if os.path.exists(ENV_PATH):
             load_dotenv(ENV_PATH)
@@ -63,7 +71,32 @@ class SimpleMonitor:
         else:
             logger.warning(".env not found at %s — IoT Hub will be disabled", ENV_PATH)
 
+        self._init_runtime_config()
         logger.info("SimpleMonitor initialised")
+
+    # ─── Runtime config bootstrap ─────────────────────────────────────────────
+
+    def _init_runtime_config(self):
+        """Ensure the writable runtime config exists.
+
+        On first boot (or after a clean install) the Device Twin has not yet
+        pushed a config, so we seed /var/lib/iot-monitor/logic_map.json from
+        the read-only source file shipped in the repo.
+        """
+        if os.path.exists(self.config_file):
+            return
+        source = os.path.join(os.path.dirname(__file__), "logic_map.json")
+        try:
+            os.makedirs(RUNTIME_CONFIG_DIR, exist_ok=True)
+            import shutil
+            shutil.copy2(source, self.config_file)
+            logger.info("Seeded runtime config from %s → %s", source, self.config_file)
+        except Exception as e:
+            logger.warning(
+                "Could not seed runtime config to %s: %s — falling back to source file",
+                self.config_file, e,
+            )
+            self.config_file = source
 
     # ─── Config ───────────────────────────────────────────────────────────────
 
@@ -131,6 +164,8 @@ class SimpleMonitor:
                 if not self.iot_hub_client.connect():
                     self.iot_hub_client = None
                     logger.error("IoT Hub connection failed")
+                else:
+                    self._needs_connect_telemetry = True
             except Exception as e:
                 logger.error("Failed to start IoT Hub client: %s", e, exc_info=True)
                 self.iot_hub_client = None
@@ -223,22 +258,24 @@ class SimpleMonitor:
         if not self.iot_hub_client:
             return
 
-        # Prime baseline state on startup without sending any telemetry.
-        if self.previous_switch_states is None:
+        # On first cycle after connect/reconnect, send the current state immediately
+        # so the dashboard never shows stale data after a Pi restart (#94).
+        if self._needs_connect_telemetry:
+            self._needs_connect_telemetry = False
             self.previous_switch_states = switch_states.copy()
-            return
+            message_type = "connect"
+        else:
+            # Emit on any switch state change (press or release) so the dashboard
+            # stays live. Previously only press transitions triggered telemetry.
+            if self.previous_switch_states is None:
+                self.previous_switch_states = switch_states.copy()
+                return
 
-        # Emit only when any switch transitions from not-pressed to pressed.
-        switch_pressed = any(
-            (not previous) and current
-            for previous, current in zip(self.previous_switch_states, switch_states)
-        )
-
-        # Always roll baseline forward so release events do not emit,
-        # but future press events are still detected correctly.
-        self.previous_switch_states = switch_states.copy()
-        if not switch_pressed:
-            return
+            state_changed = switch_states != self.previous_switch_states
+            self.previous_switch_states = switch_states.copy()
+            if not state_changed:
+                return
+            message_type = "change"
 
         try:
             actual_led_states = self.panel.get_led_states()
@@ -257,7 +294,7 @@ class SimpleMonitor:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "deviceId": self.iot_hub_device_id,
                 "source": "iot-hub",
-                "message_type": "change",
+                "message_type": message_type,
                 "timestamps": {
                     "pi_generated": datetime.now(timezone.utc).isoformat()
                 },
@@ -265,7 +302,7 @@ class SimpleMonitor:
 
             self.iot_hub_client.send_message(payload)
 
-            logger.info("Switch press → telemetry sent (rule: %s)", rule_id)
+            logger.info("Telemetry sent (type: %s, rule: %s)", message_type, rule_id)
 
         except Exception as e:
             logger.error("Failed to send telemetry: %s", e)

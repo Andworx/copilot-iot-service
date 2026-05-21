@@ -53,8 +53,10 @@ fi
 echo "Step 3: Setting up directories..."
 mkdir -p "$PROJECT_DIR"
 mkdir -p /var/log/iot-monitor
+mkdir -p /var/lib/iot-monitor
 chown -R "$SERVICE_USER:$SERVICE_USER" "$PROJECT_DIR"
 chown -R "$SERVICE_USER:$SERVICE_USER" /var/log/iot-monitor
+chown "$SERVICE_USER:$SERVICE_USER" /var/lib/iot-monitor
 echo "  Directories created"
 
 # ─── Step 4: Auto-deploy service ──────────────────────────────────────────────
@@ -87,6 +89,7 @@ RestartSec=10
 StandardOutput=journal
 StandardError=journal
 Environment=PYTHONUNBUFFERED=1
+StateDirectory=iot-monitor
 
 [Install]
 WantedBy=multi-user.target

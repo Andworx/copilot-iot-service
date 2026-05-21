@@ -164,6 +164,12 @@ hr {
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+/* Spin for agent loading icon */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .animate-in, .shimmer { animation: none; opacity: 1; transform: none; }

@@ -41,17 +41,13 @@ if [ -f "$ENV_FILE" ]; then
     GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
 fi
 
-# Configure git to use the token via Authorization header (avoids URL encoding issues)
+# Configure git auth via .netrc — works reliably from systemd (no HOME ambiguity)
 configure_git_auth() {
     if [ -n "$GITHUB_TOKEN" ]; then
-        # Write to an explicit path so HOME env ambiguity (systemd/sudo) doesn't matter.
-        # --replace-all prevents duplicate entries on repeated runs.
-        local gitconfig="/home/${SERVICE_USER}/.gitconfig"
-        sudo -u "$SERVICE_USER" git config --file "$gitconfig" --replace-all \
-            http.https://github.com/.extraHeader \
-            "Authorization: token ${GITHUB_TOKEN}"
-        # Also disable interactive credential prompting system-wide for this user
-        sudo -u "$SERVICE_USER" git config --file "$gitconfig" core.askPass ""
+        local netrc="/home/${SERVICE_USER}/.netrc"
+        echo "machine github.com login oauth2 password ${GITHUB_TOKEN}" > "$netrc"
+        chown "${SERVICE_USER}:${SERVICE_USER}" "$netrc"
+        chmod 600 "$netrc"
     fi
 }
 

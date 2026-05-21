@@ -224,6 +224,7 @@ export default function StatusHome() {
 
   const lastUpdated = hasData ? new Date(iotState!.lastUpdated) : null;
   const allNominal  = hasData && !iotState!.mismatch && connectionStatus === 'connected';
+  const allLedsOn   = hasData && iotState!.leds.every(Boolean);
 
   return (
     <div>
@@ -277,8 +278,10 @@ export default function StatusHome() {
         )}
       </section>
 
-      {/* ── HELP FIX ────────────────────────────── */}
-      <AgentButton iotState={iotState} hasMismatch={hasData && iotState!.mismatch} />
+      {/* ── HELP FIX — hidden when all LEDs are on and system is nominal ── */}
+      {!(allNominal && allLedsOn) && (
+        <AgentButton iotState={iotState} hasMismatch={hasData && iotState!.mismatch} />
+      )}
 
       {/* ── SWITCH SECTION ──────────────────────── */}
       <section aria-labelledby="switch-heading" style={{ marginBottom: 'var(--sp-6)' }}>

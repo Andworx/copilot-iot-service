@@ -44,11 +44,22 @@ fi
 # Configure git to use the token via Authorization header (avoids URL encoding issues)
 configure_git_auth() {
     if [ -n "$GITHUB_TOKEN" ]; then
-        # --replace-all prevents duplicate entries on repeated runs
-        sudo -u "$SERVICE_USER" git config --global --replace-all \
+        # Write to an explicit path so HOME env ambiguity (systemd/sudo) doesn't matter.
+        # --replace-all prevents duplicate entries on repeated runs.
+        local gitconfig="/home/${SERVICE_USER}/.gitconfig"
+        sudo -u "$SERVICE_USER" git config --file "$gitconfig" --replace-all \
             http.https://github.com/.extraHeader \
             "Authorization: token ${GITHUB_TOKEN}"
+        # Also disable interactive credential prompting system-wide for this user
+        sudo -u "$SERVICE_USER" git config --file "$gitconfig" core.askPass ""
     fi
+}
+
+# Wrapper: run git as SERVICE_USER with explicit HOME and no terminal prompts
+git_as_user() {
+    sudo -u "$SERVICE_USER" \
+        env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
+        git "$@"
 }
 
 # ─── Network ──────────────────────────────────────────────────────────────────
@@ -91,20 +102,20 @@ setup_repository() {
 
     if [ ! -d ".git" ]; then
         log_message "Cloning repository (sparse-checkout: raspberry-pi/ only)"
-        sudo -u "$SERVICE_USER" git init
-        sudo -u "$SERVICE_USER" git remote add origin "$REPO_HTTPS"
-        sudo -u "$SERVICE_USER" git sparse-checkout init --cone
-        sudo -u "$SERVICE_USER" git sparse-checkout set raspberry-pi
-        sudo -u "$SERVICE_USER" git fetch origin "$BRANCH"
-        sudo -u "$SERVICE_USER" git checkout "$BRANCH"
+        git_as_user init
+        git_as_user remote add origin "$REPO_HTTPS"
+        git_as_user sparse-checkout init --cone
+        git_as_user sparse-checkout set raspberry-pi
+        git_as_user fetch origin "$BRANCH"
+        git_as_user checkout "$BRANCH"
         log_message "Repository cloned"
     else
         # Ensure remote uses plain HTTPS (auth handled via extraHeader)
-        sudo -u "$SERVICE_USER" git remote set-url origin "$REPO_HTTPS"
-        if ! sudo -u "$SERVICE_USER" git sparse-checkout list 2>/dev/null | grep -q "raspberry-pi"; then
+        git_as_user remote set-url origin "$REPO_HTTPS"
+        if ! git_as_user sparse-checkout list 2>/dev/null | grep -q "raspberry-pi"; then
             log_message "Configuring sparse-checkout on existing repo"
-            sudo -u "$SERVICE_USER" git sparse-checkout init --cone
-            sudo -u "$SERVICE_USER" git sparse-checkout set raspberry-pi
+            git_as_user sparse-checkout init --cone
+            git_as_user sparse-checkout set raspberry-pi
         fi
     fi
 }
@@ -113,14 +124,14 @@ pull_updates() {
     log_message "Checking for updates..."
     cd "$PROJECT_DIR"
 
-    sudo -u "$SERVICE_USER" git fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
+    git_as_user fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
 
-    LOCAL=$(sudo -u "$SERVICE_USER" git rev-parse HEAD)
-    REMOTE=$(sudo -u "$SERVICE_USER" git rev-parse "origin/$BRANCH")
+    LOCAL=$(git_as_user rev-parse HEAD)
+    REMOTE=$(git_as_user rev-parse "origin/$BRANCH")
 
     if [ "$LOCAL" != "$REMOTE" ]; then
         log_message "Updates found: $LOCAL -> $REMOTE"
-        sudo -u "$SERVICE_USER" git reset --hard "origin/$BRANCH" 2>&1 | tee -a "$LOG_FILE"
+        git_as_user reset --hard "origin/$BRANCH" 2>&1 | tee -a "$LOG_FILE"
         chmod +x raspberry-pi/*.py raspberry-pi/*.sh 2>/dev/null || true
         log_message "Updates applied"
         return 0

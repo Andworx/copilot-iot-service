@@ -38,15 +38,15 @@ log_message "Starting auto-deploy service"
 # Load GITHUB_TOKEN from .env if present
 GITHUB_TOKEN=""
 if [ -f "$ENV_FILE" ]; then
-    GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'")
+    GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
 fi
 
-# Build authenticated HTTPS URL (token embedded — never logged)
-get_repo_url() {
+# Configure git to use the token via Authorization header (avoids URL encoding issues)
+configure_git_auth() {
     if [ -n "$GITHUB_TOKEN" ]; then
-        echo "https://${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
-    else
-        echo "$REPO_HTTPS"
+        sudo -u "$SERVICE_USER" git config --global \
+            http.https://github.com/.extraHeader \
+            "Authorization: token ${GITHUB_TOKEN}"
     fi
 }
 
@@ -72,6 +72,7 @@ check_github_access() {
         log_message "Add GITHUB_TOKEN=ghp_xxx (read:contents scope) to $ENV_FILE"
         return 1
     fi
+    configure_git_auth
     log_message "GitHub HTTPS access configured"
     return 0
 }
@@ -87,20 +88,18 @@ setup_repository() {
 
     cd "$PROJECT_DIR"
 
-    REPO_URL=$(get_repo_url)
-
     if [ ! -d ".git" ]; then
         log_message "Cloning repository (sparse-checkout: raspberry-pi/ only)"
         sudo -u "$SERVICE_USER" git init
-        sudo -u "$SERVICE_USER" git remote add origin "$REPO_URL"
+        sudo -u "$SERVICE_USER" git remote add origin "$REPO_HTTPS"
         sudo -u "$SERVICE_USER" git sparse-checkout init --cone
         sudo -u "$SERVICE_USER" git sparse-checkout set raspberry-pi
         sudo -u "$SERVICE_USER" git fetch origin "$BRANCH"
         sudo -u "$SERVICE_USER" git checkout "$BRANCH"
         log_message "Repository cloned"
     else
-        # Update remote URL in case token changed
-        sudo -u "$SERVICE_USER" git remote set-url origin "$REPO_URL"
+        # Ensure remote uses plain HTTPS (auth handled via extraHeader)
+        sudo -u "$SERVICE_USER" git remote set-url origin "$REPO_HTTPS"
         if ! sudo -u "$SERVICE_USER" git sparse-checkout list 2>/dev/null | grep -q "raspberry-pi"; then
             log_message "Configuring sparse-checkout on existing repo"
             sudo -u "$SERVICE_USER" git sparse-checkout init --cone

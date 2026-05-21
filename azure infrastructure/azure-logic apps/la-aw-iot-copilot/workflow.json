@@ -11,7 +11,7 @@
           }
         },
         "method": "get",
-        "path": "/@{encodeURIComponent('__EVENT_HUB_NAME__')}/events/batch/head",
+        "path": "/@{encodeURIComponent('iot-telemetry')}/events/batch/head",
         "queries": {
           "contentType": "application/octet-stream",
           "consumerGroupName": "$Default",
@@ -37,34 +37,20 @@
       "inputs": "@json(base64ToString(triggerBody()?['ContentData']))",
       "runAfter": {}
     },
-    "Condition_-_only_switch_change": {
-      "type": "If",
-      "expression": {
-        "equals": [
-          "@outputs('Compose_-_pi_messages')?['message_type']",
-          "change"
-        ]
+    "HTTP": {
+      "type": "Http",
+      "inputs": {
+        "method": "POST",
+        "uri": "__TELEMETRY_URL__",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "@outputs('Compose_-_pi_messages')"
       },
-      "actions": {
-        "Post_telemetry_to_Function": {
-          "type": "Http",
-          "inputs": {
-            "method": "POST",
-            "uri": "__TELEMETRY_URL__",
-            "headers": {
-              "Content-Type": "application/json"
-            },
-            "body": "@outputs('Compose_-_pi_messages')"
-          },
-          "runtimeConfiguration": {
-            "contentTransfer": {
-              "transferMode": "Chunked"
-            }
-          }
+      "runtimeConfiguration": {
+        "contentTransfer": {
+          "transferMode": "Chunked"
         }
-      },
-      "else": {
-        "actions": {}
       },
       "runAfter": {
         "Compose_-_pi_messages": [

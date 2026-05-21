@@ -1,0 +1,10 @@
+mcs.metadata:
+  componentName: IoT Panel Troubleshooting Agent
+kind: GptComponentMetadata
+instructions:
+gptCapabilities:
+  webBrowsing: true
+
+aISettings:
+  model:
+    modelNameHint: Sonnet46

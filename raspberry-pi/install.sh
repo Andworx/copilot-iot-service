@@ -75,7 +75,8 @@ cat > /etc/systemd/system/iot-monitor.service << EOF
 [Unit]
 Description=AgenticIoT Digital Logic Panel Monitor
 Documentation=https://github.com/Andworx/copilot-iot-service
-After=network.target iot-auto-deploy.service
+After=network-online.target iot-auto-deploy.service
+Wants=network-online.target
 
 [Service]
 Type=simple

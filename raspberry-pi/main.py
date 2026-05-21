@@ -230,6 +230,14 @@ class SimpleMonitor:
                 cycle_count += 1
                 if cycle_count >= CONFIG_CHECK_CYCLES:
                     self.check_config_changes()
+                    # Retry IoT Hub connection if it failed at boot (e.g. DNS not
+                    # ready) or dropped during operation.
+                    if self.iot_hub_client is None:
+                        cfg = self.load_config()
+                        if cfg:
+                            self.manage_iot_hub(cfg.get("iot_hub", {}))
+                            if self.iot_hub_client:
+                                self._sync_twin_config()
                     cycle_count = 0
 
                 # Device Twin push update (set from SDK callback thread)

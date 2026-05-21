@@ -41,20 +41,20 @@ if [ -f "$ENV_FILE" ]; then
     GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
 fi
 
-# Build authenticated remote URL with token embedded (most reliable — no credential lookup)
-get_auth_url() {
-    if [ -n "$GITHUB_TOKEN" ]; then
-        echo "https://x-access-token:${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
-    else
-        echo "$REPO_HTTPS"
-    fi
-}
-
-# Wrapper: run git as SERVICE_USER with explicit HOME and no terminal prompts
+# Wrapper: run git as SERVICE_USER with explicit HOME and no terminal prompts.
+# If GITHUB_TOKEN is set, injects it as an Authorization header via -c flag
+# (per-command config — no credential store, no HOME dependency).
 git_as_user() {
-    sudo -u "$SERVICE_USER" \
-        env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
-        git "$@"
+    if [ -n "$GITHUB_TOKEN" ]; then
+        sudo -u "$SERVICE_USER" \
+            env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
+            git -c "http.https://github.com/.extraHeader=Authorization: token ${GITHUB_TOKEN}" \
+            "$@"
+    else
+        sudo -u "$SERVICE_USER" \
+            env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
+            git "$@"
+    fi
 }
 
 # ─── Network ──────────────────────────────────────────────────────────────────
@@ -86,8 +86,6 @@ check_github_access() {
 # ─── Repository ───────────────────────────────────────────────────────────────
 setup_repository() {
     log_message "Setting up repository at $PROJECT_DIR"
-    local auth_url
-    auth_url=$(get_auth_url)
 
     if [ ! -d "$PROJECT_DIR" ]; then
         sudo mkdir -p "$PROJECT_DIR"
@@ -99,17 +97,14 @@ setup_repository() {
     if [ ! -d ".git" ]; then
         log_message "Cloning repository (sparse-checkout: raspberry-pi/ only)"
         git_as_user init
-        git_as_user remote add origin "$auth_url"
+        git_as_user remote add origin "$REPO_HTTPS"
         git_as_user sparse-checkout init --cone
         git_as_user sparse-checkout set raspberry-pi
         git_as_user fetch origin "$BRANCH"
         git_as_user checkout "$BRANCH"
-        # Replace auth URL with plain URL after clone (token stored in .env only)
-        git_as_user remote set-url origin "$REPO_HTTPS"
         log_message "Repository cloned"
     else
-        # Update remote to auth URL for this run, reset to plain URL after fetch
-        git_as_user remote set-url origin "$auth_url"
+        git_as_user remote set-url origin "$REPO_HTTPS"
         if ! git_as_user sparse-checkout list 2>/dev/null | grep -q "raspberry-pi"; then
             log_message "Configuring sparse-checkout on existing repo"
             git_as_user sparse-checkout init --cone
@@ -121,13 +116,8 @@ setup_repository() {
 pull_updates() {
     log_message "Checking for updates..."
     cd "$PROJECT_DIR"
-    local auth_url
-    auth_url=$(get_auth_url)
 
-    # Set auth URL for fetch, reset to plain URL after
-    git_as_user remote set-url origin "$auth_url"
     git_as_user fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
-    git_as_user remote set-url origin "$REPO_HTTPS"
 
     LOCAL=$(git_as_user rev-parse HEAD)
     REMOTE=$(git_as_user rev-parse "origin/$BRANCH")

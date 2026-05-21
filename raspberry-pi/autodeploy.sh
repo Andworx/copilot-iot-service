@@ -48,7 +48,9 @@ git_as_user() {
     if [ -n "$GITHUB_TOKEN" ]; then
         sudo -u "$SERVICE_USER" \
             env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
-            git -c "http.https://github.com/.extraHeader=Authorization: token ${GITHUB_TOKEN}" \
+            git \
+            -c credential.helper= \
+            -c "http.https://github.com/.extraHeader=Authorization: token ${GITHUB_TOKEN}" \
             "$@"
     else
         sudo -u "$SERVICE_USER" \

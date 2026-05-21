@@ -7,7 +7,7 @@
 pac auth list
 
 # Create a new auth profile (interactive login)
-pac auth create --environment "https://andworx-development.crm.dynamics.com/"
+pac auth create --environment "https://iot-agents.crm.dynamics.com/"
 
 # Select an existing auth profile by index
 pac auth select --index 1
@@ -41,7 +41,7 @@ pac pages upload `
 |-----------|-------|
 | Website ID | `YOUR_WEBSITE_ID` |
 | Model Version | `2` |
-| Environment | `andworx-development.crm.dynamics.com/` |
+| Environment | `iot-agents.crm.dynamics.com/` |
 | Upload Path | `power pages\\\YOUR_PORTAL_FOLDER\YOUR_PORTAL_SLUG` |
 | Download Path | `power pages\\\YOUR_PORTAL_FOLDER` (PAC appends `YOUR_PORTAL_SLUG\` automatically) |
 

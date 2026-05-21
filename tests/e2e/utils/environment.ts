@@ -11,5 +11,5 @@ function readDevConfig(): DevConfig {
 }
 
 export function resolvePortalBaseUrl(): string {
-  return process.env.PLAYWRIGHT_BASE_URL || readDevConfig().environmentUrl || "https://andworx-development.crm.dynamics.com/";
+  return process.env.PLAYWRIGHT_BASE_URL || readDevConfig().environmentUrl || "https://iot-agents.crm.dynamics.com/";
 }

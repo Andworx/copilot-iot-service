@@ -44,7 +44,8 @@ fi
 # Configure git to use the token via Authorization header (avoids URL encoding issues)
 configure_git_auth() {
     if [ -n "$GITHUB_TOKEN" ]; then
-        sudo -u "$SERVICE_USER" git config --global \
+        # --replace-all prevents duplicate entries on repeated runs
+        sudo -u "$SERVICE_USER" git config --global --replace-all \
             http.https://github.com/.extraHeader \
             "Authorization: token ${GITHUB_TOKEN}"
     fi

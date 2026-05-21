@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSignalR } from '../hooks/useSignalR';
+import { useSignalRContext } from '../context/SignalRContext';
 import type { TelemetryEvent } from '../types/telemetry';
 
 /* ── Display event type ─────────────────────── */
@@ -84,7 +84,7 @@ async function fetchDataverseEvents(): Promise<DisplayEvent[]> {
 
 /* ── Component ─────────────────────────────── */
 export default function History() {
-  const { events: signalREvents } = useSignalR();
+  const { events: signalREvents } = useSignalRContext();
 
   const [baseEvents, setBaseEvents] = useState<DisplayEvent[]>([]);
   const [loading, setLoading]       = useState(true);

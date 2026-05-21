@@ -1,4 +1,4 @@
-import { useSignalR } from '../hooks/useSignalR';
+import { useSignalRContext } from '../context/SignalRContext';
 import { GPIO_CONFIG } from '../types/telemetry';
 import { StatusBadge, type Status } from '../components/StatusBadge';
 
@@ -372,7 +372,7 @@ function LedBox({ led, row }: { led: GpioLed; row: number }) {
 
 /* ── Page ───────────────────────────────────── */
 export default function DeviceStatus() {
-  const { iotState, connectionStatus } = useSignalR();
+  const { iotState, connectionStatus } = useSignalRContext();
 
   const loading = iotState === null && (connectionStatus === 'connecting' || connectionStatus === 'disconnected');
 

@@ -1,4 +1,4 @@
-import { useSignalR } from '../hooks/useSignalR';
+import { useSignalRContext } from '../context/SignalRContext';
 import { GPIO_CONFIG } from '../types/telemetry';
 import { AgentButton } from '../components/AgentButton';
 
@@ -188,7 +188,7 @@ const STATUS_TEXT: Record<string, string> = {
 
 /* ── Page ───────────────────────────────────── */
 export default function StatusHome() {
-  const { iotState, connectionStatus, needsHelp } = useSignalR();
+  const { iotState, connectionStatus, needsHelp } = useSignalRContext();
 
   const loading = iotState === null && (connectionStatus === 'connecting' || connectionStatus === 'disconnected');
   const hasData  = iotState !== null;

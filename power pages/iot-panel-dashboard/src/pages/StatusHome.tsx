@@ -16,13 +16,19 @@ interface LedProps {
   gpio: number;
   color: string;
   on: boolean;
+  /** True when the Pi is disconnected — state is unknown, render as off/dim */
+  unknown?: boolean;
 }
 
-function BigLed({ label, gpio, color, on }: LedProps) {
+function BigLed({ label, gpio, color, on, unknown = false }: LedProps) {
   const rgb = hexToRgb(color);
   const dimColor = `rgba(${rgb}, 0.12)`;
   const glowColor = `rgba(${rgb}, 0.55)`;
   const ringColor = `rgba(${rgb}, 0.35)`;
+
+  const ariaLabel = unknown
+    ? `${label} LED — unknown (Pi disconnected)`
+    : `${label} LED — ${on ? 'ON' : 'OFF'}`;
 
   return (
     <div
@@ -34,30 +40,43 @@ function BigLed({ label, gpio, color, on }: LedProps) {
         gap: 'var(--sp-3)',
         padding: 'var(--sp-5) var(--sp-4)',
         background: 'var(--color-surface)',
-        border: `1px solid ${on ? `rgba(${rgb}, 0.50)` : 'var(--color-border)'}`,
+        border: `1px solid ${on && !unknown ? `rgba(${rgb}, 0.50)` : 'var(--color-border)'}`,
         borderRadius: 'var(--radius-lg)',
-        boxShadow: on ? `0 0 24px rgba(${rgb}, 0.18)` : 'var(--shadow-card)',
+        boxShadow: on && !unknown ? `0 0 24px rgba(${rgb}, 0.18)` : 'var(--shadow-card)',
+        opacity: unknown ? 0.55 : 1,
         transition: 'all 0.3s ease',
       }}
     >
       {/* Circle */}
       <div
-        aria-label={`${label} LED — ${on ? 'ON' : 'OFF'}`}
+        aria-label={ariaLabel}
         style={{
           width: '90px',
           height: '90px',
           borderRadius: '50%',
-          background: on
+          background: on && !unknown
             ? `radial-gradient(circle at 38% 35%, rgba(255,255,255,0.35) 0%, ${color} 45%, rgba(${rgb}, 0.75) 100%)`
             : `radial-gradient(circle at 38% 35%, rgba(255,255,255,0.05) 0%, ${dimColor} 60%)`,
-          boxShadow: on
+          boxShadow: on && !unknown
             ? `0 0 0 6px ${ringColor}, 0 0 32px ${glowColor}, 0 0 60px rgba(${rgb}, 0.25), inset 0 2px 6px rgba(255,255,255,0.20)`
             : `0 0 0 4px rgba(255,255,255,0.04), inset 0 2px 4px rgba(0,0,0,0.40)`,
-          border: `2px solid ${on ? color : 'rgba(255,255,255,0.08)'}`,
+          border: `2px solid ${on && !unknown ? color : 'rgba(255,255,255,0.08)'}`,
           transition: 'all 0.3s ease',
           flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
-      />
+      >
+        {unknown && (
+          <span style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: '22px',
+            color: 'var(--color-text-muted)',
+            userSelect: 'none',
+          }}>?</span>
+        )}
+      </div>
       <div style={{ textAlign: 'center' }}>
         <div style={{
           fontFamily: 'var(--font-heading)',
@@ -65,7 +84,7 @@ function BigLed({ label, gpio, color, on }: LedProps) {
           fontWeight: 700,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          color: on ? color : 'var(--color-text-muted)',
+          color: on && !unknown ? color : 'var(--color-text-muted)',
         }}>
           {label}
         </div>
@@ -87,11 +106,11 @@ function BigLed({ label, gpio, color, on }: LedProps) {
         textTransform: 'uppercase',
         padding: '3px 10px',
         borderRadius: 'var(--radius-sm)',
-        background: on ? `rgba(${rgb}, 0.15)` : 'var(--color-surface-2)',
-        color: on ? color : 'var(--color-text-muted)',
-        border: `1px solid ${on ? `rgba(${rgb}, 0.35)` : 'var(--color-border)'}`,
+        background: on && !unknown ? `rgba(${rgb}, 0.15)` : 'var(--color-surface-2)',
+        color: on && !unknown ? color : 'var(--color-text-muted)',
+        border: `1px solid ${on && !unknown ? `rgba(${rgb}, 0.35)` : 'var(--color-border)'}`,
       }}>
-        {on ? 'ON' : 'OFF'}
+        {unknown ? '—' : on ? 'ON' : 'OFF'}
       </div>
     </div>
   );
@@ -102,21 +121,25 @@ interface SwitchProps {
   label: string;
   gpio: number;
   pressed: boolean;
+  /** True when the Pi is disconnected — state is unknown */
+  unknown?: boolean;
 }
 
-function SwitchRow({ label, gpio, pressed }: SwitchProps) {
+function SwitchRow({ label, gpio, pressed, unknown = false }: SwitchProps) {
   return (
     <div
       className="animate-in"
+      aria-label={`${label}: ${unknown ? 'unknown (Pi disconnected)' : pressed ? 'pressed' : 'open'}`}
       style={{
         background: 'var(--color-surface)',
-        border: `1px solid ${pressed ? 'var(--color-primary)' : 'var(--color-border)'}`,
+        border: `1px solid ${pressed && !unknown ? 'var(--color-primary)' : 'var(--color-border)'}`,
         borderRadius: 'var(--radius-md)',
         padding: 'var(--sp-3) var(--sp-5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: pressed ? 'var(--shadow-glow-accent)' : 'none',
+        boxShadow: pressed && !unknown ? 'var(--shadow-glow-accent)' : 'none',
+        opacity: unknown ? 0.55 : 1,
         transition: 'all 0.2s ease',
       }}
     >
@@ -125,8 +148,8 @@ function SwitchRow({ label, gpio, pressed }: SwitchProps) {
           width: '14px',
           height: '14px',
           borderRadius: '3px',
-          background: pressed ? 'var(--color-primary)' : 'var(--color-border-strong)',
-          boxShadow: pressed ? '0 0 8px rgba(245,158,11,0.55)' : 'none',
+          background: pressed && !unknown ? 'var(--color-primary)' : 'var(--color-border-strong)',
+          boxShadow: pressed && !unknown ? '0 0 8px rgba(245,158,11,0.55)' : 'none',
           transition: 'all 0.2s ease',
           flexShrink: 0,
         }} />
@@ -136,7 +159,7 @@ function SwitchRow({ label, gpio, pressed }: SwitchProps) {
             fontSize: '14px',
             fontWeight: 700,
             letterSpacing: '0.06em',
-            color: pressed ? 'var(--color-text-bright)' : 'var(--color-text)',
+            color: pressed && !unknown ? 'var(--color-text-bright)' : 'var(--color-text)',
           }}>
             {label}
           </div>
@@ -159,11 +182,11 @@ function SwitchRow({ label, gpio, pressed }: SwitchProps) {
         textTransform: 'uppercase',
         padding: '4px 12px',
         borderRadius: 'var(--radius-sm)',
-        background: pressed ? 'rgba(245,158,11,0.15)' : 'var(--color-surface-2)',
-        color: pressed ? 'var(--color-primary)' : 'var(--color-text-muted)',
-        border: `1px solid ${pressed ? 'rgba(245,158,11,0.40)' : 'var(--color-border)'}`,
+        background: pressed && !unknown ? 'rgba(245,158,11,0.15)' : 'var(--color-surface-2)',
+        color: pressed && !unknown ? 'var(--color-primary)' : 'var(--color-text-muted)',
+        border: `1px solid ${pressed && !unknown ? 'rgba(245,158,11,0.40)' : 'var(--color-border)'}`,
       }}>
-        {pressed ? 'PRESSED' : 'OPEN'}
+        {unknown ? '—' : pressed ? 'PRESSED' : 'OPEN'}
       </div>
     </div>
   );
@@ -193,11 +216,15 @@ export default function StatusHome() {
   const loading = iotState === null && (connectionStatus === 'connecting' || connectionStatus === 'disconnected');
   const hasData  = iotState !== null;
 
-  const leds     = hasData ? GPIO_CONFIG.leds.map((cfg, i) => ({ ...cfg, on: iotState!.leds[i] ?? false })) : [];
+  // True when we have stale data but are no longer connected — state is unknown
+  const isDisconnected = hasData && connectionStatus !== 'connected';
+
+  const leds     = hasData ? GPIO_CONFIG.leds.map((cfg, i) => ({ ...cfg, on: isDisconnected ? false : (iotState!.leds[i] ?? false) })) : [];
   const switches = hasData ? GPIO_CONFIG.switches.map((cfg, i) => ({ ...cfg, pressed: iotState!.switches[i] ?? false })) : [];
 
   const lastUpdated = hasData ? new Date(iotState!.lastUpdated) : null;
   const allNominal  = hasData && !iotState!.mismatch && connectionStatus === 'connected';
+  const allLedsOn   = hasData && iotState!.leds.every(Boolean);
 
   return (
     <div>
@@ -245,14 +272,16 @@ export default function StatusHome() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-4)' }}>
             {leds.map(led => (
-              <BigLed key={led.gpio} label={led.label} gpio={led.gpio} color={led.color} on={led.on} />
+              <BigLed key={led.gpio} label={led.label} gpio={led.gpio} color={led.color} on={led.on} unknown={isDisconnected} />
             ))}
           </div>
         )}
       </section>
 
-      {/* ── HELP FIX ────────────────────────────── */}
-      <AgentButton iotState={iotState} hasMismatch={hasData && iotState!.mismatch} />
+      {/* ── HELP FIX — hidden when all LEDs are on and system is nominal ── */}
+      {!(allNominal && allLedsOn) && (
+        <AgentButton iotState={iotState} hasMismatch={hasData && iotState!.mismatch} />
+      )}
 
       {/* ── SWITCH SECTION ──────────────────────── */}
       <section aria-labelledby="switch-heading" style={{ marginBottom: 'var(--sp-6)' }}>
@@ -271,7 +300,7 @@ export default function StatusHome() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             {switches.map(sw => (
-              <SwitchRow key={sw.gpio} label={sw.label} gpio={sw.gpio} pressed={sw.pressed} />
+              <SwitchRow key={sw.gpio} label={sw.label} gpio={sw.gpio} pressed={sw.pressed} unknown={isDisconnected} />
             ))}
           </div>
         )}

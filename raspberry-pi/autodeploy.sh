@@ -41,9 +41,9 @@ if [ -f "$ENV_FILE" ]; then
     GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
 fi
 
-# Wrapper: run git as SERVICE_USER bypassing ALL credential helpers.
-# GIT_CONFIG_NOSYSTEM=1 skips /etc/gitconfig (source of duplicate auth header).
-# Token is embedded directly in the remote URL for the operation, then reset.
+# Wrapper: run git as SERVICE_USER.
+# GIT_CONFIG_NOSYSTEM=1 skips /etc/gitconfig to prevent duplicate auth headers.
+# Authentication is handled via /home/<user>/.netrc (written by write_netrc before fetch).
 git_as_user() {
     sudo -u "$SERVICE_USER" \
         env HOME="/home/${SERVICE_USER}" \
@@ -52,9 +52,19 @@ git_as_user() {
         git "$@"
 }
 
-# Build authenticated URL with token embedded inline (used only during fetch/clone)
-auth_remote() {
-    echo "https://x-access-token:${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
+# Write a temporary netrc file for git HTTPS authentication.
+# Runs as root — token is written to a file, never placed on the command line,
+# so it cannot appear in sudo audit logs or journalctl output.
+write_netrc() {
+    local netrc="/home/${SERVICE_USER}/.netrc"
+    printf 'machine github.com\n  login x-access-token\n  password %s\n' \
+        "$GITHUB_TOKEN" > "$netrc"
+    chmod 600 "$netrc"
+    chown "${SERVICE_USER}:${SERVICE_USER}" "$netrc"
+}
+
+remove_netrc() {
+    rm -f "/home/${SERVICE_USER}/.netrc"
 }
 
 # ─── Network ──────────────────────────────────────────────────────────────────
@@ -79,7 +89,7 @@ check_github_access() {
         log_message "Add GITHUB_TOKEN=ghp_xxx (read:contents scope) to $ENV_FILE"
         return 1
     fi
-    log_message "GitHub HTTPS access configured"
+    log_message "GitHub token present (length: ${#GITHUB_TOKEN})"
     return 0
 }
 
@@ -94,18 +104,16 @@ setup_repository() {
 
     cd "$PROJECT_DIR"
 
-    local aurl
-    aurl=$(auth_remote)
-
     if [ ! -d ".git" ]; then
         log_message "Cloning repository (sparse-checkout: raspberry-pi/ only)"
         git_as_user init
-        git_as_user remote add origin "$aurl"
+        git_as_user remote add origin "$REPO_HTTPS"
         git_as_user sparse-checkout init --cone
         git_as_user sparse-checkout set raspberry-pi
-        git_as_user fetch origin "$BRANCH"
+        write_netrc
+        git_as_user fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
+        remove_netrc
         git_as_user checkout "$BRANCH"
-        git_as_user remote set-url origin "$REPO_HTTPS"
         log_message "Repository cloned"
     else
         git_as_user remote set-url origin "$REPO_HTTPS"
@@ -121,11 +129,9 @@ pull_updates() {
     log_message "Checking for updates..."
     cd "$PROJECT_DIR"
 
-    local aurl
-    aurl=$(auth_remote)
-    git_as_user remote set-url origin "$aurl"
+    write_netrc
     git_as_user fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
-    git_as_user remote set-url origin "$REPO_HTTPS"
+    remove_netrc
 
     LOCAL=$(git_as_user rev-parse HEAD)
     REMOTE=$(git_as_user rev-parse "origin/$BRANCH")

@@ -22,13 +22,17 @@ function buildQuickFixPrompt(state: IoTState): string {
     .map((pressed, i) => `${GPIO_CONFIG.switches[i].label}=${pressed ? 'PRESSED' : 'OPEN'}`)
     .join(', ');
 
+  const allLedsOn = state.leds.every(Boolean);
+
   return (
     `Panel quick-fix request.\n` +
-    `LED status: ${leds}.\n` +
-    `Switch status: ${switches}.\n` +
-    `Active rule: ${state.activeRule}. Mismatch: ${state.mismatch ? 'YES' : 'NO'}.\n` +
-    `What are the exact steps to fix this? Reply with ONLY a numbered list of ` +
-    `switch actions (1–3 steps max). No preamble or explanation.`
+    `TARGET STATE: All 4 LEDs must be ON simultaneously. This is the only definition of a healthy panel.\n` +
+    `Current LED status: ${leds}.\n` +
+    `Current switch status: ${switches}.\n` +
+    `All LEDs on: ${allLedsOn ? 'YES' : 'NO'}.\n` +
+    `What switch actions are needed to get ALL 4 LEDs ON? ` +
+    `Reply with ONLY a plain numbered list of switch actions (1-4 steps max). ` +
+    `No emojis, no citations, no markdown, no preamble, no explanation.`
   );
 }
 

@@ -44,7 +44,7 @@ fi
 # Build authenticated remote URL with token embedded (most reliable — no credential lookup)
 get_auth_url() {
     if [ -n "$GITHUB_TOKEN" ]; then
-        echo "https://oauth2:${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
+        echo "https://x-access-token:${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
     else
         echo "$REPO_HTTPS"
     fi

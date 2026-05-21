@@ -22,6 +22,6 @@ configuration:
     kind: GenerativeAIRecognizer
 
 authenticationConfiguration: {}
-publishedOn: 2026-05-21T13:31:50.0000000Z
+publishedOn: 2026-05-21T15:30:51.0000000Z
 template: default-2.1.0
 language: 1033

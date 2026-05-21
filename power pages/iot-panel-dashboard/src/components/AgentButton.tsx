@@ -1,154 +1,199 @@
-import { useState } from 'react';
+import type { IoTState } from '../types/telemetry';
+import { GPIO_CONFIG } from '../types/telemetry';
+import { useAgentChat } from '../hooks/useAgentChat';
 
 interface AgentButtonProps {
-  hasIssues: boolean;
-  // TODO: Wire to Copilot Studio agent (Issue #12)
-  onHelpRequest?: () => void;
+  iotState: IoTState | null;
+  hasMismatch?: boolean;
 }
 
 /**
- * Conditional "Help Now" button that surfaces when IoT issues are detected.
- * Renders null when hasIssues is false.
- * When an agent is integrated, replace the stub panel with a real Copilot Studio
- * embedded chat or deep-link call.
+ * Builds a structured prompt from live telemetry — sent verbatim to the
+ * Copilot Studio agent via Direct Line. The agent's QuickFix topic
+ * recognises the "Panel quick-fix request" prefix and replies with a
+ * concise numbered list of switch actions only.
  */
-export function AgentButton({ hasIssues, onHelpRequest }: AgentButtonProps) {
-  const [panelOpen, setPanelOpen] = useState(false);
+function buildQuickFixPrompt(state: IoTState): string {
+  const leds = state.leds
+    .map((on, i) => `${GPIO_CONFIG.leds[i].label}=${on ? 'ON' : 'OFF'}`)
+    .join(', ');
 
-  if (!hasIssues) return null;
-
-  function handleClick() {
-    setPanelOpen(true);
-    // TODO: Wire to Copilot Studio agent — replace this stub (Issue #12)
-    onHelpRequest?.();
-    console.info('[AgentButton] Help requested — Copilot Studio agent not yet wired.');
-  }
+  const switches = state.switches
+    .map((pressed, i) => `${GPIO_CONFIG.switches[i].label}=${pressed ? 'PRESSED' : 'OPEN'}`)
+    .join(', ');
 
   return (
-    <>
-      {/* Floating Help Now button */}
-      <button
-        onClick={handleClick}
-        aria-label="Get AI assistance for current IoT issues"
-        style={{
-          position: 'fixed',
-          bottom: '32px',
-          right: '32px',
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '12px 20px',
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-warning)',
-          borderRadius: 'var(--radius-md)',
-          color: 'var(--color-warning)',
-          fontFamily: 'var(--font-heading)',
-          fontSize: '13px',
-          fontWeight: 600,
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          cursor: 'pointer',
-          animation: 'amberPulse 2s ease-in-out infinite',
-          transition: 'background 0.15s, transform 0.1s',
-        }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(245,158,11,0.12)';
-          (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.03)';
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'var(--color-surface)';
-          (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
-        }}
-      >
-        <span style={{ fontSize: '16px' }}>⚠</span>
-        Help Now
-      </button>
+    `Panel quick-fix request.\n` +
+    `LED status: ${leds}.\n` +
+    `Switch status: ${switches}.\n` +
+    `Active rule: ${state.activeRule}. Mismatch: ${state.mismatch ? 'YES' : 'NO'}.\n` +
+    `What are the exact steps to fix this? Reply with ONLY a numbered list of ` +
+    `switch actions (1–3 steps max). No preamble or explanation.`
+  );
+}
 
-      {/* Stub agent panel — replace with Copilot Studio embed */}
-      {panelOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="AI Agent — Issue Assistance"
+/**
+ * "Help Fix" bar placed between the LED and Switch sections on StatusHome.
+ * Pressing it sends the current panel state to the IoT Panel Troubleshooting
+ * Agent and displays its concise fix instructions inline.
+ */
+export function AgentButton({ iotState, hasMismatch }: AgentButtonProps) {
+  const { status, response, error, sendPrompt, reset } = useAgentChat();
+  const open = status !== 'idle';
+  const isAlert = hasMismatch ?? (iotState?.mismatch ?? false);
+
+  function handleClick() {
+    if (!iotState) return;
+    if (open) {
+      reset();
+      return;
+    }
+    sendPrompt(buildQuickFixPrompt(iotState));
+  }
+
+  const borderColor   = isAlert ? 'var(--color-danger)' : 'var(--color-border-strong)';
+  const lineColor     = isAlert ? 'rgba(239,68,68,0.30)' : 'var(--color-border)';
+  const buttonColor   = isAlert ? 'var(--color-danger)' : 'var(--color-text-muted)';
+  const buttonBg      = isAlert ? 'rgba(239,68,68,0.10)' : 'var(--color-surface)';
+  const disabled      = !iotState || status === 'loading';
+
+  return (
+    <div style={{ margin: 'var(--sp-4) 0' }}>
+      {/* ── Centred bar with dividers ─────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ flex: 1, height: '1px', background: lineColor }} />
+
+        <button
+          onClick={handleClick}
+          disabled={disabled}
+          aria-label="Ask AI agent to diagnose the current panel state and suggest a fix"
           style={{
-            position: 'fixed',
-            bottom: '96px',
-            right: '32px',
-            zIndex: 101,
-            width: '340px',
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-warning)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 20px',
+            background: buttonBg,
+            border: `1px solid ${borderColor}`,
             borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-glow-amber)',
+            color: buttonColor,
+            fontFamily: 'var(--font-heading)',
+            fontSize: '11px',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: !iotState ? 0.45 : 1,
+            animation: isAlert && !open ? 'amberPulse 2s ease-in-out infinite' : 'none',
+            transition: 'background 0.15s',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={e => {
+            if (!disabled) (e.currentTarget as HTMLButtonElement).style.background =
+              isAlert ? 'rgba(239,68,68,0.18)' : 'var(--color-surface-2)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = buttonBg;
+          }}
+        >
+          {status === 'loading' ? (
+            <>
+              <span style={{ fontSize: '14px', animation: 'spin 1s linear infinite' }}>⟳</span>
+              Asking Agent…
+            </>
+          ) : open ? (
+            <>
+              <span style={{ fontSize: '14px' }}>×</span>
+              Close
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: '14px' }}>{isAlert ? '⚠' : '🔍'}</span>
+              Help Fix
+            </>
+          )}
+        </button>
+
+        <div style={{ flex: 1, height: '1px', background: lineColor }} />
+      </div>
+
+      {/* ── Response panel ────────────────────────── */}
+      {open && (
+        <div
+          className="animate-in"
+          style={{
+            marginTop: 'var(--sp-3)',
+            background: 'var(--color-surface)',
+            border: `1px solid ${
+              status === 'error' ? 'var(--color-danger)'
+                : status === 'done'  ? 'var(--color-accent)'
+                : 'var(--color-border-strong)'
+            }`,
+            borderRadius: 'var(--radius-md)',
             overflow: 'hidden',
           }}
         >
-          {/* Panel header */}
+          {/* Header */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderBottom: '1px solid var(--color-border-strong)',
+            padding: '8px 14px',
             background: 'var(--color-surface-2)',
+            borderBottom: '1px solid var(--color-border)',
           }}>
             <span style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: '11px',
+              fontSize: '10px',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: 'var(--color-warning)',
+              color: 'var(--color-text-muted)',
             }}>
-              ⚠ AI Agent — Issue Assistance
+              ⚡ IoT Panel Troubleshooting Agent
             </span>
-            <button
-              onClick={() => setPanelOpen(false)}
-              aria-label="Close agent panel"
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--color-text-muted)',
-                cursor: 'pointer',
-                fontSize: '16px',
-                lineHeight: 1,
-                padding: '2px 4px',
-              }}
-            >
-              ×
-            </button>
           </div>
 
-          {/* Panel body — placeholder */}
-          <div style={{ padding: '20px 16px', textAlign: 'center' }}>
-            <div style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '12px',
-              color: 'var(--color-text-muted)',
-              lineHeight: 1.6,
-              marginBottom: '12px',
-            }}>
-              Copilot Studio agent not yet connected.
-              <br />
-              <span style={{ color: 'var(--color-border-strong)', fontSize: '11px' }}>
-                TODO: Wire to Copilot Studio agent (Issue #12)
-              </span>
-            </div>
-            <div style={{
-              padding: '10px',
-              background: 'var(--color-surface-3)',
-              border: '1px dashed var(--color-border-strong)',
-              borderRadius: 'var(--radius-sm)',
-              fontFamily: 'var(--font-heading)',
-              fontSize: '11px',
-              color: 'var(--color-text-muted)',
-              letterSpacing: '0.04em',
-            }}>
-              AGENT EMBED AREA
-            </div>
+          {/* Body */}
+          <div style={{ padding: '14px 16px' }}>
+            {status === 'loading' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="shimmer" style={{ width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0 }} />
+                <span style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: '11px',
+                  color: 'var(--color-text-muted)',
+                  letterSpacing: '0.04em',
+                }}>
+                  Analysing panel state…
+                </span>
+              </div>
+            )}
+
+            {status === 'done' && response && (
+              <div style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontSize: '13px',
+                lineHeight: 1.8,
+                color: 'var(--color-text-bright)',
+                whiteSpace: 'pre-wrap',
+              }}>
+                {response}
+              </div>
+            )}
+
+            {status === 'error' && (
+              <div style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: '11px',
+                color: 'var(--color-danger)',
+                lineHeight: 1.6,
+              }}>
+                {error}
+              </div>
+            )}
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
+

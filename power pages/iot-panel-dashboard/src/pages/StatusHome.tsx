@@ -188,7 +188,7 @@ const STATUS_TEXT: Record<string, string> = {
 
 /* ── Page ───────────────────────────────────── */
 export default function StatusHome() {
-  const { iotState, connectionStatus, needsHelp } = useSignalRContext();
+  const { iotState, connectionStatus } = useSignalRContext();
 
   const loading = iotState === null && (connectionStatus === 'connecting' || connectionStatus === 'disconnected');
   const hasData  = iotState !== null;
@@ -250,6 +250,9 @@ export default function StatusHome() {
           </div>
         )}
       </section>
+
+      {/* ── HELP FIX ────────────────────────────── */}
+      <AgentButton iotState={iotState} hasMismatch={hasData && iotState!.mismatch} />
 
       {/* ── SWITCH SECTION ──────────────────────── */}
       <section aria-labelledby="switch-heading" style={{ marginBottom: 'var(--sp-6)' }}>
@@ -369,8 +372,6 @@ export default function StatusHome() {
       <p style={{ marginTop: 'var(--sp-6)', fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-border-strong)', textAlign: 'center', letterSpacing: '0.04em' }}>
         Live data via Azure SignalR · Issue #12 · andy_iottelemetryevent
       </p>
-
-      <AgentButton hasIssues={needsHelp} />
     </div>
   );
 }

@@ -41,22 +41,20 @@ if [ -f "$ENV_FILE" ]; then
     GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
 fi
 
-# Wrapper: run git as SERVICE_USER with explicit HOME and no terminal prompts.
-# If GITHUB_TOKEN is set, injects it as an Authorization header via -c flag
-# (per-command config — no credential store, no HOME dependency).
+# Wrapper: run git as SERVICE_USER bypassing ALL credential helpers.
+# GIT_CONFIG_NOSYSTEM=1 skips /etc/gitconfig (source of duplicate auth header).
+# Token is embedded directly in the remote URL for the operation, then reset.
 git_as_user() {
-    if [ -n "$GITHUB_TOKEN" ]; then
-        sudo -u "$SERVICE_USER" \
-            env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
-            git \
-            -c credential.helper= \
-            -c "http.https://github.com/.extraHeader=Authorization: token ${GITHUB_TOKEN}" \
-            "$@"
-    else
-        sudo -u "$SERVICE_USER" \
-            env HOME="/home/${SERVICE_USER}" GIT_TERMINAL_PROMPT=0 \
-            git "$@"
-    fi
+    sudo -u "$SERVICE_USER" \
+        env HOME="/home/${SERVICE_USER}" \
+            GIT_TERMINAL_PROMPT=0 \
+            GIT_CONFIG_NOSYSTEM=1 \
+        git "$@"
+}
+
+# Build authenticated URL with token embedded inline (used only during fetch/clone)
+auth_remote() {
+    echo "https://x-access-token:${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
 }
 
 # ─── Network ──────────────────────────────────────────────────────────────────
@@ -96,14 +94,18 @@ setup_repository() {
 
     cd "$PROJECT_DIR"
 
+    local aurl
+    aurl=$(auth_remote)
+
     if [ ! -d ".git" ]; then
         log_message "Cloning repository (sparse-checkout: raspberry-pi/ only)"
         git_as_user init
-        git_as_user remote add origin "$REPO_HTTPS"
+        git_as_user remote add origin "$aurl"
         git_as_user sparse-checkout init --cone
         git_as_user sparse-checkout set raspberry-pi
         git_as_user fetch origin "$BRANCH"
         git_as_user checkout "$BRANCH"
+        git_as_user remote set-url origin "$REPO_HTTPS"
         log_message "Repository cloned"
     else
         git_as_user remote set-url origin "$REPO_HTTPS"
@@ -119,7 +121,11 @@ pull_updates() {
     log_message "Checking for updates..."
     cd "$PROJECT_DIR"
 
+    local aurl
+    aurl=$(auth_remote)
+    git_as_user remote set-url origin "$aurl"
     git_as_user fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
+    git_as_user remote set-url origin "$REPO_HTTPS"
 
     LOCAL=$(git_as_user rev-parse HEAD)
     REMOTE=$(git_as_user rev-parse "origin/$BRANCH")

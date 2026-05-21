@@ -11,7 +11,7 @@ The AgenticIoT system is an end-to-end IoT demonstration that connects a physica
 
 ### What the System Does
 
-A Raspberry Pi reads 4 physical toggle switches and controls 4 LEDs. The switch states follow configurable rules called a "logic map". When a switch is pressed, telemetry is sent to Azure IoT Hub over MQTT, and the data appears in a live browser dashboard within approximately 5 to 10 seconds. If something looks wrong — a LED is on that shouldn't be, or expected LEDs are not on — the system can trigger the AI agent to help diagnose the issue.
+A Raspberry Pi reads 4 physical switches and controls 4 LEDs. The switch states follow configurable rules called a "logic map". When a switch state changes, telemetry is sent to Azure IoT Hub over MQTT, and the data appears in a live browser dashboard within approximately 5 to 10 seconds. If something looks wrong — a LED is on that shouldn't be, or expected LEDs are not on — the system can trigger the AI agent to help diagnose the issue.
 
 ### System Architecture
 
@@ -42,7 +42,7 @@ Power Pages          Dataverse Tables
 Copilot Studio Agent  (IoT Panel Troubleshooting Agent)
 ```
 
-**Typical end-to-end latency:** 5 to 10 seconds from physical switch press to dashboard update.
+**Typical end-to-end latency:** 5 to 10 seconds from physical switch activation to dashboard update.
 
 ### Azure Resources
 
@@ -61,16 +61,24 @@ Copilot Studio Agent  (IoT Panel Troubleshooting Agent)
 
 ### The Physical Panel
 
-The hardware panel consists of a Raspberry Pi with four momentary push switches and four LEDs connected to its GPIO pins. The switches are numbered 1 through 4 (SW1 to SW4). The LEDs are numbered 0 through 3 (LED0 to LED3), each a different colour.
+The hardware panel consists of a Raspberry Pi with four switches and four LEDs connected to its GPIO pins. The switches are numbered 1 through 4 (SW1 to SW4). The LEDs are numbered 0 through 3 (LED0 to LED3), each a different colour.
+
+**Switch types:**
+- **SW1** — Red-cover guarded push button (lift the red cover and turn SW1 on; lower the cover to turn SW1 off)
+- **SW2** — Toggle switch (flip up to turn ON; flip down to turn OFF)
+- **SW3** — Toggle switch (flip up to turn ON; flip down to turn OFF)
+- **SW4** — Key switch (turn the key clockwise to turn ON; turn counter-clockwise to turn OFF)
+
+When giving instructions to users, always use "turn SW1 on/off", "flip SW2/SW3 up/down", "turn the key on SW4 on/off". Never say "press" or "depress" for any switch.
 
 ### GPIO Pin Assignments (BCM numbering)
 
 | Component | Label | BCM Pin | Physical Pin | Colour / Notes |
 |-----------|-------|---------|--------------|----------------|
-| Switch 1  | SW1   | GPIO 5  | Pin 29       | Pull-up; LOW (active) when pressed |
-| Switch 2  | SW2   | GPIO 6  | Pin 31       | Pull-up; LOW when pressed |
-| Switch 3  | SW3   | GPIO 13 | Pin 33       | Pull-up; LOW when pressed |
-| Switch 4  | SW4   | GPIO 19 | Pin 35       | Pull-up; LOW when pressed |
+| Switch 1  | SW1   | GPIO 5  | Pin 29       | Red-cover guarded button; Pull-up; LOW (active) when turned ON |
+| Switch 2  | SW2   | GPIO 6  | Pin 31       | Toggle switch; Pull-up; LOW when flipped ON |
+| Switch 3  | SW3   | GPIO 13 | Pin 33       | Toggle switch; Pull-up; LOW when flipped ON |
+| Switch 4  | SW4   | GPIO 19 | Pin 35       | Key switch; Pull-up; LOW when key turned ON |
 | LED 0     | LED0  | GPIO 18 | Pin 12       | Blue LED |
 | LED 1     | LED1  | GPIO 24 | Pin 18       | Orange LED |
 | LED 2     | LED2  | GPIO 25 | Pin 22       | Green LED |
@@ -133,8 +141,8 @@ The "logic map" is the brain of the system. It defines which switch combinations
 
 ### What Each State Means
 
-- **`all_lights_on` (SW1 + SW3):** The "healthy" demo state. All LEDs should be on. If you press SW1 and SW3 together and not all LEDs light up, there is a hardware or configuration problem.
-- **`fallback` (no match):** Activates when the current switch combination doesn't match any rule. If you press switches that aren't in the rule table, the blue LED lights up by default. This is expected behaviour, not an error.
+- **`all_lights_on` (SW1 + SW3):** The "healthy" demo state. All LEDs should be on. If you turn SW1 and SW3 on together and not all LEDs light up, there is a hardware or configuration problem.
+- **`fallback` (no match):** Activates when the current switch combination doesn't match any rule. If you turn on switches that aren't in the rule table, the blue LED lights up by default. This is expected behaviour, not an error.
 - **`diagnostic_mode` (SW1 + SW2 + SW3):** Used during demos to show a specific two-LED pattern for diagnostics discussions.
 - **`shutdown_sequence` (SW1 + SW2 + SW4):** Turns all LEDs off. Use this to reset the panel to a known-off state.
 - **`needs_help` flag:** Set to `true` in telemetry when the actual LED states don't match the expected LED states according to the current rule. This is the trigger for the AI agent to appear in the dashboard.
@@ -176,11 +184,11 @@ When `false_positives.enabled` is set to `true`, the Pi randomly fails to light 
    - Check service: `sudo systemctl status iot-monitor`
    - Check logs: `sudo journalctl -u iot-monitor -f`
 
-4. **No switch presses** — The Pi only sends telemetry on switch state changes. If no switches have been pressed since the service started, the dashboard shows no data.
-   - Press any switch on the panel to generate a telemetry event.
+4. **No switch activity** — The Pi only sends telemetry on switch state changes. If no switches have been activated since the service started, the dashboard shows no data.
+   - Turn any switch on or off to generate a telemetry event.
 
 **Resolution steps:**
-1. Press a switch on the Pi.
+1. Activate a switch on the Pi (turn SW1 on, for example).
 2. Wait 5 to 10 seconds for the data to propagate.
 3. If still nothing, check the health endpoint, then the Logic App run history, then the Pi logs.
 
@@ -188,10 +196,10 @@ When `false_positives.enabled` is set to `true`, the Pi randomly fails to light 
 
 ### Scenario B: "A specific LED is not turning on when it should"
 
-**Symptoms:** You press switches that match a rule, but one or more expected LEDs don't light up.
+**Symptoms:** You activate switches that match a rule, but one or more expected LEDs don't light up.
 
 **Questions to ask:**
-- Which switches are currently active (pressed)?
+- Which switches are currently active (turned on)?
 - Which LEDs are currently on?
 - Which rule should be firing according to the logic map?
 
@@ -266,9 +274,9 @@ az iot hub device-identity connection-string show \
 
 ---
 
-### Scenario D: "The dashboard updates when I press switches but not from the Pi"
+### Scenario D: "The dashboard updates when I activate switches but not from the Pi"
 
-**Symptoms:** The test button or local simulation works fine, but physical Pi switch presses don't produce dashboard updates.
+**Symptoms:** The test button or local simulation works fine, but physical Pi switch activations don't produce dashboard updates.
 
 **Diagnostic steps:**
 
@@ -276,18 +284,18 @@ az iot hub device-identity connection-string show \
    ```bash
    sudo journalctl -u iot-monitor -f
    ```
-   Press a switch and look for: `Successfully sent message to Hub`
+   Turn a switch on and look for: `Successfully sent message to Hub`
 
 2. **Verify the message reaches IoT Hub:**
    On your dev machine:
    ```bash
    az iot hub monitor-events --hub-name iothub-aw-iot-copilot --device-id raspberry-pi-iotpanel
    ```
-   Press a switch and check if a message appears here.
+   Turn a switch on and check if a message appears here.
 
 3. **Verify the Logic App is picking up the message:**
    - Azure Portal → Logic App `la-aw-iot-copilot` → Overview → Run history
-   - A successful run should appear within 5 seconds of the switch press.
+   - A successful run should appear within 5 seconds of the switch state change.
    - If the run shows the message content, the Logic App is working.
 
 4. **Verify the Function App received the POST:**
@@ -333,11 +341,11 @@ sudo systemctl start iot-monitor
 
 ---
 
-### Scenario F: "Switch presses show on dashboard but rule name is wrong"
+### Scenario F: "Switch state changes show on dashboard but rule name is wrong"
 
 **Symptoms:** The telemetry arrives and updates the dashboard, but `active_rule` shows `fallback` when you expect a specific rule, or shows the wrong rule.
 
-**Cause:** The switch combination pressed does not match any rule in the current `logic_map.json`, or the rules were overwritten by an incomplete Device Twin update.
+**Cause:** The switch combination active does not match any rule in the current `logic_map.json`, or the rules were overwritten by an incomplete Device Twin update.
 
 **Check current rules:**
 ```bash
@@ -654,23 +662,23 @@ Use this procedure to verify hardware is correctly wired after assembly or after
 systemctl status iot-monitor
 ```
 
-**Step 2:** Press each switch individually and observe:
+**Step 2:** Activate each switch and observe:
 
 | Action | Expected LED(s) on |
 |--------|-------------------|
-| Press SW2 only | LED2 (Green) |
-| Press SW4 only | LED3 (Yellow) |
-| Press SW1 only | LED0 (Blue) — fallback rule |
-| Press SW1 + SW3 | LED0 + LED1 + LED2 + LED3 (all 4) |
-| Press SW1 + SW2 | LED0 + LED2 (Blue + Green) |
-| Press SW1 + SW2 + SW3 | LED1 + LED3 (Orange + Yellow) |
-| Press SW1 + SW2 + SW4 | No LEDs on |
+| Turn SW2 ON only | LED2 (Green) |
+| Turn SW4 ON only | LED3 (Yellow) |
+| Turn SW1 ON only | LED0 (Blue) — fallback rule |
+| Turn SW1 + SW3 ON | LED0 + LED1 + LED2 + LED3 (all 4) |
+| Turn SW1 + SW2 ON | LED0 + LED2 (Blue + Green) |
+| Turn SW1 + SW2 + SW3 ON | LED1 + LED3 (Orange + Yellow) |
+| Turn SW1 + SW2 + SW4 ON | No LEDs on |
 
-**Step 3:** Check live logs during switch presses:
+**Step 3:** Check live logs during switch activation:
 ```bash
 sudo journalctl -u iot-monitor -f
 ```
-You should see `Switch press → telemetry sent (rule: <rule_id>)` for each press.
+You should see `Switch state change → telemetry sent (rule: <rule_id>)` for each change.
 
 **Step 4:** Check the local API:
 ```bash

@@ -15,6 +15,8 @@ interface GpioSwitch {
   gpio: number;
   physicalPin: number;
   pressed: boolean;
+  /** True when the Pi is disconnected — state cannot be confirmed */
+  unknown: boolean;
   label: string;
 }
 
@@ -69,6 +71,7 @@ const WIRE_KEYFRAMES = `
 
 /* ── Switch box — left column ───────────────── */
 function SwitchBox({ sw, row }: { sw: GpioSwitch; row: number }) {
+  const active = sw.pressed && !sw.unknown;
   return (
     <div
       className="animate-in"
@@ -76,22 +79,23 @@ function SwitchBox({ sw, row }: { sw: GpioSwitch; row: number }) {
         gridColumn: 1,
         gridRow: row + 1,
         background: 'var(--color-surface)',
-        border: `1px solid ${sw.pressed ? `rgba(${AMBER_RGB}, 0.55)` : 'var(--color-border)'}`,
+        border: `1px solid ${active ? `rgba(${AMBER_RGB}, 0.55)` : 'var(--color-border)'}`,
         borderRadius: 'var(--radius-md)',
         padding: '6px 10px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        boxShadow: sw.pressed ? `0 0 10px rgba(${AMBER_RGB}, 0.20)` : 'none',
+        boxShadow: active ? `0 0 10px rgba(${AMBER_RGB}, 0.20)` : 'none',
+        opacity: sw.unknown ? 0.55 : 1,
         transition: 'all 0.2s',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
         <div style={{
           width: '12px', height: '12px', borderRadius: '2px', flexShrink: 0,
-          background: sw.pressed ? `rgba(${AMBER_RGB}, 1)` : 'var(--color-surface-2)',
-          border: `1px solid ${sw.pressed ? `rgba(${AMBER_RGB}, 0.8)` : 'var(--color-border-strong)'}`,
-          boxShadow: sw.pressed ? `0 0 6px rgba(${AMBER_RGB}, 0.55)` : 'none',
+          background: active ? `rgba(${AMBER_RGB}, 1)` : 'var(--color-surface-2)',
+          border: `1px solid ${active ? `rgba(${AMBER_RGB}, 0.8)` : 'var(--color-border-strong)'}`,
+          boxShadow: active ? `0 0 6px rgba(${AMBER_RGB}, 0.55)` : 'none',
           transition: 'all 0.2s',
         }} />
         <span style={{ fontFamily: 'var(--font-heading)', fontSize: '12px', fontWeight: 700, color: 'var(--color-text-bright)', letterSpacing: '0.06em' }}>
@@ -104,9 +108,9 @@ function SwitchBox({ sw, row }: { sw: GpioSwitch; row: number }) {
       <div style={{
         fontFamily: 'var(--font-heading)', fontSize: '9px', fontWeight: 700,
         letterSpacing: '0.10em', textTransform: 'uppercase',
-        color: sw.pressed ? `rgba(${AMBER_RGB}, 1)` : 'var(--color-text-muted)',
+        color: active ? `rgba(${AMBER_RGB}, 1)` : 'var(--color-text-muted)',
       }}>
-        {sw.pressed ? 'PRESSED' : 'OPEN'}
+        {sw.unknown ? '?' : sw.pressed ? 'PRESSED' : 'OPEN'}
       </div>
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: '8px', color: 'var(--color-border-strong)', marginTop: '2px' }}>
         ⏚ GND
@@ -117,6 +121,7 @@ function SwitchBox({ sw, row }: { sw: GpioSwitch; row: number }) {
 
 /* ── Switch wire — col 2 ───────────────────── */
 function SwitchWire({ sw, row }: { sw: GpioSwitch; row: number }) {
+  const active = sw.pressed && !sw.unknown;
   return (
     <div
       style={{
@@ -134,7 +139,7 @@ function SwitchWire({ sw, row }: { sw: GpioSwitch; row: number }) {
         height: '3px',
         top: '50%',
         transform: 'translateY(-50%)',
-        background: sw.pressed ? `rgba(${AMBER_RGB}, 0.35)` : 'var(--color-border)',
+        background: active ? `rgba(${AMBER_RGB}, 0.35)` : 'var(--color-border)',
         transition: 'background 0.3s',
       }} />
       <div style={{
@@ -144,7 +149,7 @@ function SwitchWire({ sw, row }: { sw: GpioSwitch; row: number }) {
         transform: 'translateY(-50%)',
         width: '34px', height: '13px',
         background: 'var(--color-surface-2)',
-        border: `1px solid ${sw.pressed ? `rgba(${AMBER_RGB}, 0.45)` : 'var(--color-border)'}`,
+        border: `1px solid ${active ? `rgba(${AMBER_RGB}, 0.45)` : 'var(--color-border)'}`,
         borderRadius: '2px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 1,
@@ -159,14 +164,14 @@ function SwitchWire({ sw, row }: { sw: GpioSwitch; row: number }) {
         width: 0, height: 0,
         borderTop: '5px solid transparent',
         borderBottom: '5px solid transparent',
-        borderLeft: `6px solid ${sw.pressed ? `rgba(${AMBER_RGB}, 0.55)` : 'var(--color-border)'}`,
+        borderLeft: `6px solid ${active ? `rgba(${AMBER_RGB}, 0.55)` : 'var(--color-border)'}`,
       }} />
     </div>
   );
 }
 
 /* ── Pi center — col 3, spans all 4 rows ────── */
-function PiCenter({ switches, leds }: { switches: GpioSwitch[]; leds: GpioLed[] }) {
+function PiCenter({ switches, leds, isDisconnected }: { switches: GpioSwitch[]; leds: GpioLed[]; isDisconnected: boolean }) {
   return (
     <div
       style={{
@@ -195,62 +200,66 @@ function PiCenter({ switches, leds }: { switches: GpioSwitch[]; leds: GpioLed[] 
       }}>
         RPi GPIO
       </div>
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 7px',
-            borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{
-              width: '6px', height: '6px', borderRadius: '50%',
-              background: switches[i].pressed ? `rgba(${AMBER_RGB}, 1)` : 'rgba(255,255,255,0.15)',
-              boxShadow: switches[i].pressed ? `0 0 5px rgba(${AMBER_RGB}, 0.7)` : 'none',
-              transition: 'all 0.2s',
-            }} />
+      {[0, 1, 2, 3].map((i) => {
+        const swActive = switches[i].pressed && !isDisconnected;
+        const ledActive = leds[i].on && !isDisconnected;
+        return (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 7px',
+              borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{
+                width: '6px', height: '6px', borderRadius: '50%',
+                background: swActive ? `rgba(${AMBER_RGB}, 1)` : 'rgba(255,255,255,0.15)',
+                boxShadow: swActive ? `0 0 5px rgba(${AMBER_RGB}, 0.7)` : 'none',
+                transition: 'all 0.2s',
+              }} />
+              <span style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: '9px',
+                color: swActive ? `rgba(${AMBER_RGB}, 1)` : 'var(--color-text-muted)',
+                letterSpacing: '0.03em',
+                transition: 'color 0.2s',
+              }}>
+                {switches[i].gpio}
+              </span>
+            </div>
             <span style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: '9px',
-              color: switches[i].pressed ? `rgba(${AMBER_RGB}, 1)` : 'var(--color-text-muted)',
-              letterSpacing: '0.03em',
-              transition: 'color 0.2s',
+              fontSize: '7px',
+              color: 'rgba(255,255,255,0.20)',
+              letterSpacing: '0.04em',
             }}>
-              {switches[i].gpio}
+              IN|OUT
             </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: '9px',
+                color: ledActive ? leds[i].color : 'var(--color-text-muted)',
+                letterSpacing: '0.03em',
+                transition: 'color 0.2s',
+              }}>
+                {leds[i].gpio}
+              </span>
+              <div style={{
+                width: '6px', height: '6px', borderRadius: '50%',
+                background: ledActive ? leds[i].color : 'rgba(255,255,255,0.15)',
+                boxShadow: ledActive ? `0 0 5px ${leds[i].color}` : 'none',
+                transition: 'all 0.2s',
+              }} />
+            </div>
           </div>
-          <span style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: '7px',
-            color: 'rgba(255,255,255,0.20)',
-            letterSpacing: '0.04em',
-          }}>
-            IN|OUT
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '9px',
-              color: leds[i].on ? leds[i].color : 'var(--color-text-muted)',
-              letterSpacing: '0.03em',
-              transition: 'color 0.2s',
-            }}>
-              {leds[i].gpio}
-            </span>
-            <div style={{
-              width: '6px', height: '6px', borderRadius: '50%',
-              background: leds[i].on ? leds[i].color : 'rgba(255,255,255,0.15)',
-              boxShadow: leds[i].on ? `0 0 5px ${leds[i].color}` : 'none',
-              transition: 'all 0.2s',
-            }} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -376,6 +385,9 @@ export default function DeviceStatus() {
 
   const loading = iotState === null && (connectionStatus === 'connecting' || connectionStatus === 'disconnected');
 
+  // True when we have stale data but are no longer connected — state is unknown
+  const isDisconnected = iotState !== null && connectionStatus !== 'connected';
+
   // Build DeviceInfo from live SignalR state; fall back to off/open when no data yet
   const device: DeviceInfo = {
     id: 'raspberry-pi-iotpanel',
@@ -387,13 +399,14 @@ export default function DeviceStatus() {
       gpio: cfg.gpio,
       physicalPin: LED_PINS[i],
       color: cfg.color,
-      on: iotState ? iotState.leds[i] : false,
+      on: isDisconnected ? false : (iotState ? iotState.leds[i] : false),
       label: cfg.label,
     })),
     switches: GPIO_CONFIG.switches.map((cfg, i) => ({
       gpio: cfg.gpio,
       physicalPin: SW_PINS[i],
       pressed: iotState ? iotState.switches[i] : false,
+      unknown: isDisconnected,
       label: cfg.label,
     })),
   };
@@ -489,7 +502,7 @@ export default function DeviceStatus() {
                 rowGap: '6px',
               }}
             >
-              <PiCenter switches={device.switches} leds={device.leds} />
+              <PiCenter switches={device.switches} leds={device.leds} isDisconnected={isDisconnected} />
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} style={{ display: 'contents' }}>
                   <SwitchBox  sw={device.switches[i]} row={i} />

@@ -114,6 +114,13 @@ setup_configuration() {
     log_message "Setting up configuration files"
     sudo mkdir -p /opt/iot-monitor
 
+    # Ensure the writable runtime config directory exists and is owned by the
+    # service user.  On installs that already have StateDirectory=iot-monitor in
+    # the service unit systemd creates this automatically; this step is a
+    # belt-and-braces guard for existing installs without that directive (#93).
+    sudo mkdir -p /var/lib/iot-monitor
+    sudo chown "$SERVICE_USER:$SERVICE_USER" /var/lib/iot-monitor
+
     # Create .env from template only if it doesn't already exist.
     # Existing .env is NEVER overwritten — it contains the IoT Hub secret.
     if [ ! -f "/opt/iot-monitor/.env" ]; then

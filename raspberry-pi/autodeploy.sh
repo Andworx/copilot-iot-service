@@ -4,16 +4,21 @@
 # and starts the iot-monitor service.
 #
 # SECURITY: No secrets are stored in this script.
-# IoT Hub credentials live in /opt/iot-monitor/.env (not committed to git).
+# IoT Hub credentials and GITHUB_TOKEN live in /opt/iot-monitor/.env
+# (not committed to git).
+#
+# GitHub access uses HTTPS + Personal Access Token (read:contents scope).
+# Add GITHUB_TOKEN=ghp_xxx to /opt/iot-monitor/.env — no SSH keys needed.
 
 set -e
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-REPO_URL="git@github.com:Andworx/copilot-iot-service.git"
+REPO_HTTPS="https://github.com/Andworx/copilot-iot-service.git"
 PROJECT_DIR="/opt/iot-monitor"
 SERVICE_NAME="iot-monitor"
 LOG_FILE="/var/log/iot-monitor/autodeploy.log"
 BRANCH="main"
+ENV_FILE="/opt/iot-monitor/.env"
 
 # Detect the non-root user who owns the repository
 if [ -d "$PROJECT_DIR/raspberry-pi" ]; then
@@ -30,6 +35,21 @@ log_message() {
 mkdir -p "$(dirname "$LOG_FILE")"
 log_message "Starting auto-deploy service"
 
+# Load GITHUB_TOKEN from .env if present
+GITHUB_TOKEN=""
+if [ -f "$ENV_FILE" ]; then
+    GITHUB_TOKEN=$(grep -E '^GITHUB_TOKEN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'")
+fi
+
+# Build authenticated HTTPS URL (token embedded — never logged)
+get_repo_url() {
+    if [ -n "$GITHUB_TOKEN" ]; then
+        echo "https://${GITHUB_TOKEN}@github.com/Andworx/copilot-iot-service.git"
+    else
+        echo "$REPO_HTTPS"
+    fi
+}
+
 # ─── Network ──────────────────────────────────────────────────────────────────
 check_internet() {
     log_message "Checking internet connectivity..."
@@ -45,18 +65,15 @@ check_internet() {
     return 1
 }
 
-# ─── GitHub SSH ───────────────────────────────────────────────────────────────
+# ─── GitHub access ────────────────────────────────────────────────────────────
 check_github_access() {
-    log_message "Checking GitHub SSH access..."
-    if sudo -u "$SERVICE_USER" ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -T git@github.com 2>&1 \
-        | grep -q "successfully authenticated"; then
-        log_message "GitHub SSH access confirmed"
-        return 0
-    else
-        log_message "ERROR: Cannot authenticate with GitHub via SSH"
-        log_message "See raspberry-pi/SSH_SETUP.md for configuration instructions"
+    if [ -z "$GITHUB_TOKEN" ]; then
+        log_message "ERROR: GITHUB_TOKEN not set in $ENV_FILE"
+        log_message "Add GITHUB_TOKEN=ghp_xxx (read:contents scope) to $ENV_FILE"
         return 1
     fi
+    log_message "GitHub HTTPS access configured"
+    return 0
 }
 
 # ─── Repository ───────────────────────────────────────────────────────────────
@@ -70,6 +87,8 @@ setup_repository() {
 
     cd "$PROJECT_DIR"
 
+    REPO_URL=$(get_repo_url)
+
     if [ ! -d ".git" ]; then
         log_message "Cloning repository (sparse-checkout: raspberry-pi/ only)"
         sudo -u "$SERVICE_USER" git init
@@ -80,6 +99,8 @@ setup_repository() {
         sudo -u "$SERVICE_USER" git checkout "$BRANCH"
         log_message "Repository cloned"
     else
+        # Update remote URL in case token changed
+        sudo -u "$SERVICE_USER" git remote set-url origin "$REPO_URL"
         if ! sudo -u "$SERVICE_USER" git sparse-checkout list 2>/dev/null | grep -q "raspberry-pi"; then
             log_message "Configuring sparse-checkout on existing repo"
             sudo -u "$SERVICE_USER" git sparse-checkout init --cone

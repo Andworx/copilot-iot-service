@@ -7,7 +7,7 @@ description: "Use when working on AgenticIoT — general conventions for file or
 
 - Solution unique name: `AgenticIoT`
 - Publisher prefix: `andy`
-- Environment: `andworx-development.crm.dynamics.com/`
+- Environment: `iot-agents.crm.dynamics.com/`
 
 ## PAC CLI
 

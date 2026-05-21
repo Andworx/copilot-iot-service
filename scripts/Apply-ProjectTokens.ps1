@@ -25,7 +25,7 @@
     Preview what would be applied without writing any files.
 
 .PARAMETER Token
-    Apply a single named token only (e.g. -Token andworx-development.crm.dynamics.com/).
+    Apply a single named token only (e.g. -Token iot-agents.crm.dynamics.com/).
 
 .PARAMETER SkipMigration
     If detected old flat token format, skip migration offer and exit with error.
@@ -43,8 +43,8 @@
     # Preview what prod tokens would apply without writing files
 
 .EXAMPLE
-    .\scripts\Apply-ProjectTokens.ps1 -Environment dev -Token andworx-development.crm.dynamics.com/
-    # Apply only andworx-development.crm.dynamics.com/ token for dev environment
+    .\scripts\Apply-ProjectTokens.ps1 -Environment dev -Token iot-agents.crm.dynamics.com/
+    # Apply only iot-agents.crm.dynamics.com/ token for dev environment
 
 .EXAMPLE
     .\scripts\Apply-ProjectTokens.ps1 -Environment dev -SkipRemoteSync

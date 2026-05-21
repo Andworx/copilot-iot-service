@@ -110,7 +110,7 @@ Project tokens support dev, test, and prod environments with environment-specifi
 .\Apply-ProjectTokens.ps1 -Environment prod
 
 # Apply single token for specific environment
-.\Apply-ProjectTokens.ps1 -Environment prod -Token andworx-development.crm.dynamics.com/
+.\Apply-ProjectTokens.ps1 -Environment prod -Token iot-agents.crm.dynamics.com/
 
 # Preview without writing files
 .\Apply-ProjectTokens.ps1 -Environment prod -WhatIf
@@ -166,10 +166,10 @@ To add more files or sources, edit `scripts/remote-content.sources.json`.
 |-------|---------|-------------|-------|
 | `AgenticIoT` | My Project | All | Project identifier |
 | `AgenticIoT` | proj-001 | All | Unique project ID |
-| `andworx-development` | Andworx | All | Organization name |
+| `iot-agents` | Andworx | All | Organization name |
 | `AgenticIoT` | my_solution | All | Dataverse solution name |
 | `andy` | andworx | All | Publisher prefix |
-| `andworx-development.crm.dynamics.com/` | https://org.crm.dynamics.com | Env-specific | Dataverse instance |
+| `iot-agents.crm.dynamics.com/` | https://org.crm.dynamics.com | Env-specific | Dataverse instance |
 | `YOUR_TENANT_ID` | {guid} | Env-specific | Azure tenant |
 | ` commercial` | commercial | Env-specific | Cloud authority host selector (`commercial`, `gcc`, `gcch`, `dod`) |
 | `YOUR_CLIENT_ID` | {guid} | Optional | Service principal |

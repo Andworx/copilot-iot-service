@@ -151,7 +151,7 @@ Once your PR is approved and merged:
 2. Click **Projects** → **New project**
 3. Choose **Board** layout
 4. Name it (e.g., `AgenticIoT`)
-5. Note the project number from the URL (e.g., `https://github.com/orgs/andworx-development/projects/2` → number is `2`)
+5. Note the project number from the URL (e.g., `https://github.com/orgs/iot-agents/projects/2` → number is `2`)
 6. Set `YOUR_PROJECT_NUMBER` in `project.tokens.json` and re-run `Apply-ProjectTokens.ps1`
 
 ### 2. Create Required Labels

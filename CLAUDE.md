@@ -5,8 +5,8 @@
 - **Project name:** AgenticIoT
 - **Solution unique name:** AgenticIoT
 - **Publisher prefix:** andy
-- **Organisation URL:** andworx-development.crm.dynamics.com/
-- **Org / tenant:** andworx-development
+- **Organisation URL:** iot-agents.crm.dynamics.com/
+- **Org / tenant:** iot-agents
 - **Cloud environment:**  commercial (commercial | gcc | gcch | dod)
 
 Copy `project.tokens.example.json` → `project.tokens.json`, fill in real values, then run `.\scripts\Apply-ProjectTokens.ps1 -Environment dev` to stamp them across the repo. `project.tokens.json` is gitignored — never commit it.
@@ -15,7 +15,7 @@ Copy `project.tokens.example.json` → `project.tokens.json`, fill in real value
 
 - Solution unique name: `AgenticIoT`
 - Publisher prefix: `andy` — all custom entities, columns, choices, and relationships use this prefix; no exceptions
-- Target environment: `andworx-development.crm.dynamics.com/`
+- Target environment: `iot-agents.crm.dynamics.com/`
 
 ## PAC CLI
 

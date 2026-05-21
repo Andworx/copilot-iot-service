@@ -171,7 +171,8 @@ install_dependencies() {
         sudo apt-get install -y python3-pip python3-full
     fi
     if [ -f "raspberry-pi/requirements.txt" ]; then
-        sudo pip3 install --break-system-packages -r raspberry-pi/requirements.txt
+        # --ignore-installed avoids attempting to uninstall system-managed packages (e.g. urllib3)
+        sudo pip3 install --break-system-packages --ignore-installed -r raspberry-pi/requirements.txt
         log_message "Python packages installed"
     fi
 }

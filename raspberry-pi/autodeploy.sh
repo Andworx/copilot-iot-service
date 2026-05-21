@@ -210,15 +210,8 @@ setup_service() {
 main() {
     log_message "=== Auto-deploy started ==="
 
-    # Self-update: keep /usr/local/bin/auto-deploy.sh current
-    if [ -f "raspberry-pi/autodeploy.sh" ] && \
-       ! cmp -s "raspberry-pi/autodeploy.sh" "/usr/local/bin/auto-deploy.sh"; then
-        log_message "Updating /usr/local/bin/auto-deploy.sh"
-        sudo cp raspberry-pi/autodeploy.sh /usr/local/bin/auto-deploy.sh
-    fi
-
     check_internet  || { log_message "FATAL: No internet"; exit 1; }
-    check_github_access || { log_message "FATAL: GitHub SSH failed"; exit 1; }
+    check_github_access || { log_message "FATAL: GitHub access failed"; exit 1; }
 
     setup_repository
 
@@ -227,6 +220,14 @@ main() {
         install_dependencies
     else
         dependencies_need_update && install_dependencies
+    fi
+
+    # Self-update: copy script AFTER pulling so we get the latest version
+    if [ -f "raspberry-pi/autodeploy.sh" ] && \
+       ! cmp -s "raspberry-pi/autodeploy.sh" "/usr/local/bin/auto-deploy.sh"; then
+        log_message "Updating /usr/local/bin/auto-deploy.sh"
+        sudo cp raspberry-pi/autodeploy.sh /usr/local/bin/auto-deploy.sh
+        sudo chmod +x /usr/local/bin/auto-deploy.sh
     fi
 
     setup_configuration

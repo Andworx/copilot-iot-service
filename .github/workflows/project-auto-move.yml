@@ -35,7 +35,7 @@ jobs:
         if: steps.get-issue.outputs.issue_number != ''
         id: project-access
         run: |
-          if gh project view YOUR_PROJECT_NUMBER --owner andworx-development >/dev/null 2>&1; then
+          if gh project view YOUR_PROJECT_NUMBER --owner iot-agents >/dev/null 2>&1; then
             echo "ok=true" >> $GITHUB_OUTPUT
           else
             echo "ok=false" >> $GITHUB_OUTPUT
@@ -48,7 +48,7 @@ jobs:
         if: steps.get-issue.outputs.issue_number != '' && steps.project-access.outputs.ok != 'true'
         run: |
           echo "Skipping project status move: token cannot access org project #YOUR_PROJECT_NUMBER."
-          echo "Fix PAT_PROJECT by authorizing it for andworx-development org and scopes repo, read:project, write:project."
+          echo "Fix PAT_PROJECT by authorizing it for iot-agents org and scopes repo, read:project, write:project."
         shell: bash
 
       - name: Handle PR opened/reopened/edited - Move to In Review
@@ -56,7 +56,7 @@ jobs:
         uses: leonsteinhaeuser/project-beta-automations@v2.2.1
         with:
           gh_token: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
-          organization: andworx-development
+          organization: iot-agents
           project_id: YOUR_PROJECT_NUMBER
           resource_node_id: ${{ steps.issue-node.outputs.issue_node_id }}
           status_value: "In Review"
@@ -66,7 +66,7 @@ jobs:
         uses: leonsteinhaeuser/project-beta-automations@v2.2.1
         with:
           gh_token: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
-          organization: andworx-development
+          organization: iot-agents
           project_id: YOUR_PROJECT_NUMBER
           resource_node_id: ${{ steps.issue-node.outputs.issue_node_id }}
           status_value: "Done"
@@ -84,7 +84,7 @@ jobs:
         uses: leonsteinhaeuser/project-beta-automations@v2.2.1
         with:
           gh_token: ${{ secrets.PAT_PROJECT || secrets.GITHUB_TOKEN }}
-          organization: andworx-development
+          organization: iot-agents
           project_id: YOUR_PROJECT_NUMBER
           resource_node_id: ${{ steps.issue-node.outputs.issue_node_id }}
           status_value: "In Progress"

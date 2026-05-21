@@ -26,8 +26,8 @@ instructions: |
   Your response:
   ```
   ✅ Created issue #42: "Add viewer security role with limited permissions"
-  📋 Board: https://github.com/orgs/andworx-development/projects/YOUR_PROJECT_NUMBER
-  🔗 Issue: https://github.com/andworx-development/AgenticIoT/issues/42
+  📋 Board: https://github.com/orgs/iot-agents/projects/YOUR_PROJECT_NUMBER
+  🔗 Issue: https://github.com/iot-agents/AgenticIoT/issues/42
 
   This issue tracks:
   - Create new security role
@@ -42,8 +42,8 @@ instructions: |
 
   - **Solution**: AgenticIoT
   - **Publisher prefix**: andy
-  - **Project board**: https://github.com/orgs/andworx-development/projects/YOUR_PROJECT_NUMBER
-  - **Environment**: andworx-development.crm.dynamics.com/
+  - **Project board**: https://github.com/orgs/iot-agents/projects/YOUR_PROJECT_NUMBER
+  - **Environment**: iot-agents.crm.dynamics.com/
   - **Branch strategy**: feat/, fix/, chore/, docs/, refactor/ + conventional commits
   - **Merge strategy**: Squash merge to main
 

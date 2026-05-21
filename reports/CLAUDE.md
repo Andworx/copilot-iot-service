@@ -21,7 +21,7 @@ Each report folder should include:
 - Commit PBIP and semantic model definition files.
 - Do not commit local Power BI cache/state files under `.pbi/`.
 - Do not commit temporary export outputs.
-- Keep organization values tokenized where practical (`andworx-development.crm.dynamics.com/`, etc.).
+- Keep organization values tokenized where practical (`iot-agents.crm.dynamics.com/`, etc.).
 
 ## DAX and M Organization
 

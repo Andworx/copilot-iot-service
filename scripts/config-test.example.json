@@ -1,5 +1,5 @@
 {
-  "environmentUrl": "https://andworx-development.crm.dynamics.com/",
+  "environmentUrl": "https://iot-agents.crm.dynamics.com/",
   "apiVersion": "v9.2",
   "tenantId": "YOUR_TENANT_ID",
   "clientId": "YOUR_CLIENT_ID",

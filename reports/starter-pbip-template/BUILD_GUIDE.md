@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Power BI Desktop (latest version)
-- Access to Dataverse environment at `https://andworx-development.crm.dynamics.com/.crm.dynamics.com`
+- Access to Dataverse environment at `https://iot-agents.crm.dynamics.com/.crm.dynamics.com`
 - Permissions for source tables/views used by the report
 
 ## Build Steps

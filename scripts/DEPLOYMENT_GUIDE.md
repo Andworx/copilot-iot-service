@@ -23,7 +23,7 @@ Copy-Item .env.example .env
 
 ```powershell
 Copy-Item config-dev.example.json config-dev.json
-# Edit config-dev.json → fill in andworx-development.crm.dynamics.com/, 7cea0515-a5e4-4e8a-8f2a-6d1ad5d6b9f8, 347aeaed-b2d1-4b76-a4ff-0d2b340f707e,
+# Edit config-dev.json → fill in iot-agents.crm.dynamics.com/, 7cea0515-a5e4-4e8a-8f2a-6d1ad5d6b9f8, 347aeaed-b2d1-4b76-a4ff-0d2b340f707e,
 #  commercial, andy, AgenticIoT
 ```
 
@@ -61,7 +61,7 @@ Each environment has a `config-{name}.json` file. See `config-dev.example.json` 
 
 ```json
 {
-  "environmentUrl": "https://andworx-development.crm.dynamics.com/",
+  "environmentUrl": "https://iot-agents.crm.dynamics.com/",
   "apiVersion": "v9.2",
   "tenantId": "7cea0515-a5e4-4e8a-8f2a-6d1ad5d6b9f8",
   "clientId": "347aeaed-b2d1-4b76-a4ff-0d2b340f707e",

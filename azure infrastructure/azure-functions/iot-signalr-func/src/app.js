@@ -54,13 +54,16 @@ const dvCredential = new DefaultAzureCredential();
  */
 async function writeToDataverse(messageData, context) {
     const dataverseUrl = process.env.DATAVERSE_URL;
+    context.log(`[DV] writeToDataverse called — DATAVERSE_URL=${dataverseUrl ? dataverseUrl : '(not set)'}`);
     if (!dataverseUrl) {
-        context.log.warn('DATAVERSE_URL not set — skipping Dataverse write');
+        context.log('[DV] DATAVERSE_URL not set — skipping Dataverse write');
         return;
     }
 
     try {
+        context.log('[DV] Acquiring MSI token...');
         const tokenResponse = await dvCredential.getToken(`${dataverseUrl.replace(/\/$/, '')}/.default`);
+        context.log('[DV] Token acquired — writing record...');
         const fetch = require('node-fetch');
 
         const deviceId = messageData.deviceId || messageData.device_id || 'raspberry-pi-iotpanel';
@@ -96,13 +99,13 @@ async function writeToDataverse(messageData, context) {
         });
 
         if (res.ok) {
-            context.log(`Dataverse record created for device: ${deviceId}`);
+            context.log(`[DV] Dataverse record created for device: ${deviceId}`);
         } else {
             const errorText = await res.text();
-            context.log.error(`Dataverse write failed (${res.status}): ${errorText}`);
+            context.log(`[DV] Dataverse write failed (${res.status}): ${errorText}`);
         }
     } catch (err) {
-        context.log.error('Dataverse write error (non-blocking):', err.message);
+        context.log(`[DV] Dataverse write error (non-blocking): ${err.message}`);
     }
 }
 

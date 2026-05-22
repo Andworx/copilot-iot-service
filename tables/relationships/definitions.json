@@ -1,4 +1,37 @@
 {
   "_comment": "Aggregated relationship definitions consumed by scripts/Import-Relationships.ps1. Each relationship must have an entry here AND an individual file in this folder (e.g. andy_account_contact.json). Add new entries in deployment order: referenced tables must exist before referencing tables.",
-  "relationships": []
+  "relationships": [
+    {
+      "schemaName": "andy_technician_dispatchhistory",
+      "type": "OneToMany",
+      "referencedEntity": "andy_technician",
+      "referencingEntity": "andy_dispatch_history",
+      "referencingAttribute": "andy_technician_id",
+      "cascadeDelete": "Restrict"
+    },
+    {
+      "schemaName": "andy_iotsensor_dispatchhistory",
+      "type": "OneToMany",
+      "referencedEntity": "andy_iot_sensor",
+      "referencingEntity": "andy_dispatch_history",
+      "referencingAttribute": "andy_sensor_id",
+      "cascadeDelete": "Restrict"
+    },
+    {
+      "schemaName": "andy_dispatchhistory_iotsensor_active",
+      "type": "OneToMany",
+      "referencedEntity": "andy_dispatch_history",
+      "referencingEntity": "andy_iot_sensor",
+      "referencingAttribute": "andy_active_assignment_id",
+      "cascadeDelete": "RemoveLink"
+    },
+    {
+      "schemaName": "andy_systemuser_technician",
+      "type": "OneToMany",
+      "referencedEntity": "systemuser",
+      "referencingEntity": "andy_technician",
+      "referencingAttribute": "andy_user_id",
+      "cascadeDelete": "RemoveLink"
+    }
+  ]
 }

@@ -1,0 +1,74 @@
+{
+  "schemaName": "andy_technician",
+  "displayName": "Technician",
+  "displayCollectionName": "Technicians",
+  "description": "Field technician available for IoT fault dispatch. Links to a Dataverse system user for contact details (name, email, phone). Availability and GPS position are updated by the dispatch agent.",
+  "primaryNameColumn": "andy_name",
+  "ownership": "Organization",
+  "isActivity": false,
+  "changeTrackingEnabled": true,
+  "columns": [
+    {
+      "schemaName": "andy_name",
+      "displayName": "Name",
+      "description": "Full display name of the technician (e.g. 'Jane Smith'). Synced from the linked system user.",
+      "dataType": "String",
+      "maxLength": 200,
+      "required": "Required"
+    },
+    {
+      "schemaName": "andy_user_id",
+      "displayName": "System User",
+      "description": "Link to the Dataverse system user record. Provides name, email, and phone via the user profile.",
+      "dataType": "Lookup",
+      "target": "systemuser",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_availability",
+      "displayName": "Availability",
+      "description": "Current availability status. Available = eligible for dispatch. On Job = has open assignment. Off Shift = not eligible.",
+      "dataType": "Choice",
+      "choiceName": "andy_technician_availability",
+      "defaultValue": 756150000,
+      "required": "Required"
+    },
+    {
+      "schemaName": "andy_skill_level",
+      "displayName": "Skill Level",
+      "description": "Experience level of the technician. Used when selecting the best available tech for complex faults.",
+      "dataType": "Choice",
+      "choiceName": "andy_technician_skill_level",
+      "defaultValue": 756150001,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_latitude",
+      "displayName": "Latitude",
+      "description": "Current GPS latitude of the technician. Updated as techs move between assignments.",
+      "dataType": "Decimal",
+      "minValue": -90,
+      "maxValue": 90,
+      "precision": 6,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_longitude",
+      "displayName": "Longitude",
+      "description": "Current GPS longitude of the technician. Updated as techs move between assignments.",
+      "dataType": "Decimal",
+      "minValue": -180,
+      "maxValue": 180,
+      "precision": 6,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_location_label",
+      "displayName": "Location Label",
+      "description": "Human-readable location description (e.g. 'Building A, Floor 2' or 'Boston – Back Bay').",
+      "dataType": "String",
+      "maxLength": 200,
+      "required": "Optional"
+    }
+  ]
+}

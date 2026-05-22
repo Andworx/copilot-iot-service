@@ -34,7 +34,16 @@ function Import-Tables {
         'andy_servicetype',
         'andy_servicerequest',
         'andy_servicerequestnote',
-        'andy_servicerequestattachment'
+        'andy_servicerequestattachment',
+        # IoT dispatch pipeline — deploy in dependency order:
+        # 1. technician (no custom lookup deps)
+        # 2. dispatch_history (lookup to technician added via relationship after deploy)
+        # 3. iot_sensor (lookup to dispatch_history added via relationship after deploy)
+        # 4. Run Import-Relationships to wire up all lookups
+        'andy_technician',
+        'andy_dispatch_history',
+        'andy_iot_sensor',
+        'andy_iottelemetryevent'
     )
 
     # Discover definition files

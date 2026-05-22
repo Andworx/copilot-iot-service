@@ -173,12 +173,12 @@ foreach ($s in $sensors) {
     }
 
     $body = @{
-        andy_device_id  = $s.deviceId
-        andy_site_name  = $s.site
-        andy_device_type = $s.type
-        andy_status     = $ST_ONLINE
-        andy_latitude   = $s.lat
-        andy_longitude  = $s.lon
+        andy_device_id     = $s.deviceId
+        andy_site_name     = $s.site
+        andy_device_type   = $s.type
+        andy_sensor_status = $ST_ONLINE
+        andy_latitude      = $s.lat
+        andy_longitude     = $s.lon
     }
 
     if ($DryRun) {

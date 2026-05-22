@@ -34,8 +34,8 @@
       "required": "Recommended"
     },
     {
-      "schemaName": "andy_status",
-      "displayName": "Status",
+      "schemaName": "andy_sensor_status",
+      "displayName": "Sensor Status",
       "description": "Operational status. Set to Error on first dispatch; reset to Online when dispatch is resolved.",
       "dataType": "Choice",
       "choiceName": "andy_iot_sensor_status",

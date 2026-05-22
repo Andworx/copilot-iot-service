@@ -11,7 +11,7 @@ Registry of IoT sensor devices. Stores fixed metadata (device ID, site, location
 | `andy_device_id` | Text | **Primary name** — matches IoT Hub device ID (e.g. `raspberry-pi-iotpanel`) |
 | `andy_site_name` | Text | Facility/site name |
 | `andy_device_type` | Choice | `Power Panel` / `Temperature` / `Pressure` / `Humidity` / `Motion` |
-| `andy_status` | Choice | `Online` / `Error` / `Offline` / `Maintenance` |
+| `andy_sensor_status` | Choice | `Online` / `Error` / `Offline` / `Maintenance` |
 | `andy_latitude` | Decimal | Fixed GPS latitude of installation site |
 | `andy_longitude` | Decimal | Fixed GPS longitude of installation site |
 | `andy_last_seen` | DateTime | Last telemetry heartbeat |

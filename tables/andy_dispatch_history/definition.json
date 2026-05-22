@@ -7,6 +7,10 @@
   "ownership": "Organization",
   "isActivity": false,
   "changeTrackingEnabled": true,
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_dispatch_history_icon",
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_dispatch_history_icon",
   "columns": [
     {
       "schemaName": "andy_name",

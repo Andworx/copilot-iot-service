@@ -7,6 +7,10 @@
   "ownership": "Organization",
   "isActivity": false,
   "changeTrackingEnabled": true,
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_iot_sensor_icon",
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_iot_sensor_icon",
   "columns": [
     {
       "schemaName": "andy_device_id",

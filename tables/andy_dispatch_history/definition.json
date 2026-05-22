@@ -1,0 +1,79 @@
+{
+  "schemaName": "andy_dispatch_history",
+  "displayName": "Dispatch History",
+  "displayCollectionName": "Dispatch History",
+  "description": "Audit log of IoT fault dispatch assignments. Each record represents one technician assignment to one IoT sensor fault. The dispatch agent queries this table to suppress duplicate dispatches while a fault is still open.",
+  "primaryNameColumn": "andy_name",
+  "ownership": "Organization",
+  "isActivity": false,
+  "changeTrackingEnabled": true,
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_dispatch_history_icon",
+  "columns": [
+    {
+      "schemaName": "andy_name",
+      "displayName": "Dispatch Number",
+      "description": "Auto-generated unique dispatch identifier in the format DISP-{YYYY}-{SEQNUM:5} (e.g. DISP-2026-00001).",
+      "dataType": "String",
+      "maxLength": 100,
+      "required": "Required",
+      "autoNumber": {
+        "format": "DISP-{YYYY}-{SEQNUM:5}"
+      }
+    },
+    {
+      "schemaName": "andy_technician_id",
+      "displayName": "Technician",
+      "description": "The technician assigned to this dispatch. Created via relationship andy_technician_dispatchhistory.",
+      "dataType": "Lookup",
+      "target": "andy_technician",
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_sensor_id",
+      "displayName": "Sensor",
+      "description": "The IoT sensor that triggered this dispatch. Created via relationship andy_iotsensor_dispatchhistory.",
+      "dataType": "Lookup",
+      "target": "andy_iot_sensor",
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_status",
+      "displayName": "Status",
+      "description": "Lifecycle status of this dispatch. Open = active assignment in progress. The duplicate-guard checks for Open records.",
+      "dataType": "Choice",
+      "choiceName": "andy_dispatch_status",
+      "defaultValue": 756150000,
+      "required": "Required"
+    },
+    {
+      "schemaName": "andy_dispatched_at",
+      "displayName": "Dispatched At",
+      "description": "UTC timestamp when this dispatch assignment was created.",
+      "dataType": "DateTime",
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_resolved_at",
+      "displayName": "Resolved At",
+      "description": "UTC timestamp when the technician marked the fault resolved. Null while status is Open.",
+      "dataType": "DateTime",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_error_code",
+      "displayName": "Error Code",
+      "description": "Error code received from the IoT device payload at time of dispatch (e.g. LED_MISMATCH).",
+      "dataType": "String",
+      "maxLength": 100,
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_error_message",
+      "displayName": "Error Message",
+      "description": "Full error description from the IoT device payload at time of dispatch.",
+      "dataType": "Memo",
+      "required": "Optional"
+    }
+  ]
+}

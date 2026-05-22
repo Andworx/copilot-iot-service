@@ -1,0 +1,13 @@
+{
+  "schemaName": "andy_systemuser_technician",
+  "type": "OneToMany",
+  "referencedEntity": "systemuser",
+  "referencingEntity": "andy_technician",
+  "referencingAttribute": "andy_user_id",
+  "cascadeDelete": "RemoveLink",
+  "cascadeAssign": "NoCascade",
+  "cascadeShare": "NoCascade",
+  "cascadeUnshare": "NoCascade",
+  "cascadeReparent": "NoCascade",
+  "description": "Optional link from a technician record to a Dataverse system user. Provides name, email, and phone from the user profile."
+}

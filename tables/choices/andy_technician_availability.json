@@ -1,0 +1,12 @@
+{
+  "schemaName": "andy_technician_availability",
+  "displayName": "Technician Availability",
+  "description": "Availability status of a field technician. Used to filter technicians eligible for dispatch.",
+  "isGlobal": true,
+  "defaultValue": 756150000,
+  "options": [
+    { "value": 756150000, "label": "Available",  "description": "Technician is available and can be dispatched." },
+    { "value": 756150001, "label": "On Job",      "description": "Technician is currently assigned to an open dispatch." },
+    { "value": 756150002, "label": "Off Shift",   "description": "Technician is off shift and unavailable for dispatch." }
+  ]
+}

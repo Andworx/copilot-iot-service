@@ -1,0 +1,12 @@
+{
+  "schemaName": "andy_technician_skill_level",
+  "displayName": "Technician Skill Level",
+  "description": "Experience level of a field technician. Used when selecting the best available tech for a dispatch.",
+  "isGlobal": true,
+  "defaultValue": 756150001,
+  "options": [
+    { "value": 756150000, "label": "Junior",  "description": "Entry-level technician with basic skills." },
+    { "value": 756150001, "label": "Mid",     "description": "Mid-level technician with solid field experience." },
+    { "value": 756150002, "label": "Senior",  "description": "Senior technician capable of handling complex faults." }
+  ]
+}

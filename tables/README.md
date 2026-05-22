@@ -149,3 +149,6 @@ Always use `"cascadeDelete": "Restrict"` to prevent accidental data loss.
 | Folder | Display name | Purpose |
 |--------|--------------|---------|
 | `andy_iottelemetryevent/` | IoT Telemetry Event | Persists IoT Hub telemetry messages from Raspberry Pi devices. Written by `iot-signalr-func`; read by the Power Pages History tab. |
+| `andy_technician/` | Technician | Field technicians available for IoT fault dispatch. Links to Dataverse system user for contact details. Seeded with 25 US East records. |
+| `andy_dispatch_history/` | Dispatch History | Audit log of IoT fault dispatch assignments. Queried by the dispatch agent for duplicate-suppression (open record guard). Auto-number: `DISP-{YYYY}-{SEQNUM:5}`. |
+| `andy_iot_sensor/` | IoT Sensor | Registry of IoT sensor devices with fixed GPS coordinates and site metadata. Used by the dispatch agent to locate the nearest available technician. Seeded with 12 US East records. |

@@ -1,0 +1,13 @@
+{
+  "schemaName": "andy_dispatchhistory_iotsensor_active",
+  "type": "OneToMany",
+  "referencedEntity": "andy_dispatch_history",
+  "referencingEntity": "andy_iot_sensor",
+  "referencingAttribute": "andy_active_assignment_id",
+  "cascadeDelete": "RemoveLink",
+  "cascadeAssign": "NoCascade",
+  "cascadeShare": "NoCascade",
+  "cascadeUnshare": "NoCascade",
+  "cascadeReparent": "NoCascade",
+  "description": "Nullable FK on andy_iot_sensor pointing to the currently open dispatch. RemoveLink on delete so deleting a dispatch record clears the sensor's active assignment pointer."
+}

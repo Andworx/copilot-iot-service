@@ -1,0 +1,13 @@
+{
+  "schemaName": "andy_iotsensor_dispatchhistory",
+  "type": "OneToMany",
+  "referencedEntity": "andy_iot_sensor",
+  "referencingEntity": "andy_dispatch_history",
+  "referencingAttribute": "andy_sensor_id",
+  "cascadeDelete": "Restrict",
+  "cascadeAssign": "NoCascade",
+  "cascadeShare": "NoCascade",
+  "cascadeUnshare": "NoCascade",
+  "cascadeReparent": "NoCascade",
+  "description": "One IoT sensor can have many dispatch history records over its lifetime."
+}

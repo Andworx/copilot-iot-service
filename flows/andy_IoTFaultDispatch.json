@@ -1,7 +1,7 @@
 {
-  "name": "andy_IoTFaultDispatch",
+  "flowName": "andy_IoTFaultDispatch",
   "displayName": "IoT — Auto Dispatch on Fault",
-  "description": "Triggers when an IoT telemetry event with andy_mismatch=true is added to Dataverse. Looks up the sensor, suppresses duplicate dispatches, selects the nearest available technician by GPS distance, creates a dispatch record, and updates sensor and technician status.",
+  "flowDescription": "Triggers when an IoT telemetry event with andy_mismatch=true is added to Dataverse. Looks up the sensor, suppresses duplicate dispatches, selects the nearest available technician by GPS distance, creates a dispatch record, and updates sensor and technician status.",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "1.0.0.0",

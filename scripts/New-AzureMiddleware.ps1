@@ -9,13 +9,12 @@
       - Azure Function App     : func-aw-iot-copilot      (Consumption, Node.js 24)
       - App Service Plan       : plan-func-aw-iot-copilot (Y1 Consumption)
       - Storage Account        : stfuncawiotcopilot        (LRS, required by Functions)
-      - Event Hub Namespace    : evhns-aw-iot-copilot / iot-telemetry  (retained for existing routes)
-      - Logic App (optional)   : la-aw-iot-copilot  (DEPRECATED — skipped by default with -SkipLogicApp)
+      - Event Hub Namespace    : evhns-aw-iot-copilot / iot-telemetry
 
     After provisioning:
       - Function App source is deployed from azure infrastructure/azure-functions/iot-signalr-func/
       - Function App is configured with IoTHubEventHubConnectionString so the Event Hub trigger
-        reads directly from IoT Hub's built-in endpoint — no Logic App poll cycle needed.
+        reads directly from the dedicated Event Hub namespace.
       - IoT Hub route for device 'raspberry-pi-iotpanel' → dedicated Event Hub (evhns-aw-iot-copilot / iot-telemetry)
 
 .PARAMETER Environment
@@ -30,14 +29,6 @@
 .PARAMETER SkipFunctionDeploy
     Skip npm install + func publish step (use if Function Core Tools not installed).
 
-.PARAMETER SkipLogicApp
-    Skip Logic App provisioning (default behaviour — Logic App is deprecated).
-    Pass this flag explicitly to skip it, or omit to provision the Logic App for rollback purposes.
-
-.PARAMETER RefreshLogicAppResources
-    Delete and recreate the Logic App workflow and Event Hubs connection before redeploying.
-    Use this when the portal designer shows the Event Hubs trigger as broken even though runtime deployment succeeded.
-
 .EXAMPLE
     .\New-AzureMiddleware.ps1 -Environment dev
     # Full provision + deploy
@@ -49,10 +40,6 @@
 .EXAMPLE
     .\New-AzureMiddleware.ps1 -Environment dev -SkipFunctionDeploy
     # Provision infrastructure only; deploy Function App manually later
-
-.EXAMPLE
-    .\New-AzureMiddleware.ps1 -Environment dev -RefreshLogicAppResources
-    # Recreate the Logic App workflow + Event Hubs connection, then redeploy
 
 .NOTES
     PREREQUISITES:
@@ -71,9 +58,7 @@ param(
     [Parameter(Mandatory)][ValidateSet('dev','test','prod')] [string]$Environment,
     [string]$Location     = 'eastus',
     [switch]$DryRun,
-    [switch]$SkipFunctionDeploy,
-    [switch]$SkipLogicApp,
-    [switch]$RefreshLogicAppResources
+    [switch]$SkipFunctionDeploy
 )
 
 Set-StrictMode -Version Latest
@@ -85,14 +70,12 @@ $IotHubName      = 'iothub-aw-iot-copilot'
 $SignalRName      = 'signalr-aw-iot-copilot'
 $FuncAppName     = 'func-aw-iot-copilot'
 $StorageName     = 'stfuncawiotcopilot'   # max 24 chars, lowercase, no hyphens
-$LogicAppName    = 'la-aw-iot-copilot'
 $EvhNsName       = 'evhns-aw-iot-copilot'  # Event Hub namespace
 $EvhName         = 'iot-telemetry'          # Event Hub inside the namespace
 $DeviceId        = 'raspberry-pi-iotpanel'
 
-$AzureInfraPath          = Join-Path $PSScriptRoot '..\azure infrastructure'
-$FuncSrcPath             = Join-Path $AzureInfraPath 'azure-functions\iot-signalr-func'
-$LogicAppDefinitionPath  = Join-Path $AzureInfraPath 'azure-logic apps\la-aw-iot-copilot\workflow.json'
+$AzureInfraPath  = Join-Path $PSScriptRoot '..\azure infrastructure'
+$FuncSrcPath     = Join-Path $AzureInfraPath 'azure-functions\iot-signalr-func'
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -193,8 +176,7 @@ if ($st) {
 
 # ─── 4. Event Hub Namespace + Event Hub ──────────────────────────────────────
 # A dedicated Event Hub receives IoT Hub messages via a custom endpoint + route.
-# Logic Apps connects to this hub with a standard SAS connection string,
-# avoiding the 401 issues when connecting directly to IoT Hub's built-in endpoint.
+# The Function App reads directly from this hub using the Event Hub trigger.
 Write-Step "Event Hub Namespace: $EvhNsName"
 $evhns = az eventhubs namespace show --name $EvhNsName --resource-group $ResourceGroup 2>$null
 if ($evhns) {
@@ -227,7 +209,7 @@ if ($evh) {
     Write-Ok "Created"
 }
 
-# Get Event Hub connection string for Logic App and IoT Hub custom endpoint
+# Get Event Hub connection string for IoT Hub custom endpoint
 $evhConnStr = if (-not $DryRun) {
     (Invoke-Az @(
         'eventhubs','namespace','authorization-rule','keys','list',
@@ -526,142 +508,6 @@ if (-not $DryRun) {
     $TelemetryUrl = "$FuncUrl/api/telemetry?code=$funcKey"
 }
 
-# ─── 9. Logic App (DEPRECATED — skipped by default) ──────────────────────────
-if ($SkipLogicApp) {
-    Write-Skip "Logic App provisioning skipped (-SkipLogicApp). Logic App is deprecated — direct Event Hub trigger on Function App is the active path."
-} else {
-    Write-Host "`n  ⚠  Logic App provisioning is deprecated." -ForegroundColor Yellow
-    Write-Host "     Use -SkipLogicApp to suppress this block. Proceeding for rollback/compatibility..." -ForegroundColor Yellow
-
-    Write-Step "Logic App: $LogicAppName (Consumption)"
-
-# Use the dedicated Event Hub connection string (set earlier in section 4)
-$ehConnStr = if (-not $DryRun) { $evhConnStr } else {
-    'Endpoint=sb://placeholder.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=placeholder'
-}
-Write-Info "Using Event Hub: $EvhNsName / $EvhName"
-
-if (-not (Test-Path $LogicAppDefinitionPath)) {
-    throw "Logic App workflow definition not found: $LogicAppDefinitionPath"
-}
-
-$laDefinitionJson = Get-Content -Path $LogicAppDefinitionPath -Raw
-$laDefinitionJson = $laDefinitionJson.Replace('__EVENT_HUB_NAME__', $EvhName)
-$laDefinitionJson = $laDefinitionJson.Replace('__TELEMETRY_URL__', $TelemetryUrl)
-$laDefinition = $laDefinitionJson | ConvertFrom-Json -AsHashtable
-
-$subId     = (az account show --query id -o tsv 2>$null).Trim()
-$connResId = "/subscriptions/$subId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/connections/eventhubs"
-$connApiId = "/subscriptions/$subId/providers/Microsoft.Web/locations/$Location/managedApis/eventhubs"
-
-$laTemplate = @{
-    '$schema'          = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
-    contentVersion    = '1.0.0.0'
-    resources         = @(
-        # API connection resource — provides EH connectivity to Logic App
-        @{
-            type       = 'Microsoft.Web/connections'
-            apiVersion = '2016-06-01'
-            kind       = 'V1'
-            name       = 'eventhubs'
-            location   = $Location
-            properties = @{
-                displayName = 'eventhubs'
-                api         = @{ id = $connApiId }
-                parameterValueSet = @{
-                    name   = 'connectionstringauth'
-                    values = @{
-                        connectionString = @{ value = $ehConnStr }
-                    }
-                }
-            }
-        }
-        @{
-            type       = 'Microsoft.Logic/workflows'
-            apiVersion = '2019-05-01'
-            name       = $LogicAppName
-            location   = $Location
-            dependsOn  = @("[resourceId('Microsoft.Web/connections', 'eventhubs')]")
-            properties = @{
-                state      = 'Enabled'
-                definition = $laDefinition
-                parameters = @{
-                    '$connections' = @{
-                        value = @{
-                            eventhubs = @{
-                                connectionId   = $connResId
-                                connectionName = 'eventhubs'
-                                id             = $connApiId
-                                connectionProperties = @{}
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    )
-}
-
-$templateFile = Join-Path $env:TEMP 'la-template.json'
-$laTemplate | ConvertTo-Json -Depth 20 | Set-Content $templateFile -Encoding UTF8
-
-if ($RefreshLogicAppResources) {
-    Write-Step "Refreshing Logic App workflow and Event Hubs connection"
-    if ($DryRun) {
-        Write-Host "  [DRY RUN] Would delete workflow '$LogicAppName' and connection 'eventhubs' before redeploy" -ForegroundColor DarkGray
-    } else {
-        az logic workflow show --name $LogicAppName --resource-group $ResourceGroup 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
-            Invoke-Az @(
-                'logic','workflow','delete',
-                '--name',$LogicAppName,
-                '--resource-group',$ResourceGroup,
-                '--yes'
-            ) | Out-Null
-            Write-Ok "Deleted existing Logic App workflow"
-        } else {
-            Write-Skip "Logic App workflow not present"
-        }
-
-        az resource show --resource-group $ResourceGroup --resource-type Microsoft.Web/connections --name eventhubs 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
-            Invoke-Az @(
-                'resource','delete',
-                '--resource-group',$ResourceGroup,
-                '--resource-type','Microsoft.Web/connections',
-                '--name','eventhubs'
-            ) | Out-Null
-            Write-Ok "Deleted existing Event Hubs connection"
-        } else {
-            Write-Skip "Event Hubs connection not present"
-        }
-    }
-}
-
-$la = az logic workflow show --name $LogicAppName --resource-group $ResourceGroup 2>$null
-if ($la) {
-    Write-Skip "Logic App already exists — redeploying via ARM template"
-    Invoke-Az @(
-        'deployment','group','create',
-        '--resource-group',$ResourceGroup,
-        '--template-file',$templateFile,
-        '--mode','Incremental'
-    ) | Out-Null
-    Write-Ok "Updated"
-} else {
-    Invoke-Az @(
-        'deployment','group','create',
-        '--resource-group',$ResourceGroup,
-        '--template-file',$templateFile,
-        '--mode','Incremental'
-    ) | Out-Null
-    Write-Ok "Logic App created"
-}
-
-    Remove-Item $templateFile -Force -ErrorAction SilentlyContinue
-
-} # end if (-not $SkipLogicApp)
-
 # ─── Summary ──────────────────────────────────────────────────────────────────
 Write-Host "`n============================================================" -ForegroundColor Green
 Write-Host " AgenticIoT Middleware — Provisioning Complete" -ForegroundColor Green
@@ -670,22 +516,16 @@ Write-Host "  Function App URL  : $FuncUrl"
 Write-Host "  Health check      : $FuncUrl/api/health"
 Write-Host "  Telemetry URL     : $TelemetryUrl  (secondary/test path)"
 Write-Host "  SignalR name      : $SignalRName"
-Write-Host "  Event Hub NS      : $EvhNsName  (retained for IoT Hub route)"
+Write-Host "  Event Hub NS      : $EvhNsName"
 Write-Host "  Event Hub         : $EvhName"
 Write-Host ""
-Write-Host "  Primary telemetry path  : IoT Hub built-in EH → Event Hub trigger → SignalR"
+Write-Host "  Primary telemetry path  : IoT Hub → Event Hub trigger → SignalR"
 Write-Host "  Secondary (test) path   : POST $FuncUrl/api/telemetry"
 Write-Host ""
 Write-Host "  Expected next steps after deploy:"
 Write-Host "  A. Test: curl $FuncUrl/api/health"
 Write-Host "  B. Press a Pi switch — check Function App logs for 'iotTelemetry' trigger invocations"
 Write-Host "  C. Connect Power Pages to $FuncUrl/api/negotiate"
-Write-Host ""
-if ($SkipLogicApp) {
-    Write-Host "  Logic App : SKIPPED (deprecated — direct EH trigger is active)" -ForegroundColor Yellow
-} else {
-    Write-Host "  Logic App : $LogicAppName (provisioned — use -SkipLogicApp to suppress)" -ForegroundColor Yellow
-}
 Write-Host ""
 if ($DryRun) {
     Write-Host "  (DRY RUN — no resources were created)" -ForegroundColor Yellow

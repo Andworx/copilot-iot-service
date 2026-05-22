@@ -1,7 +1,7 @@
 {
   "name": "iot-signalr-func",
   "version": "1.0.0",
-  "description": "AgenticIoT — IoT SignalR Function App. Bridges IoT Hub telemetry to browser via Logic App + SignalR.",
+  "description": "AgenticIoT — IoT SignalR Function App. Bridges IoT Hub telemetry to browser via direct Event Hub trigger + SignalR.",
   "main": "src/app.js",
   "scripts": {
     "start": "func start",

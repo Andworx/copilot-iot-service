@@ -24,6 +24,7 @@ $ErrorActionPreference = 'Stop'
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 . (Join-Path $scriptDir 'Connect-Dataverse.ps1')
+. (Join-Path $scriptDir 'Invoke-DataverseApi.ps1')
 
 $configPath = Join-Path $scriptDir "config-$Environment.json"
 $conn = Connect-Dataverse -ConfigPath $configPath

@@ -2,20 +2,33 @@
   "flowName": "andy_IoTFaultDispatch",
   "displayName": "IoT — Auto Dispatch on Fault",
   "flowDescription": "Triggers when an IoT telemetry event with andy_mismatch=true is added to Dataverse. Looks up the sensor, suppresses duplicate dispatches, selects the nearest available technician by GPS distance, creates a dispatch record, and updates sensor and technician status.",
+  "solutionAware": true,
+  "connectionReferences": [
+    "andy_shared_commondataserviceforapps"
+  ],
+  "environmentVariables": [],
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "$connections": { "defaultValue": {}, "type": "Object" },
-      "$authentication": { "defaultValue": {}, "type": "SecureObject" }
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      },
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      }
     },
     "triggers": {
       "When_a_telemetry_row_is_added": {
-        "metadata": { "operationMetadataId": "trigger-iottelemetryevent-mismatch" },
+        "metadata": {
+          "operationMetadataId": "trigger-iottelemetryevent-mismatch"
+        },
         "type": "OpenApiConnectionWebhook",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
+            "connectionName": "shared_commondataserviceforapps",
             "operationId": "SubscribeWebhookTrigger",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
           },
@@ -33,95 +46,143 @@
       "Init_MinDistance": {
         "type": "InitializeVariable",
         "inputs": {
-          "variables": [{ "name": "Var_MinDistance", "type": "float", "value": 999999 }]
+          "variables": [
+            {
+              "name": "Var_MinDistance",
+              "type": "float",
+              "value": 999999
+            }
+          ]
         },
-        "runAfter": {},
-        "description": "Sentinel value for nearest-tech loop; replaced by any real distance."
+        "runAfter": {}
       },
       "Init_NearestTechId": {
         "type": "InitializeVariable",
         "inputs": {
-          "variables": [{ "name": "Var_NearestTechId", "type": "string", "value": "" }]
+          "variables": [
+            {
+              "name": "Var_NearestTechId",
+              "type": "string",
+              "value": ""
+            }
+          ]
         },
         "runAfter": {}
       },
       "Init_NearestTechName": {
         "type": "InitializeVariable",
         "inputs": {
-          "variables": [{ "name": "Var_NearestTechName", "type": "string", "value": "" }]
+          "variables": [
+            {
+              "name": "Var_NearestTechName",
+              "type": "string",
+              "value": ""
+            }
+          ]
         },
         "runAfter": {}
       },
       "Init_SensorLat": {
         "type": "InitializeVariable",
         "inputs": {
-          "variables": [{ "name": "Var_SensorLat", "type": "float", "value": 0 }]
+          "variables": [
+            {
+              "name": "Var_SensorLat",
+              "type": "float",
+              "value": 0
+            }
+          ]
         },
         "runAfter": {}
       },
       "Init_SensorLon": {
         "type": "InitializeVariable",
         "inputs": {
-          "variables": [{ "name": "Var_SensorLon", "type": "float", "value": 0 }]
+          "variables": [
+            {
+              "name": "Var_SensorLon",
+              "type": "float",
+              "value": 0
+            }
+          ]
         },
         "runAfter": {}
       },
       "Init_CurrentDistance": {
         "type": "InitializeVariable",
         "inputs": {
-          "variables": [{ "name": "Var_CurrentDistance", "type": "float", "value": 0 }]
+          "variables": [
+            {
+              "name": "Var_CurrentDistance",
+              "type": "float",
+              "value": 0
+            }
+          ]
         },
         "runAfter": {}
       },
-
       "Guard_SensorLookup": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
             "operationId": "ListRecords",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionReferenceName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_iot_sensors",
             "$filter": "@concat('andy_device_id eq ''', triggerOutputs()?['body/andy_deviceid'], '''')",
             "$select": "andy_iot_sensorid,andy_device_id,andy_site_name,andy_latitude,andy_longitude,andy_sensor_status",
             "$top": 1
-          },
-          "authentication": "@parameters('$authentication')"
+          }
         },
         "runAfter": {
-          "Init_MinDistance": ["Succeeded"],
-          "Init_NearestTechId": ["Succeeded"],
-          "Init_NearestTechName": ["Succeeded"],
-          "Init_SensorLat": ["Succeeded"],
-          "Init_SensorLon": ["Succeeded"],
-          "Init_CurrentDistance": ["Succeeded"]
-        },
-        "description": "Look up the sensor record by device ID from the telemetry event."
+          "Init_MinDistance": [
+            "Succeeded"
+          ],
+          "Init_NearestTechId": [
+            "Succeeded"
+          ],
+          "Init_NearestTechName": [
+            "Succeeded"
+          ],
+          "Init_SensorLat": [
+            "Succeeded"
+          ],
+          "Init_SensorLon": [
+            "Succeeded"
+          ],
+          "Init_CurrentDistance": [
+            "Succeeded"
+          ]
+        }
       },
-
       "Condition_SensorFound": {
         "type": "If",
         "expression": {
-          "greater": ["@length(outputs('Guard_SensorLookup')?['body/value'])", 0]
+          "greater": [
+            "@length(outputs('Guard_SensorLookup')?['body/value'])",
+            0
+          ]
         },
         "actions": {},
         "else": {
           "actions": {
             "Terminate_UnknownDevice": {
               "type": "Terminate",
-              "inputs": { "runStatus": "Succeeded" },
-              "runAfter": {},
-              "description": "No sensor record found for this device ID — dispatch skipped silently."
+              "inputs": {
+                "runStatus": "Succeeded"
+              },
+              "runAfter": {}
             }
           }
         },
         "runAfter": {
-          "Guard_SensorLookup": ["Succeeded"]
+          "Guard_SensorLookup": [
+            "Succeeded"
+          ]
         }
       },
-
       "Set_SensorLat": {
         "type": "SetVariable",
         "inputs": {
@@ -129,7 +190,9 @@
           "value": "@float(first(outputs('Guard_SensorLookup')?['body/value'])?['andy_latitude'])"
         },
         "runAfter": {
-          "Condition_SensorFound": ["Succeeded"]
+          "Condition_SensorFound": [
+            "Succeeded"
+          ]
         }
       },
       "Set_SensorLon": {
@@ -139,78 +202,85 @@
           "value": "@float(first(outputs('Guard_SensorLookup')?['body/value'])?['andy_longitude'])"
         },
         "runAfter": {
-          "Set_SensorLat": ["Succeeded"]
+          "Set_SensorLat": [
+            "Succeeded"
+          ]
         }
       },
-
       "Guard_DuplicateCheck": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
             "operationId": "ListRecords",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionReferenceName": "shared_commondataserviceforapps"
           },
           "parameters": {
-            "entityName": "andy_dispatch_historyset",
+            "entityName": "andy_dispatch_historys",
             "$filter": "@concat('_andy_sensor_id_value eq ', first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid'], ' and andy_status eq 756150000')",
             "$select": "andy_dispatch_historyid,andy_name",
             "$top": 1
-          },
-          "authentication": "@parameters('$authentication')"
+          }
         },
         "runAfter": {
-          "Set_SensorLon": ["Succeeded"]
-        },
-        "description": "Check for an existing Open dispatch on this sensor — if found, suppress duplicate."
+          "Set_SensorLon": [
+            "Succeeded"
+          ]
+        }
       },
-
       "Condition_NoDuplicate": {
         "type": "If",
         "expression": {
-          "equals": ["@length(outputs('Guard_DuplicateCheck')?['body/value'])", 0]
+          "equals": [
+            "@length(outputs('Guard_DuplicateCheck')?['body/value'])",
+            0
+          ]
         },
         "actions": {},
         "else": {
           "actions": {
             "Terminate_AlreadyDispatched": {
               "type": "Terminate",
-              "inputs": { "runStatus": "Succeeded" },
-              "runAfter": {},
-              "description": "Open dispatch already exists for this sensor — duplicate suppressed."
+              "inputs": {
+                "runStatus": "Succeeded"
+              },
+              "runAfter": {}
             }
           }
         },
         "runAfter": {
-          "Guard_DuplicateCheck": ["Succeeded"]
+          "Guard_DuplicateCheck": [
+            "Succeeded"
+          ]
         }
       },
-
       "Data_GetAvailableTechs": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
             "operationId": "ListRecords",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionReferenceName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_technicians",
             "$filter": "andy_availability eq 756150000",
             "$select": "andy_technicianid,andy_name,andy_latitude,andy_longitude"
-          },
-          "authentication": "@parameters('$authentication')"
+          }
         },
         "runAfter": {
-          "Condition_NoDuplicate": ["Succeeded"]
-        },
-        "description": "Retrieve all technicians with Availability = Available (756150000)."
+          "Condition_NoDuplicate": [
+            "Succeeded"
+          ]
+        }
       },
-
       "Condition_TechsAvailable": {
         "type": "If",
         "expression": {
-          "greater": ["@length(outputs('Data_GetAvailableTechs')?['body/value'])", 0]
+          "greater": [
+            "@length(outputs('Data_GetAvailableTechs')?['body/value'])",
+            0
+          ]
         },
         "actions": {},
         "else": {
@@ -224,16 +294,16 @@
                   "message": "No available technicians found. Dispatch could not be completed."
                 }
               },
-              "runAfter": {},
-              "description": "Fail the run so it surfaces as an error in run history for investigation."
+              "runAfter": {}
             }
           }
         },
         "runAfter": {
-          "Data_GetAvailableTechs": ["Succeeded"]
+          "Data_GetAvailableTechs": [
+            "Succeeded"
+          ]
         }
       },
-
       "Loop_FindNearest": {
         "type": "Foreach",
         "foreach": "@outputs('Data_GetAvailableTechs')?['body/value']",
@@ -245,45 +315,75 @@
               "name": "Var_CurrentDistance",
               "value": "@add(mul(sub(variables('Var_SensorLat'), float(items('Loop_FindNearest')?['andy_latitude'])), sub(variables('Var_SensorLat'), float(items('Loop_FindNearest')?['andy_latitude']))), mul(sub(variables('Var_SensorLon'), float(items('Loop_FindNearest')?['andy_longitude'])), sub(variables('Var_SensorLon'), float(items('Loop_FindNearest')?['andy_longitude']))))"
             },
-            "runAfter": {},
-            "description": "Squared Euclidean distance (Δlat² + Δlon²). No trig needed — valid for nearest comparison."
+            "runAfter": {}
           },
           "Condition_IsNearer": {
             "type": "If",
             "expression": {
-              "less": ["@variables('Var_CurrentDistance')", "@variables('Var_MinDistance')"]
+              "less": [
+                "@variables('Var_CurrentDistance')",
+                "@variables('Var_MinDistance')"
+              ]
             },
             "actions": {
               "Update_MinDistance": {
                 "type": "SetVariable",
-                "inputs": { "name": "Var_MinDistance", "value": "@variables('Var_CurrentDistance')" },
+                "inputs": {
+                  "name": "Var_MinDistance",
+                  "value": "@variables('Var_CurrentDistance')"
+                },
                 "runAfter": {}
               },
               "Update_NearestTechId": {
                 "type": "SetVariable",
-                "inputs": { "name": "Var_NearestTechId", "value": "@items('Loop_FindNearest')?['andy_technicianid']" },
-                "runAfter": { "Update_MinDistance": ["Succeeded"] }
+                "inputs": {
+                  "name": "Var_NearestTechId",
+                  "value": "@items('Loop_FindNearest')?['andy_technicianid']"
+                },
+                "runAfter": {
+                  "Update_MinDistance": [
+                    "Succeeded"
+                  ]
+                }
               },
               "Update_NearestTechName": {
                 "type": "SetVariable",
-                "inputs": { "name": "Var_NearestTechName", "value": "@items('Loop_FindNearest')?['andy_name']" },
-                "runAfter": { "Update_NearestTechId": ["Succeeded"] }
+                "inputs": {
+                  "name": "Var_NearestTechName",
+                  "value": "@items('Loop_FindNearest')?['andy_name']"
+                },
+                "runAfter": {
+                  "Update_NearestTechId": [
+                    "Succeeded"
+                  ]
+                }
               }
             },
-            "else": { "actions": {} },
-            "runAfter": { "Calc_Distance": ["Succeeded"] }
+            "else": {
+              "actions": {}
+            },
+            "runAfter": {
+              "Calc_Distance": [
+                "Succeeded"
+              ]
+            }
           }
         },
         "runAfter": {
-          "Condition_TechsAvailable": ["Succeeded"]
-        },
-        "description": "Sequential loop — variables require sequential execution to avoid race conditions."
+          "Condition_TechsAvailable": [
+            "Succeeded"
+          ]
+        }
       },
-
       "Condition_TechSelected": {
         "type": "If",
         "expression": {
-          "not": { "equals": ["@variables('Var_NearestTechId')", ""] }
+          "not": {
+            "equals": [
+              "@variables('Var_NearestTechId')",
+              ""
+            ]
+          }
         },
         "actions": {},
         "else": {
@@ -302,91 +402,78 @@
           }
         },
         "runAfter": {
-          "Loop_FindNearest": ["Succeeded"]
+          "Loop_FindNearest": [
+            "Succeeded"
+          ]
         }
       },
-
       "Data_CreateDispatch": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
             "operationId": "CreateRecord",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionReferenceName": "shared_commondataserviceforapps"
           },
           "parameters": {
-            "entityName": "andy_dispatch_historyset",
-            "item": {
-              "andy_status": 756150000,
-              "andy_dispatched_at": "@utcNow()",
-              "andy_error_code": "@triggerOutputs()?['body/andy_eventtype']",
-              "andy_error_message": "@concat('Device: ', triggerOutputs()?['body/andy_deviceid'], ' | Value: ', triggerOutputs()?['body/andy_value'])",
-              "andy_technician_id@odata.bind": "@concat('/andy_technicians(', variables('Var_NearestTechId'), ')')",
-              "andy_sensor_id@odata.bind": "@concat('/andy_iot_sensors(', first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid'], ')')"
-            }
-          },
-          "authentication": "@parameters('$authentication')"
+            "entityName": "andy_dispatch_historys",
+            "item/andy_status": 756150000,
+            "item/andy_dispatched_at": "@utcNow()",
+            "item/andy_error_code": "@triggerOutputs()?['body/andy_eventtype']",
+            "item/andy_error_message": "@concat('Device: ', triggerOutputs()?['body/andy_deviceid'], ' | Value: ', string(triggerOutputs()?['body/andy_value']))",
+            "item/andy_technician_id@odata.bind": "@concat('/andy_technicians(', variables('Var_NearestTechId'), ')')",
+            "item/andy_sensor_id@odata.bind": "@concat('/andy_iot_sensors(', first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid'], ')')"
+          }
         },
         "runAfter": {
-          "Condition_TechSelected": ["Succeeded"]
-        },
-        "description": "Create the dispatch record — andy_name auto-numbers as DISP-{YYYY}-{SEQNUM:5}."
+          "Condition_TechSelected": [
+            "Succeeded"
+          ]
+        }
       },
-
       "Data_UpdateSensorStatus": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
             "operationId": "UpdateRecord",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionReferenceName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_iot_sensors",
             "recordId": "@first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid']",
-            "item": {
-              "andy_sensor_status": 756150001,
-              "andy_active_assignment_id@odata.bind": "@concat('/andy_dispatch_historyset(', outputs('Data_CreateDispatch')?['body/andy_dispatch_historyid'], ')')"
-            }
-          },
-          "authentication": "@parameters('$authentication')"
+            "item/andy_sensor_status": 756150001,
+            "item/andy_active_assignment_id@odata.bind": "@concat('/andy_dispatch_historys(', outputs('Data_CreateDispatch')?['body/andy_dispatch_historyid'], ')')"
+          }
         },
         "runAfter": {
-          "Data_CreateDispatch": ["Succeeded"]
-        },
-        "description": "Set sensor to Error (756150001) and link to the active dispatch record."
+          "Data_CreateDispatch": [
+            "Succeeded"
+          ]
+        }
       },
-
       "Data_UpdateTechAvailability": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
-            "connectionName": "andy_shared_commondataserviceforapps",
             "operationId": "UpdateRecord",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionReferenceName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_technicians",
             "recordId": "@variables('Var_NearestTechId')",
-            "item": {
-              "andy_availability": 756150001
-            }
-          },
-          "authentication": "@parameters('$authentication')"
+            "item/andy_availability": 756150001
+          }
         },
         "runAfter": {
-          "Data_CreateDispatch": ["Succeeded"]
-        },
-        "description": "Set technician to On Job (756150001) to prevent double-dispatch."
+          "Data_CreateDispatch": [
+            "Succeeded"
+          ]
+        }
       }
     },
     "outputs": {}
-  },
-  "connectionReferences": {
-    "andy_shared_commondataserviceforapps": {
-      "runtimeSource": "invoker",
-      "connection": {},
-      "api": { "name": "shared_commondataserviceforapps" }
-    }
   }
 }
+

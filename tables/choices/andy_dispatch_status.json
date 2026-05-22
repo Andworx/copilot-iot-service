@@ -1,0 +1,12 @@
+{
+  "schemaName": "andy_dispatch_status",
+  "displayName": "Dispatch Status",
+  "description": "Lifecycle status of an IoT fault dispatch record. Open records trigger duplicate-suppression in the dispatch agent.",
+  "isGlobal": true,
+  "defaultValue": 756150000,
+  "options": [
+    { "value": 756150000, "label": "Open",       "description": "Dispatch is active. Technician is en route or working the fault." },
+    { "value": 756150001, "label": "Resolved",   "description": "Technician has resolved the fault and closed the dispatch." },
+    { "value": 756150002, "label": "Cancelled",  "description": "Dispatch was cancelled before the technician arrived." }
+  ]
+}

@@ -34,7 +34,16 @@ function Import-Tables {
         'andy_servicetype',
         'andy_servicerequest',
         'andy_servicerequestnote',
-        'andy_servicerequestattachment'
+        'andy_servicerequestattachment',
+        # IoT dispatch pipeline — deploy in dependency order:
+        # 1. technician (no custom lookup deps)
+        # 2. dispatch_history (lookup to technician added via relationship after deploy)
+        # 3. iot_sensor (lookup to dispatch_history added via relationship after deploy)
+        # 4. Run Import-Relationships to wire up all lookups
+        'andy_technician',
+        'andy_dispatch_history',
+        'andy_iot_sensor',
+        'andy_iottelemetryevent'
     )
 
     # Discover definition files
@@ -224,12 +233,17 @@ function Import-Tables {
                                     -IncludeSolutionHeader
                             }
 
-                            $wrPublishXml = "<ImportExportXml><webresources><webresource>$($def.iconWebResourceName)</webresource></webresources></ImportExportXml>"
-                            Write-Host "    [ICON-PUBLISHED] $($def.iconWebResourceName)" -ForegroundColor DarkGray
-                            Invoke-DataverseApi -Connection $Connection `
-                                -Endpoint 'PublishXml' `
-                                -Method POST `
-                                -Body @{ ParameterXml = $wrPublishXml }
+                            try {
+                                $wrPublishXml = "<importexportxml><webresources><webresource>$($def.iconWebResourceName)</webresource></webresources></importexportxml>"
+                                Write-Host "    [ICON-PUBLISHED] $($def.iconWebResourceName)" -ForegroundColor DarkGray
+                                Invoke-DataverseApi -Connection $Connection `
+                                    -Endpoint 'PublishXml' `
+                                    -Method POST `
+                                    -Body @{ ParameterXml = $wrPublishXml }
+                            }
+                            catch {
+                                Write-Warning "    [ICON-WR-PUBLISH-WARN] $($def.iconWebResourceName): $_ (continuing to link entity)"
+                            }
 
                             $entityMeta = Invoke-DataverseApi -Connection $Connection `
                                 -Endpoint "EntityDefinitions(LogicalName='$($def.schemaName)')?`$select=MetadataId" `

@@ -1,0 +1,13 @@
+{
+  "schemaName": "andy_iot_sensor_status",
+  "displayName": "IoT Sensor Status",
+  "description": "Operational status of an IoT sensor device. Set to Error on first dispatch; reset to Online on resolution.",
+  "isGlobal": true,
+  "defaultValue": 756150000,
+  "options": [
+    { "value": 756150000, "label": "Online",       "description": "Device is operating normally." },
+    { "value": 756150001, "label": "Error",        "description": "Device has reported a fault and has an active dispatch." },
+    { "value": 756150002, "label": "Offline",      "description": "Device is not reporting. May require manual investigation." },
+    { "value": 756150003, "label": "Maintenance",  "description": "Device is undergoing planned maintenance." }
+  ]
+}

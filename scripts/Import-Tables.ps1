@@ -233,7 +233,7 @@ function Import-Tables {
                                     -IncludeSolutionHeader
                             }
 
-                            $wrPublishXml = "<ImportExportXml><webresources><webresource>$($def.iconWebResourceName)</webresource></webresources></ImportExportXml>"
+                            $wrPublishXml = "<importexportxml><webresources><webresource>$($def.iconWebResourceName)</webresource></webresources></importexportxml>"
                             Write-Host "    [ICON-PUBLISHED] $($def.iconWebResourceName)" -ForegroundColor DarkGray
                             Invoke-DataverseApi -Connection $Connection `
                                 -Endpoint 'PublishXml' `

@@ -64,11 +64,11 @@ function Import-Relationships {
         }
 
         $cascadeConfig = @{
-            Delete   = if ($cascadeMap.ContainsKey($rel.cascadeDelete)) { $cascadeMap[$rel.cascadeDelete] } else { 'NoCascade' }
-            Assign   = if ($cascadeMap.ContainsKey($rel.cascadeAssign)) { $cascadeMap[$rel.cascadeAssign] } else { 'NoCascade' }
-            Reparent = if ($cascadeMap.ContainsKey($rel.cascadeReparent)) { $cascadeMap[$rel.cascadeReparent] } else { 'NoCascade' }
-            Share    = if ($cascadeMap.ContainsKey($rel.cascadeShare)) { $cascadeMap[$rel.cascadeShare] } else { 'NoCascade' }
-            Unshare  = if ($cascadeMap.ContainsKey($rel.cascadeUnshare)) { $cascadeMap[$rel.cascadeUnshare] } else { 'NoCascade' }
+            Delete   = if ($rel.cascadeDelete   -and $cascadeMap.ContainsKey($rel.cascadeDelete))   { $cascadeMap[$rel.cascadeDelete] }   else { 'NoCascade' }
+            Assign   = if ($rel.cascadeAssign   -and $cascadeMap.ContainsKey($rel.cascadeAssign))   { $cascadeMap[$rel.cascadeAssign] }   else { 'NoCascade' }
+            Reparent = if ($rel.cascadeReparent -and $cascadeMap.ContainsKey($rel.cascadeReparent)) { $cascadeMap[$rel.cascadeReparent] } else { 'NoCascade' }
+            Share    = if ($rel.cascadeShare    -and $cascadeMap.ContainsKey($rel.cascadeShare))    { $cascadeMap[$rel.cascadeShare] }    else { 'NoCascade' }
+            Unshare  = if ($rel.cascadeUnshare  -and $cascadeMap.ContainsKey($rel.cascadeUnshare))  { $cascadeMap[$rel.cascadeUnshare] }  else { 'NoCascade' }
             Merge    = 'NoCascade'
         }
 

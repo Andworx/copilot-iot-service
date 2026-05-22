@@ -32,6 +32,7 @@ A secondary HTTP endpoint (`POST /api/telemetry`) is retained for manual testing
 | `AzureWebJobsStorage` | Storage account connection string (required by Functions runtime) |
 | `IoTHubEventHubConnectionString` | IoT Hub owner connection string in Event Hub-compatible format (see below) |
 | `IoTHubName` | IoT Hub name — used as the Event Hub entity path (default: `iothub-aw-iot-copilot`) |
+| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://iot-agents.crm.dynamics.com` (see Dataverse Auth below) |
 
 ### IoTHubEventHubConnectionString format
 
@@ -44,6 +45,87 @@ Endpoint=sb://<iothub-name>.servicebus.windows.net/;SharedAccessKeyName=iothubow
 Get it from the Azure Portal: **IoT Hub → Built-in endpoints → Event Hub-compatible endpoint**.
 
 `New-AzureMiddleware.ps1` sets this automatically during provisioning.
+
+## Dataverse Auth — System-Assigned Managed Identity
+
+The function writes telemetry records to the `andy_iottelemetryevent` Dataverse table using `DefaultAzureCredential` from `@azure/identity`. In Azure this resolves to the Function App's System-Assigned Managed Identity (MSI); locally it uses your `az login` session.
+
+### Why MSI over a Service Principal
+
+| | MSI | Service Principal |
+|---|---|---|
+| Secrets | None | `client_secret` required |
+| Rotation | Automatic | Manual |
+| Complexity | Low | Medium |
+| Works locally | No (use `az login` fallback) | Yes |
+
+### One-time setup (run once per environment)
+
+**Step 1 — Enable System-Assigned Identity on the Function App**
+
+```bash
+az functionapp identity assign \
+  --resource-group <resource-group> \
+  --name <function-app-name>
+# Copy the principalId from the output
+```
+
+**Step 2 — Register the MSI as a Dataverse Application User**
+
+1. Go to [Power Platform Admin Center](https://admin.powerplatform.microsoft.com) → **Environments** → `iot-agents` → **Settings** → **Users + permissions** → **Application users**
+2. Click **New app user** → paste the **principalId** (Object ID) from Step 1
+3. Select the `iot-agents` Business Unit
+4. Assign a security role with **Create** access on `andy_iottelemetryevent`
+   - Use the existing **System Administrator** role for initial setup, then tighten to a custom "IoT Writer" role if needed
+
+**Step 3 — Set the `DATAVERSE_URL` app setting**
+
+```bash
+az functionapp config appsettings set \
+  --resource-group <resource-group> \
+  --name <function-app-name> \
+  --settings DATAVERSE_URL=https://iot-agents.crm.dynamics.com
+```
+
+### Local development
+
+`DefaultAzureCredential` automatically tries `az login` credentials locally:
+
+```bash
+az login
+# Ensure your account has access to the Dataverse environment
+```
+
+Add `DATAVERSE_URL` to `local.settings.json`:
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "DATAVERSE_URL": "https://iot-agents.crm.dynamics.com",
+    ...
+  }
+}
+```
+
+### Verification
+
+After deployment, send a test telemetry message and check:
+
+```bash
+# Check Function logs for:
+# "Dataverse record created for device: raspberry-pi-iotpanel"
+
+# Or query Dataverse directly:
+curl -H "Authorization: Bearer <token>" \
+  "https://iot-agents.crm.dynamics.com/api/data/v9.2/andy_iottelemetryevents?\$top=5&\$orderby=createdon desc"
+```
+
+### Failure behaviour
+
+The Dataverse write is fire-and-forget inside `broadcastTelemetry()`. If it fails (token error, network issue, permission denied), the error is logged but the SignalR broadcast always completes. The History tab will simply show fewer records until the issue is resolved.
+
+---
 
 ## Local Development
 
@@ -65,3 +147,4 @@ Update this file when:
 - A new trigger or endpoint is added or removed
 - Required app settings change
 - The pipeline architecture changes
+- Dataverse auth setup steps change

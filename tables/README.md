@@ -143,3 +143,9 @@ Download the `.svg` response and save it as `icon.svg` in the table folder. Brow
 ```
 
 Always use `"cascadeDelete": "Restrict"` to prevent accidental data loss.
+
+## Tables
+
+| Folder | Display name | Purpose |
+|--------|--------------|---------|
+| `andy_iottelemetryevent/` | IoT Telemetry Event | Persists IoT Hub telemetry messages from Raspberry Pi devices. Written by `iot-signalr-func`; read by the Power Pages History tab. |

@@ -1,0 +1,89 @@
+{
+  "schemaName": "andy_iottelemetryevent",
+  "displayName": "IoT Telemetry Event",
+  "displayCollectionName": "IoT Telemetry Events",
+  "description": "Persists each IoT telemetry message received from a Raspberry Pi device. Records are written by the Azure Function (iot-signalr-func) when a message arrives via IoT Hub. Used by the Power Pages History tab to display a durable event log.",
+  "primaryNameColumn": "andy_name",
+  "ownership": "Organization",
+  "isActivity": false,
+  "changeTrackingEnabled": true,
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_iottelemetryevent_icon",
+  "columns": [
+    {
+      "schemaName": "andy_name",
+      "displayName": "Name",
+      "description": "Auto-generated display name combining device ID and timestamp (e.g. raspberry-pi-iotpanel 2026-05-22T07:00:00Z).",
+      "dataType": "String",
+      "maxLength": 200,
+      "required": "Required"
+    },
+    {
+      "schemaName": "andy_deviceid",
+      "displayName": "Device ID",
+      "description": "Identifier of the IoT device that sent the telemetry, e.g. raspberry-pi-iotpanel.",
+      "dataType": "String",
+      "maxLength": 100,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_eventtype",
+      "displayName": "Event Type",
+      "description": "Classification of the telemetry event, e.g. telemetry-snapshot, help-triggered, led_on, led_off.",
+      "dataType": "String",
+      "maxLength": 100,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_gpiopin",
+      "displayName": "GPIO Pin",
+      "description": "GPIO pin number associated with this event (e.g. 18, 24, 25, 12, 5, 6, 13, 19). Null for non-pin-specific events.",
+      "dataType": "Integer",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_value",
+      "displayName": "Value",
+      "description": "Scalar value reported for this event, e.g. OK, MISMATCH, 1, 0.",
+      "dataType": "String",
+      "maxLength": 100,
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_mismatch",
+      "displayName": "Mismatch",
+      "description": "True when the actual LED state does not match the expected state derived from switch positions.",
+      "dataType": "Boolean",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_switchstate",
+      "displayName": "Switch State",
+      "description": "JSON array representing the state of all physical switches at the time of the event, e.g. [1,0,1,0].",
+      "dataType": "Memo",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_ledstate",
+      "displayName": "LED State",
+      "description": "JSON array representing the actual observed state of all LEDs at the time of the event, e.g. [1,0,1,0].",
+      "dataType": "Memo",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_expectedledstate",
+      "displayName": "Expected LED State",
+      "description": "JSON array representing the expected LED states derived from switch positions and active rule, e.g. [1,0,1,0].",
+      "dataType": "Memo",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_activerule",
+      "displayName": "Active Rule",
+      "description": "Name of the rule active on the Pi at the time of the event, e.g. all_lights_on, switch_mirror.",
+      "dataType": "String",
+      "maxLength": 100,
+      "required": "Optional"
+    }
+  ]
+}

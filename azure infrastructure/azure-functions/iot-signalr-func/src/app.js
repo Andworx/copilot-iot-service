@@ -18,6 +18,7 @@
 
 const { app, input, output } = require('@azure/functions');
 const crypto = require('crypto');
+const { DefaultAzureCredential } = require('@azure/identity');
 
 // ─── SignalR bindings ──────────────────────────────────────────────────────────
 
@@ -35,7 +36,75 @@ const signalROutput = output.generic({
     connectionStringSetting: 'AzureSignalRConnectionString'
 });
 
+// ─── Dataverse credential (re-used across invocations) ───────────────────────
+// DefaultAzureCredential: uses System-Assigned MSI in Azure, az CLI locally.
+const dvCredential = new DefaultAzureCredential();
+
 // ─── Shared broadcast helper ──────────────────────────────────────────────────
+
+/**
+ * Writes a telemetry record to the andy_iottelemetryevent Dataverse table.
+ * Uses System-Assigned Managed Identity (MSI) in Azure; falls back to
+ * DefaultAzureCredential (az CLI) for local development.
+ *
+ * Wrapped in try/catch — a Dataverse write failure never blocks SignalR broadcast.
+ *
+ * @param {object} messageData  Parsed IoT telemetry payload
+ * @param {object} context      Azure Functions invocation context
+ */
+async function writeToDataverse(messageData, context) {
+    const dataverseUrl = process.env.DATAVERSE_URL;
+    if (!dataverseUrl) {
+        context.log.warn('DATAVERSE_URL not set — skipping Dataverse write');
+        return;
+    }
+
+    try {
+        const tokenResponse = await dvCredential.getToken(`${dataverseUrl.replace(/\/$/, '')}/.default`);
+        const fetch = require('node-fetch');
+
+        const deviceId = messageData.deviceId || messageData.device_id || 'raspberry-pi-iotpanel';
+        const timestamp = messageData.timestamp || new Date().toISOString();
+
+        const record = {
+            andy_name:             `${deviceId} ${timestamp}`,
+            andy_deviceid:         deviceId,
+            andy_eventtype:        messageData.event_type || 'telemetry-snapshot',
+            andy_value:            messageData.mismatch === true ? 'MISMATCH' : 'OK',
+            andy_mismatch:         messageData.mismatch === true,
+            andy_activerule:       messageData.active_rule || null,
+            andy_switchstate:      messageData.switches      != null ? JSON.stringify(messageData.switches)       : null,
+            andy_ledstate:         messageData.actual_leds   != null ? JSON.stringify(messageData.actual_leds)    : null,
+            andy_expectedledstate: messageData.expected_leds != null ? JSON.stringify(messageData.expected_leds)  : null,
+        };
+
+        // gpio_pin is a scalar — only set if explicitly provided and numeric
+        if (messageData.gpio_pin != null && !isNaN(Number(messageData.gpio_pin))) {
+            record.andy_gpiopin = Number(messageData.gpio_pin);
+        }
+
+        const apiBase = `${dataverseUrl.replace(/\/$/, '')}/api/data/v9.2`;
+        const res = await fetch(`${apiBase}/andy_iottelemetryevents`, {
+            method: 'POST',
+            headers: {
+                'Authorization':    `Bearer ${tokenResponse.token}`,
+                'Content-Type':     'application/json',
+                'OData-MaxVersion': '4.0',
+                'OData-Version':    '4.0',
+            },
+            body: JSON.stringify(record),
+        });
+
+        if (res.ok) {
+            context.log(`Dataverse record created for device: ${deviceId}`);
+        } else {
+            const errorText = await res.text();
+            context.log.error(`Dataverse write failed (${res.status}): ${errorText}`);
+        }
+    } catch (err) {
+        context.log.error('Dataverse write error (non-blocking):', err.message);
+    }
+}
 
 /**
  * Derives SignalR messages from a parsed IoT telemetry payload and writes them
@@ -87,6 +156,10 @@ function broadcastTelemetry(messageData, context) {
 
     context.extraOutputs.set(signalROutput, messages);
     context.log(`Broadcast ${messages.length} SignalR message(s) for device: ${deviceId}`);
+
+    // Fire-and-forget Dataverse write — non-blocking, errors are logged only
+    writeToDataverse(messageData, context).catch(() => {});
+
     return { deviceId, messageCount: messages.length };
 }
 

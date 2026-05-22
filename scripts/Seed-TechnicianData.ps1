@@ -113,12 +113,12 @@ Write-Host "`n--- Technicians (${($technicians.Count)}) ---" -ForegroundColor Wh
 $techCreated = 0; $techSkipped = 0
 
 foreach ($t in $technicians) {
-    $filterName = [System.Uri]::EscapeDataString($t.name)
+    $escapedName = $t.name -replace "'", "''"
     $exists = $false
     if (-not $DryRun) {
         $exists = Test-RecordExists -Connection $conn `
             -EntitySet 'andy_technicians' `
-            -Filter "andy_name eq '$($t.name)'"
+            -Filter "andy_name eq '$escapedName'"
     }
 
     if ($exists) {
@@ -158,11 +158,12 @@ Write-Host "`n--- IoT Sensors (${($sensors.Count)}) ---" -ForegroundColor White
 $sensorCreated = 0; $sensorSkipped = 0
 
 foreach ($s in $sensors) {
+    $escapedDeviceId = $s.deviceId -replace "'", "''"
     $exists = $false
     if (-not $DryRun) {
         $exists = Test-RecordExists -Connection $conn `
             -EntitySet 'andy_iot_sensors' `
-            -Filter "andy_device_id eq '$($s.deviceId)'"
+            -Filter "andy_device_id eq '$escapedDeviceId'"
     }
 
     if ($exists) {

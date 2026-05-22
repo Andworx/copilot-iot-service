@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Provisions the Azure middleware layer for AgenticIoT: SignalR Service, Function App, and Logic App.
+    Provisions the Azure middleware layer for AgenticIoT: SignalR Service and Function App.
 
 .DESCRIPTION
     Creates or verifies (idempotent) the following resources in rg-aw-azcom-iot-copilot:
@@ -9,12 +9,13 @@
       - Azure Function App     : func-aw-iot-copilot      (Consumption, Node.js 24)
       - App Service Plan       : plan-func-aw-iot-copilot (Y1 Consumption)
       - Storage Account        : stfuncawiotcopilot        (LRS, required by Functions)
-      - Logic App              : la-aw-iot-copilot         (Consumption, polls Event Hub → HTTP POST to Function)
+      - Event Hub Namespace    : evhns-aw-iot-copilot / iot-telemetry  (retained for existing routes)
+      - Logic App (optional)   : la-aw-iot-copilot  (DEPRECATED — skipped by default with -SkipLogicApp)
 
     After provisioning:
-            - Function App source is deployed from azure infrastructure/azure-functions/iot-signalr-func/
-            - Logic App workflow definition is loaded from azure infrastructure/azure-logic apps/la-aw-iot-copilot/workflow.json
-            - Logic App is configured with the Function App URL and key automatically
+      - Function App source is deployed from azure infrastructure/azure-functions/iot-signalr-func/
+      - Function App is configured with IoTHubEventHubConnectionString so the Event Hub trigger
+        reads directly from IoT Hub's built-in endpoint — no Logic App poll cycle needed.
       - IoT Hub route for device 'raspberry-pi-iotpanel' → dedicated Event Hub (evhns-aw-iot-copilot / iot-telemetry)
 
 .PARAMETER Environment
@@ -28,6 +29,10 @@
 
 .PARAMETER SkipFunctionDeploy
     Skip npm install + func publish step (use if Function Core Tools not installed).
+
+.PARAMETER SkipLogicApp
+    Skip Logic App provisioning (default behaviour — Logic App is deprecated).
+    Pass this flag explicitly to skip it, or omit to provision the Logic App for rollback purposes.
 
 .PARAMETER RefreshLogicAppResources
     Delete and recreate the Logic App workflow and Event Hubs connection before redeploying.
@@ -58,8 +63,7 @@
 
     OUTPUTS (printed at end):
     - Function App URL
-    - Function key (copy to Logic App or store in Key Vault)
-    - SignalR connection string (copy to Function App settings)
+    - SignalR connection string (copy to Function App settings if needed)
 #>
 
 [CmdletBinding()]
@@ -68,6 +72,7 @@ param(
     [string]$Location     = 'eastus',
     [switch]$DryRun,
     [switch]$SkipFunctionDeploy,
+    [switch]$SkipLogicApp,
     [switch]$RefreshLogicAppResources
 )
 
@@ -321,14 +326,33 @@ if (-not $fa -or ($fa -and $faOs -match 'linux')) {
     Write-Ok "Created (Windows Consumption, Node 20)"
 }
 
-Write-Step "Configuring Function App settings (SignalR connection string)"
+Write-Step "Configuring Function App settings (SignalR + IoT Hub Event Hub connection strings)"
+
+# Fetch the IoT Hub's built-in Event Hub-compatible connection string.
+# Format: Endpoint=sb://<iothub>.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=<key>;EntityPath=<iothub-name>
+$iotHubEhConnStr = if (-not $DryRun) {
+    (Invoke-Az @(
+        'iot','hub','connection-string','show',
+        '--hub-name',$IotHubName,
+        '--resource-group',$ResourceGroup,
+        '--default-eventhub',
+        '--query','connectionString','-o','tsv'
+    )).Trim()
+} else {
+    "Endpoint=sb://$IotHubName.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=placeholder;EntityPath=$IotHubName"
+}
+Write-Ok "IoT Hub Event Hub-compatible connection string retrieved"
+
 Invoke-Az @(
     'functionapp','config','appsettings','set',
     '--name',$FuncAppName,
     '--resource-group',$ResourceGroup,
-    '--settings',"AzureSignalRConnectionString=$signalRConnStr"
+    '--settings',
+    "AzureSignalRConnectionString=$signalRConnStr",
+    "IoTHubEventHubConnectionString=$iotHubEhConnStr",
+    "IoTHubName=$IotHubName"
 ) | Out-Null
-Write-Ok "AzureSignalRConnectionString set"
+Write-Ok "AzureSignalRConnectionString, IoTHubEventHubConnectionString, and IoTHubName set"
 
 # CORS — allow Power Pages origins
 Write-Step "Setting CORS on Function App"
@@ -498,8 +522,14 @@ if (-not $DryRun) {
     $TelemetryUrl = "$FuncUrl/api/telemetry?code=$funcKey"
 }
 
-# ─── 9. Logic App ─────────────────────────────────────────────────────────────
-Write-Step "Logic App: $LogicAppName (Consumption)"
+# ─── 9. Logic App (DEPRECATED — skipped by default) ──────────────────────────
+if ($SkipLogicApp) {
+    Write-Skip "Logic App provisioning skipped (-SkipLogicApp). Logic App is deprecated — direct Event Hub trigger on Function App is the active path."
+} else {
+    Write-Host "`n  ⚠  Logic App provisioning is deprecated." -ForegroundColor Yellow
+    Write-Host "     Use -SkipLogicApp to suppress this block. Proceeding for rollback/compatibility..." -ForegroundColor Yellow
+
+    Write-Step "Logic App: $LogicAppName (Consumption)"
 
 # Use the dedicated Event Hub connection string (set earlier in section 4)
 $ehConnStr = if (-not $DryRun) { $evhConnStr } else {
@@ -624,7 +654,9 @@ if ($la) {
     Write-Ok "Logic App created"
 }
 
-Remove-Item $templateFile -Force -ErrorAction SilentlyContinue
+    Remove-Item $templateFile -Force -ErrorAction SilentlyContinue
+
+} # end if (-not $SkipLogicApp)
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
 Write-Host "`n============================================================" -ForegroundColor Green
@@ -632,21 +664,24 @@ Write-Host " AgenticIoT Middleware — Provisioning Complete" -ForegroundColor G
 Write-Host "============================================================`n" -ForegroundColor Green
 Write-Host "  Function App URL  : $FuncUrl"
 Write-Host "  Health check      : $FuncUrl/api/health"
-Write-Host "  Telemetry URL     : $TelemetryUrl"
-Write-Host "  Logic App         : https://portal.azure.com (search '$LogicAppName')"
+Write-Host "  Telemetry URL     : $TelemetryUrl  (secondary/test path)"
 Write-Host "  SignalR name      : $SignalRName"
-Write-Host "  Event Hub NS      : $EvhNsName"
+Write-Host "  Event Hub NS      : $EvhNsName  (retained for IoT Hub route)"
 Write-Host "  Event Hub         : $EvhName"
 Write-Host ""
-Write-Host "  Logic App source  : $LogicAppDefinitionPath"
+Write-Host "  Primary telemetry path  : IoT Hub built-in EH → Event Hub trigger → SignalR"
+Write-Host "  Secondary (test) path   : POST $FuncUrl/api/telemetry"
 Write-Host ""
 Write-Host "  Expected next steps after deploy:"
 Write-Host "  A. Test: curl $FuncUrl/api/health"
-Write-Host "  B. Press a Pi switch — check Logic App run history for messages"
+Write-Host "  B. Press a Pi switch — check Function App logs for 'iotTelemetry' trigger invocations"
 Write-Host "  C. Connect Power Pages to $FuncUrl/api/negotiate"
 Write-Host ""
-Write-Host "  If the Event Hubs trigger shows a connection error in the portal," -ForegroundColor Yellow
-Write-Host "  open '$LogicAppName' and verify the managed connection named 'eventhubs'." -ForegroundColor Yellow
+if ($SkipLogicApp) {
+    Write-Host "  Logic App : SKIPPED (deprecated — direct EH trigger is active)" -ForegroundColor Yellow
+} else {
+    Write-Host "  Logic App : $LogicAppName (provisioned — use -SkipLogicApp to suppress)" -ForegroundColor Yellow
+}
 Write-Host ""
 if ($DryRun) {
     Write-Host "  (DRY RUN — no resources were created)" -ForegroundColor Yellow

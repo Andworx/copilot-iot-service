@@ -3,6 +3,8 @@
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "AzureSignalRConnectionString": "Endpoint=https://<signalr-name>.service.signalr.net;AccessKey=<key>;Version=1.0;"
+    "AzureSignalRConnectionString": "Endpoint=https://<signalr-name>.service.signalr.net;AccessKey=<key>;Version=1.0;",
+    "IoTHubEventHubConnectionString": "Endpoint=sb://<iothub-name>.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=<key>;EntityPath=<iothub-name>",
+    "IoTHubName": "iothub-aw-iot-copilot"
   }
 }

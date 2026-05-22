@@ -2,6 +2,15 @@
 
 Power Automate cloud flows for the AgenticIoT solution. All flows are solution-aware and use connection references — never hard-wired connections.
 
+## File Naming Convention
+
+The `Import-Flows.ps1` script discovers flows by scanning `flows/` for files matching `andy_*.json` **at the root level** (not in subdirectories). Each flow must have:
+
+- **`flows/andy_<FlowName>.json`** — the deployment file (what the script imports)
+- **`flows/<folder-name>/`** — a subdirectory with the source-of-record `flow.json` and `README.md`
+
+Keep both in sync when editing a flow definition.
+
 ## Flows
 
 | Folder | Display Name | Trigger | Purpose |

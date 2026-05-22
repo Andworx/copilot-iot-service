@@ -66,7 +66,11 @@ Trigger: andy_iottelemetryevent (andy_mismatch eq true)
 
 ## Deployment
 
-Import via solution or `scripts/Import-Flows.ps1` (when available). After import:
+The `Import-Flows.ps1` script discovers flow files by scanning for `andy_*.json` directly in the `flows/` root.
+The canonical deployment copy lives at **`flows/andy_IoTFaultDispatch.json`** — this is what the script imports.
+The copy in this subdirectory (`flows/iot-fault-dispatch/flow.json`) is the source-of-record for editing; keep both in sync when making changes.
+
+Import via `scripts/Import-Flows.ps1`. After import:
 - Ensure the `andy_shared_commondataserviceforapps` connection reference is configured
 - Turn on the flow
 - Verify with a test telemetry record: set `andy_mismatch = true` on an existing sensor

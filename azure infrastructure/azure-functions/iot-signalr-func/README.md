@@ -122,7 +122,7 @@ After deployment, send a test telemetry message and check:
 
 # Or query Dataverse directly:
 curl -H "Authorization: Bearer <token>" \
-  "https://iot-agents.crm.dynamics.com/api/data/v9.2/andy_iottelemetryevents?\$top=5&\$orderby=createdon desc"
+  "https://orgdec501b8.crm.dynamics.com/api/data/v9.2/andy_iottelemetryevents?\$top=5&\$orderby=createdon desc"
 ```
 
 ### Failure behaviour
@@ -142,8 +142,32 @@ The Dataverse write is fire-and-forget inside `broadcastTelemetry()`. If it fail
 
 ## Deployment
 
-Deployed via `scripts/New-AzureMiddleware.ps1 -Environment dev`.
-The script zips the source, runs `npm install --production`, and publishes to `func-aw-iot-copilot`.
+### Deploy function code only (recommended for code changes)
+
+Use Azure Functions Core Tools to publish directly — fast and reliable:
+
+```bash
+cd "azure infrastructure/azure-functions/iot-signalr-func"
+npm install
+func azure functionapp publish func-aw-iot-copilot --node
+```
+
+Prerequisites: `az login`, `npm`, and Azure Functions Core Tools v4 (`func --version`).
+
+### Full infrastructure + code deploy (first-time or reprovisioning)
+
+```powershell
+cd scripts
+.\New-AzureMiddleware.ps1 -Environment dev
+```
+
+This provisions all Azure resources (Resource Group, SignalR, Storage, Event Hub, IoT Hub routing, Function App) and then deploys the function code. It is idempotent — existing resources are skipped.
+
+To provision infrastructure **without** re-deploying code:
+
+```powershell
+.\New-AzureMiddleware.ps1 -Environment dev -SkipFunctionDeploy
+```
 
 ## Updating This README
 

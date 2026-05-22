@@ -326,22 +326,26 @@ if (-not $fa -or ($fa -and $faOs -match 'linux')) {
     Write-Ok "Created (Windows Consumption, Node 20)"
 }
 
-Write-Step "Configuring Function App settings (SignalR + IoT Hub Event Hub connection strings)"
+Write-Step "Configuring Function App settings (SignalR + Event Hub connection strings)"
 
-# Fetch the IoT Hub's built-in Event Hub-compatible connection string.
-# Format: Endpoint=sb://<iothub>.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=<key>;EntityPath=<iothub-name>
+# Use the dedicated Event Hub namespace (evhns-aw-iot-copilot / iot-telemetry) — this is where
+# IoT Hub routes messages via the custom route 'route-iotpanel'.
+# The IoT Hub built-in endpoint is NOT used because the custom route (condition: true) intercepts
+# all messages before they reach the fallback/built-in endpoint.
 $iotHubEhConnStr = if (-not $DryRun) {
-    (Invoke-Az @(
-        'iot','hub','connection-string','show',
-        '--hub-name',$IotHubName,
+    $rawConn = (Invoke-Az @(
+        'eventhubs','namespace','authorization-rule','keys','list',
+        '--name','RootManageSharedAccessKey',
+        '--namespace-name',$EvhNsName,
         '--resource-group',$ResourceGroup,
-        '--default-eventhub',
-        '--query','connectionString','-o','tsv'
+        '--query','primaryConnectionString','-o','tsv'
     )).Trim()
+    # Append EntityPath so the Functions Event Hub binding knows which hub to read
+    "$rawConn;EntityPath=$EvhName"
 } else {
-    "Endpoint=sb://$IotHubName.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=placeholder;EntityPath=$IotHubName"
+    "Endpoint=sb://$EvhNsName.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=placeholder;EntityPath=$EvhName"
 }
-Write-Ok "IoT Hub Event Hub-compatible connection string retrieved"
+Write-Ok "Dedicated Event Hub connection string retrieved (namespace: $EvhNsName, hub: $EvhName)"
 
 Invoke-Az @(
     'functionapp','config','appsettings','set',
@@ -350,7 +354,7 @@ Invoke-Az @(
     '--settings',
     "AzureSignalRConnectionString=$signalRConnStr",
     "IoTHubEventHubConnectionString=$iotHubEhConnStr",
-    "IoTHubName=$IotHubName"
+    "IoTHubName=$EvhName"
 ) | Out-Null
 Write-Ok "AzureSignalRConnectionString, IoTHubEventHubConnectionString, and IoTHubName set"
 

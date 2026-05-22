@@ -32,7 +32,7 @@ A secondary HTTP endpoint (`POST /api/telemetry`) is retained for manual testing
 | `AzureWebJobsStorage` | Storage account connection string (required by Functions runtime) |
 | `IoTHubEventHubConnectionString` | IoT Hub owner connection string in Event Hub-compatible format (see below) |
 | `IoTHubName` | IoT Hub name — used as the Event Hub entity path (default: `iothub-aw-iot-copilot`) |
-| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://iot-agents.crm.dynamics.com` (see Dataverse Auth below) |
+| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://orgdec501b8.crm.dynamics.com` — set as an **Environment variable** on the Function App (see Dataverse Auth below) |
 
 ### IoTHubEventHubConnectionString format
 
@@ -72,20 +72,26 @@ az functionapp identity assign \
 
 **Step 2 — Register the MSI as a Dataverse Application User**
 
-1. Go to [Power Platform Admin Center](https://admin.powerplatform.microsoft.com) → **Environments** → `iot-agents` → **Settings** → **Users + permissions** → **Application users**
-2. Click **New app user** → paste the **principalId** (Object ID) from Step 1
-3. Select the `iot-agents` Business Unit
+1. Go to [Power Platform Admin Center](https://admin.powerplatform.microsoft.com) → **Environments** → your environment → **Settings** → **Users + permissions** → **Application users**
+2. Click **New app user** → **+ Add an app** → search by the MSI's **Application (Client) ID**
+   - Find this in Azure Portal → **Azure Active Directory** → **Enterprise applications** → search `func-aw-iot-copilot` → copy **Application ID**
+   - ⚠️ This is NOT the Object ID shown on the Identity blade — it is the Application ID from Enterprise applications
+3. Select the correct Business Unit
 4. Assign a security role with **Create** access on `andy_iottelemetryevent`
    - Use the existing **System Administrator** role for initial setup, then tighten to a custom "IoT Writer" role if needed
 
-**Step 3 — Set the `DATAVERSE_URL` app setting**
+**Step 3 — Set the `DATAVERSE_URL` environment variable**
+
+Set `DATAVERSE_URL` as an **environment variable** on the Function App (Azure Portal → Function App → **Environment variables** blade, _not_ Configuration/Application settings):
 
 ```bash
 az functionapp config appsettings set \
-  --resource-group <resource-group> \
-  --name <function-app-name> \
-  --settings DATAVERSE_URL=https://iot-agents.crm.dynamics.com
+  --resource-group rg-aw-azcom-iot-copilot \
+  --name func-aw-iot-copilot \
+  --settings DATAVERSE_URL=https://orgdec501b8.crm.dynamics.com
 ```
+
+> **Note:** In Azure Functions, App Settings and Environment Variables are both surfaced as `process.env` inside the function. Either location works — Environment variables is preferred for non-connection-string config.
 
 ### Local development
 
@@ -102,7 +108,7 @@ Add `DATAVERSE_URL` to `local.settings.json`:
 {
   "IsEncrypted": false,
   "Values": {
-    "DATAVERSE_URL": "https://iot-agents.crm.dynamics.com",
+    "DATAVERSE_URL": "https://orgdec501b8.crm.dynamics.com",
     ...
   }
 }

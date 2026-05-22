@@ -92,10 +92,12 @@ function broadcastTelemetry(messageData, context) {
 
 // ─── iotTelemetry — Event Hub trigger (primary path) ─────────────────────────
 //
-// Reads directly from IoT Hub's built-in Event Hub-compatible endpoint.
+// Reads from the dedicated Event Hub namespace (evhns-aw-iot-copilot / iot-telemetry).
+// IoT Hub routes all messages here via custom route 'route-iotpanel' (condition: true).
 // Connection string is stored in app setting: IoTHubEventHubConnectionString
-//   Format: Endpoint=sb://<iothub>.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=<key>;EntityPath=<iothub-name>
+//   Format: Endpoint=sb://evhns-aw-iot-copilot.servicebus.windows.net/;...;EntityPath=iot-telemetry
 //
+// Uses dedicated consumer group 'funcapp' to avoid conflicts with $Default.
 // This replaces the Logic App polling approach and fires within milliseconds
 // of the Pi sending a message rather than up to 5 seconds later.
 
@@ -103,7 +105,7 @@ app.eventHub('iotTelemetry', {
     connection:    'IoTHubEventHubConnectionString',
     eventHubName:  process.env.IoTHubName || 'iothub-aw-iot-copilot',
     cardinality:   'many',     // batch of events per invocation
-    consumerGroup: '$Default',
+    consumerGroup: 'funcapp',
     extraOutputs:  [signalROutput],
     handler: async (events, context) => {
         if (!Array.isArray(events) || events.length === 0) return;

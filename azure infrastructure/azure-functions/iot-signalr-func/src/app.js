@@ -157,10 +157,13 @@ function broadcastTelemetry(messageData, context) {
     context.extraOutputs.set(signalROutput, messages);
     context.log(`Broadcast ${messages.length} SignalR message(s) for device: ${deviceId}`);
 
-    // Fire-and-forget Dataverse write — non-blocking, errors are logged only
-    writeToDataverse(messageData, context).catch(() => {});
-
-    return { deviceId, messageCount: messages.length };
+    // Return the Dataverse write promise so callers can await it.
+    // writeToDataverse never throws — errors are caught and logged internally.
+    return {
+        dvPromise:    writeToDataverse(messageData, context),
+        deviceId,
+        messageCount: messages.length,
+    };
 }
 
 // ─── iotTelemetry — Event Hub trigger (primary path) ─────────────────────────
@@ -185,6 +188,7 @@ app.eventHub('iotTelemetry', {
 
         context.log(`Event Hub trigger fired — ${events.length} event(s)`);
 
+        const dvPromises = [];
         for (const event of events) {
             let messageData;
             try {
@@ -195,8 +199,13 @@ app.eventHub('iotTelemetry', {
             }
 
             context.log(`EH payload preview: ${JSON.stringify(messageData).substring(0, 200)}`);
-            broadcastTelemetry(messageData, context);
+            const { dvPromise } = broadcastTelemetry(messageData, context);
+            dvPromises.push(dvPromise);
         }
+
+        // Await all Dataverse writes before returning so the worker doesn't
+        // get recycled before the async writes complete.
+        await Promise.all(dvPromises.map(p => p.catch(() => {})));
     },
 });
 
@@ -248,7 +257,8 @@ app.http('telemetry', {
 
         context.log(`Payload preview: ${JSON.stringify(messageData).substring(0, 200)}`);
 
-        const { deviceId, messageCount } = broadcastTelemetry(messageData, context);
+        const { deviceId, messageCount, dvPromise } = broadcastTelemetry(messageData, context);
+        await dvPromise;
 
         return {
             status: 200,

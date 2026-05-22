@@ -1,0 +1,14 @@
+{
+  "schemaName": "andy_iot_sensor_device_type",
+  "displayName": "IoT Sensor Device Type",
+  "description": "Physical type of an IoT sensor device. Determines which monitoring rules and error thresholds apply.",
+  "isGlobal": true,
+  "defaultValue": 756150000,
+  "options": [
+    { "value": 756150000, "label": "Power Panel",   "description": "Electrical switch/LED panel device (e.g. Raspberry Pi IoT panel)." },
+    { "value": 756150001, "label": "Temperature",   "description": "Temperature monitoring sensor." },
+    { "value": 756150002, "label": "Pressure",      "description": "Pressure monitoring sensor." },
+    { "value": 756150003, "label": "Humidity",      "description": "Humidity monitoring sensor." },
+    { "value": 756150004, "label": "Motion",        "description": "Motion detection sensor." }
+  ]
+}

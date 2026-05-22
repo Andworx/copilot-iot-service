@@ -1,0 +1,83 @@
+{
+  "schemaName": "andy_iot_sensor",
+  "displayName": "IoT Sensor",
+  "displayCollectionName": "IoT Sensors",
+  "description": "Registry of IoT sensor devices. Stores fixed metadata (location, type, site) for each device. The dispatch agent looks up sensor metadata here when an error payload arrives from IoT Hub.",
+  "primaryNameColumn": "andy_device_id",
+  "ownership": "Organization",
+  "isActivity": false,
+  "changeTrackingEnabled": true,
+  "iconSvgFile": "icon.svg",
+  "iconWebResourceName": "andy_iot_sensor_icon",
+  "columns": [
+    {
+      "schemaName": "andy_device_id",
+      "displayName": "Device ID",
+      "description": "Unique device identifier matching the IoT Hub device ID (e.g. raspberry-pi-iotpanel). Used as the primary name column for lookup and matching.",
+      "dataType": "String",
+      "maxLength": 200,
+      "required": "Required"
+    },
+    {
+      "schemaName": "andy_site_name",
+      "displayName": "Site Name",
+      "description": "Name of the facility or site where the device is installed (e.g. 'Midtown DC Panel Room').",
+      "dataType": "String",
+      "maxLength": 200,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_device_type",
+      "displayName": "Device Type",
+      "description": "Physical type of this sensor device.",
+      "dataType": "Choice",
+      "choiceName": "andy_iot_sensor_device_type",
+      "defaultValue": 756150000,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_sensor_status",
+      "displayName": "Sensor Status",
+      "description": "Operational status. Set to Error on first dispatch; reset to Online when dispatch is resolved.",
+      "dataType": "Choice",
+      "choiceName": "andy_iot_sensor_status",
+      "defaultValue": 756150000,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_latitude",
+      "displayName": "Latitude",
+      "description": "Fixed GPS latitude of the device installation site.",
+      "dataType": "Decimal",
+      "minValue": -90,
+      "maxValue": 90,
+      "precision": 6,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_longitude",
+      "displayName": "Longitude",
+      "description": "Fixed GPS longitude of the device installation site.",
+      "dataType": "Decimal",
+      "minValue": -180,
+      "maxValue": 180,
+      "precision": 6,
+      "required": "Recommended"
+    },
+    {
+      "schemaName": "andy_last_seen",
+      "displayName": "Last Seen",
+      "description": "UTC timestamp of the most recent telemetry message received from this device.",
+      "dataType": "DateTime",
+      "required": "Optional"
+    },
+    {
+      "schemaName": "andy_active_assignment_id",
+      "displayName": "Active Assignment",
+      "description": "Lookup to the current open dispatch record for this sensor. Null when no fault is active. Created via relationship andy_dispatchhistory_iotsensor_active.",
+      "dataType": "Lookup",
+      "target": "andy_dispatch_history",
+      "required": "Optional"
+    }
+  ]
+}

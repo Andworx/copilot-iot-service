@@ -366,8 +366,11 @@ if ($SkipFunctionDeploy) {
 
             Write-Info "Creating deployment zip..."
             if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-            $items = Get-ChildItem -Path . | Where-Object { $_.Name -notin @('.git') }
+            $items = Get-ChildItem -Path . | Where-Object { $_.Name -notin @('.git', '.vscode', 'tests', '*.test.js') }
+            $prevPref = $ProgressPreference
+            $ProgressPreference = 'SilentlyContinue'
             Compress-Archive -Path $items.FullName -DestinationPath $zipPath -Force
+            $ProgressPreference = $prevPref
             Write-Info "Zip created: $zipPath ($([math]::Round((Get-Item $zipPath).Length/1KB))KB)"
         } finally {
             Pop-Location

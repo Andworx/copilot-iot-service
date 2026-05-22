@@ -71,7 +71,7 @@ function Connect-Dataverse {
         grant_type    = 'client_credentials'
         client_id     = $config.clientId
         client_secret = $secret
-        scope         = "$($config.environmentUrl)/.default"
+        scope         = "$($config.environmentUrl.TrimEnd('/') )/.default"
     }
     $formBody = [string]::Join('&', ($body.GetEnumerator() | ForEach-Object {
         "{0}={1}" -f $_.Key, [System.Net.WebUtility]::UrlEncode([string]$_.Value)
@@ -138,7 +138,7 @@ function Connect-Dataverse {
     Write-Host "[Auth] Token acquired successfully." -ForegroundColor Green
 
     # --- Build connection object ---
-    $apiBase = "$($config.environmentUrl)/api/data/$($config.apiVersion)"
+    $apiBase = "$($config.environmentUrl.TrimEnd('/') )/api/data/$($config.apiVersion)"
     $headers = @{
         'Authorization'    = "Bearer $($tokenResponse.access_token)"
         'OData-MaxVersion' = '4.0'

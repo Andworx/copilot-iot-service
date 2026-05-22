@@ -1,8 +1,8 @@
 {
-  "environmentUrl": "https://iot-agents.crm.dynamics.com/",
+  "environmentUrl": "https://YOUR_ORG_NAME.crm.dynamics.com/",
   "apiVersion": "v9.2",
   "tenantId": "YOUR_TENANT_ID",
-  "clientId": "YOUR_CLIENT_ID",
+  "clientId": "54323971-c56f-4f26-8b73-c7306de29728",
   "cloudEnvironment": "commercial",
   "publisherPrefix": "andy",
   "solutionUniqueName": "AgenticIoT",

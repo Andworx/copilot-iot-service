@@ -18,6 +18,7 @@
 
 const { app, input, output } = require('@azure/functions');
 const crypto = require('crypto');
+const { DefaultAzureCredential } = require('@azure/identity');
 
 // ─── SignalR bindings ──────────────────────────────────────────────────────────
 
@@ -35,7 +36,78 @@ const signalROutput = output.generic({
     connectionStringSetting: 'AzureSignalRConnectionString'
 });
 
+// ─── Dataverse credential (re-used across invocations) ───────────────────────
+// DefaultAzureCredential: uses System-Assigned MSI in Azure, az CLI locally.
+const dvCredential = new DefaultAzureCredential();
+
 // ─── Shared broadcast helper ──────────────────────────────────────────────────
+
+/**
+ * Writes a telemetry record to the andy_iottelemetryevent Dataverse table.
+ * Uses System-Assigned Managed Identity (MSI) in Azure; falls back to
+ * DefaultAzureCredential (az CLI) for local development.
+ *
+ * Wrapped in try/catch — a Dataverse write failure never blocks SignalR broadcast.
+ *
+ * @param {object} messageData  Parsed IoT telemetry payload
+ * @param {object} context      Azure Functions invocation context
+ */
+async function writeToDataverse(messageData, context) {
+    const dataverseUrl = process.env.DATAVERSE_URL;
+    context.log(`[DV] writeToDataverse called — DATAVERSE_URL=${dataverseUrl ? dataverseUrl : '(not set)'}`);
+    if (!dataverseUrl) {
+        context.log('[DV] DATAVERSE_URL not set — skipping Dataverse write');
+        return;
+    }
+
+    try {
+        context.log('[DV] Acquiring MSI token...');
+        const tokenResponse = await dvCredential.getToken(`${dataverseUrl.replace(/\/$/, '')}/.default`);
+        context.log('[DV] Token acquired — writing record...');
+        const fetch = require('node-fetch');
+
+        const deviceId = messageData.deviceId || messageData.device_id || 'raspberry-pi-iotpanel';
+        const timestamp = messageData.timestamp || new Date().toISOString();
+
+        const record = {
+            andy_name:             `${deviceId} ${timestamp}`,
+            andy_deviceid:         deviceId,
+            andy_eventtype:        messageData.event_type || 'telemetry-snapshot',
+            andy_value:            messageData.mismatch === true ? 'MISMATCH' : 'OK',
+            andy_mismatch:         messageData.mismatch === true,
+            andy_activerule:       messageData.active_rule || null,
+            andy_switchstate:      messageData.switches      != null ? JSON.stringify(messageData.switches)       : null,
+            andy_ledstate:         messageData.actual_leds   != null ? JSON.stringify(messageData.actual_leds)    : null,
+            andy_expectedledstate: messageData.expected_leds != null ? JSON.stringify(messageData.expected_leds)  : null,
+        };
+
+        // gpio_pin is a scalar — only set if explicitly provided and numeric
+        if (messageData.gpio_pin != null && !isNaN(Number(messageData.gpio_pin))) {
+            record.andy_gpiopin = Number(messageData.gpio_pin);
+        }
+
+        const apiBase = `${dataverseUrl.replace(/\/$/, '')}/api/data/v9.2`;
+        const res = await fetch(`${apiBase}/andy_iottelemetryevents`, {
+            method: 'POST',
+            headers: {
+                'Authorization':    `Bearer ${tokenResponse.token}`,
+                'Content-Type':     'application/json',
+                'OData-MaxVersion': '4.0',
+                'OData-Version':    '4.0',
+            },
+            body: JSON.stringify(record),
+        });
+
+        if (res.ok) {
+            context.log(`[DV] Dataverse record created for device: ${deviceId}`);
+        } else {
+            const errorText = await res.text();
+            context.log(`[DV] Dataverse write failed (${res.status}): ${errorText}`);
+        }
+    } catch (err) {
+        context.log(`[DV] Dataverse write error (non-blocking): ${err.message}`);
+    }
+}
 
 /**
  * Derives SignalR messages from a parsed IoT telemetry payload and writes them
@@ -87,7 +159,14 @@ function broadcastTelemetry(messageData, context) {
 
     context.extraOutputs.set(signalROutput, messages);
     context.log(`Broadcast ${messages.length} SignalR message(s) for device: ${deviceId}`);
-    return { deviceId, messageCount: messages.length };
+
+    // Return the Dataverse write promise so callers can await it.
+    // writeToDataverse never throws — errors are caught and logged internally.
+    return {
+        dvPromise:    writeToDataverse(messageData, context),
+        deviceId,
+        messageCount: messages.length,
+    };
 }
 
 // ─── iotTelemetry — Event Hub trigger (primary path) ─────────────────────────
@@ -112,6 +191,7 @@ app.eventHub('iotTelemetry', {
 
         context.log(`Event Hub trigger fired — ${events.length} event(s)`);
 
+        const dvPromises = [];
         for (const event of events) {
             let messageData;
             try {
@@ -122,8 +202,13 @@ app.eventHub('iotTelemetry', {
             }
 
             context.log(`EH payload preview: ${JSON.stringify(messageData).substring(0, 200)}`);
-            broadcastTelemetry(messageData, context);
+            const { dvPromise } = broadcastTelemetry(messageData, context);
+            dvPromises.push(dvPromise);
         }
+
+        // Await all Dataverse writes before returning so the worker doesn't
+        // get recycled before the async writes complete.
+        await Promise.all(dvPromises.map(p => p.catch(() => {})));
     },
 });
 
@@ -175,7 +260,8 @@ app.http('telemetry', {
 
         context.log(`Payload preview: ${JSON.stringify(messageData).substring(0, 200)}`);
 
-        const { deviceId, messageCount } = broadcastTelemetry(messageData, context);
+        const { deviceId, messageCount, dvPromise } = broadcastTelemetry(messageData, context);
+        await dvPromise;
 
         return {
             status: 200,

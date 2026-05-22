@@ -233,12 +233,17 @@ function Import-Tables {
                                     -IncludeSolutionHeader
                             }
 
-                            $wrPublishXml = "<importexportxml><webresources><webresource>$($def.iconWebResourceName)</webresource></webresources></importexportxml>"
-                            Write-Host "    [ICON-PUBLISHED] $($def.iconWebResourceName)" -ForegroundColor DarkGray
-                            Invoke-DataverseApi -Connection $Connection `
-                                -Endpoint 'PublishXml' `
-                                -Method POST `
-                                -Body @{ ParameterXml = $wrPublishXml }
+                            try {
+                                $wrPublishXml = "<importexportxml><webresources><webresource>$($def.iconWebResourceName)</webresource></webresources></importexportxml>"
+                                Write-Host "    [ICON-PUBLISHED] $($def.iconWebResourceName)" -ForegroundColor DarkGray
+                                Invoke-DataverseApi -Connection $Connection `
+                                    -Endpoint 'PublishXml' `
+                                    -Method POST `
+                                    -Body @{ ParameterXml = $wrPublishXml }
+                            }
+                            catch {
+                                Write-Warning "    [ICON-WR-PUBLISH-WARN] $($def.iconWebResourceName): $_ (continuing to link entity)"
+                            }
 
                             $entityMeta = Invoke-DataverseApi -Connection $Connection `
                                 -Endpoint "EntityDefinitions(LogicalName='$($def.schemaName)')?`$select=MetadataId" `

@@ -32,7 +32,7 @@ A secondary HTTP endpoint (`POST /api/telemetry`) is retained for manual testing
 | `AzureWebJobsStorage` | Storage account connection string (required by Functions runtime) |
 | `IoTHubEventHubConnectionString` | IoT Hub owner connection string in Event Hub-compatible format (see below) |
 | `IoTHubName` | IoT Hub name — used as the Event Hub entity path (default: `iothub-aw-iot-copilot`) |
-| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://orgdec501b8.crm.dynamics.com` — set as an **Environment variable** on the Function App (see Dataverse Auth below) |
+| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://orgdec501b8.crm.dynamics.com` — set as an App Setting (see Dataverse Auth below) |
 
 ### IoTHubEventHubConnectionString format
 
@@ -80,9 +80,9 @@ az functionapp identity assign \
 4. Assign a security role with **Create** access on `andy_iottelemetryevent`
    - Use the existing **System Administrator** role for initial setup, then tighten to a custom "IoT Writer" role if needed
 
-**Step 3 — Set the `DATAVERSE_URL` environment variable**
+**Step 3 — Set the `DATAVERSE_URL` app setting**
 
-Set `DATAVERSE_URL` as an **environment variable** on the Function App (Azure Portal → Function App → **Environment variables** blade, _not_ Configuration/Application settings):
+Set `DATAVERSE_URL` as an **App Setting** on the Function App (Azure Portal → Function App → **Configuration** → **Application settings**, or the **Environment variables** blade in newer portal — both are equivalent and surfaced as `process.env` inside the function):
 
 ```bash
 az functionapp config appsettings set \
@@ -90,8 +90,6 @@ az functionapp config appsettings set \
   --name func-aw-iot-copilot \
   --settings DATAVERSE_URL=https://orgdec501b8.crm.dynamics.com
 ```
-
-> **Note:** In Azure Functions, App Settings and Environment Variables are both surfaced as `process.env` inside the function. Either location works — Environment variables is preferred for non-connection-string config.
 
 ### Local development
 

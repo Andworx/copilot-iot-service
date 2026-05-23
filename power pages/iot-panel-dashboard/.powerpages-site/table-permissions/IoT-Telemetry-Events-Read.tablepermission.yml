@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- f43c4a73-0afb-49c9-83b3-b260f7829007
+- 579133c8-ff82-4ca9-bd39-dab25eebd671
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: andy_iottelemetryevent
+entityname: IoT Telemetry Events - Read
+id: f7c2a841-93d5-4e8b-b067-2a5e9f3d1c84
+read: true
+scope: 756150004
+write: false

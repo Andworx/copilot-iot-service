@@ -1,0 +1,4 @@
+description: Enable Web API access for andy_iottelemetryevent table
+id: c7a3f291-4b5e-4d8f-96b0-1c9d3e4f5a6b
+name: Webapi/andy_iottelemetryevent/enabled
+value: true

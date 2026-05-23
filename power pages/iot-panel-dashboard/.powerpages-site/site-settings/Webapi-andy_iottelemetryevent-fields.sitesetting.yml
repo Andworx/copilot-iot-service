@@ -1,0 +1,4 @@
+description: Allowed fields for andy_iottelemetryevent Web API access
+id: d8b4e302-5c6f-4e90-87c1-2d0e4f5a6b7c
+name: Webapi/andy_iottelemetryevent/fields
+value: andy_deviceid,andy_eventtype,andy_gpiopin,andy_iottelemetryeventid,andy_value,createdon

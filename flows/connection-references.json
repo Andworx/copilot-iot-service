@@ -1,0 +1,8 @@
+[
+  {
+    "schemaName": "andy_shared_commondataserviceforapps",
+    "displayName": "AgenticIoT — Dataverse",
+    "description": "Dataverse connection used by all AgenticIoT flows for triggers and data operations.",
+    "connectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+  }
+]

@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     build: {
       outDir: 'dist',
+      assetsInlineLimit: 1_000_000, // inline all assets as base64 — SVG files are blocked by Power Pages
     },
     server: {
       proxy: {

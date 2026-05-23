@@ -174,3 +174,16 @@ hr {
 @media (prefers-reduced-motion: reduce) {
   .animate-in, .shimmer { animation: none; opacity: 1; transform: none; }
 }
+
+/* ── Infrastructure diagram animations ──────── */
+
+/* Animated data-flow dots travelling along SVG connector paths */
+@keyframes flowLine {
+  to { stroke-dashoffset: -24; }
+}
+
+/* Opacity pulse for active node indicator dots (SVG elements) */
+@keyframes svgPulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 1; }
+}

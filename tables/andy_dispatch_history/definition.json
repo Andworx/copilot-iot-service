@@ -16,8 +16,7 @@
       "description": "Auto-generated unique dispatch identifier in the format DISP-{YYYY}-{SEQNUM:5} (e.g. DISP-2026-00001).",
       "dataType": "String",
       "maxLength": 100,
-      "required": "Required",
-      "autoNumber": {
+      "required": "Recommended",
         "format": "DISP-{YYYY}-{SEQNUM:5}"
       }
     },

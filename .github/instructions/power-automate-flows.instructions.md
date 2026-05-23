@@ -360,11 +360,14 @@ Use **flat `item/fieldname` keys** — never a nested `"item": { ... }` object:
 ```json
 "parameters": {
   "entityName": "andy_dispatch_histories",
+  "item/andy_name": "",
   "item/andy_status": 756150000,
   "item/andy_dispatched_at": "@utcNow()",
   "item/andy_technician_id@odata.bind": "@concat('/andy_technicians(', variables('Var_TechId'), ')')"
 }
 ```
+
+> ⚠️ **AutoNumber + Required fields**: If the table has an AutoNumber primary name column marked `Required`, the Dataverse connector validates it client-side and will reject the save with `missing required property 'item/andy_name'`. Pass an **empty string `""`** for the field — Dataverse ignores the value and generates the autonumber. Do NOT try to set it to a real value.
 
 For UpdateRecord also include:
 ```json

@@ -10,6 +10,6 @@
   "dependencies": {
     "@azure/functions": "^4.5.0",
     "@azure/identity": "^4.13.1",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^3.3.2"
   }
 }

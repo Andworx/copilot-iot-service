@@ -85,7 +85,7 @@ npm run preview
 
 ```powershell
 # Create an auth profile for the IoT-Agents environment
-pac auth create --environment "https://YOUR_ORG_NAME.crm.dynamics.com"
+pac auth create --environment "https://<your-org>.crm.dynamics.com"
 
 # Verify you are connected to the correct environment
 pac auth who
@@ -95,7 +95,7 @@ Expected output from `pac auth who`:
 ```
 Connected to...
 Environment: IoT-Agents
-Environment URL: https://YOUR_ORG_NAME.crm.dynamics.com
+Environment URL: https://<your-org>.crm.dynamics.com
 ```
 
 ### 2. Build the site

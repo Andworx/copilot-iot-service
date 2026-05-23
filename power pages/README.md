@@ -25,7 +25,7 @@ A React 19 + Vite SPA deployed as a Power Pages code site. See [`iot-panel-dashb
 
 ```powershell
 # Authenticate (run once per session)
-pac auth create --environment "https://YOUR_ORG_NAME.crm.dynamics.com"
+pac auth create --environment "https://<your-org>.crm.dynamics.com"
 
 # Check which environment is active
 pac auth who

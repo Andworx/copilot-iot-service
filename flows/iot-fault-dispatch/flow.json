@@ -127,14 +127,15 @@
           "host": {
             "operationId": "ListRecords",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
-            "connectionReferenceName": "shared_commondataserviceforapps"
+            "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_iot_sensors",
             "$filter": "@concat('andy_device_id eq ''', triggerOutputs()?['body/andy_deviceid'], '''')",
             "$select": "andy_iot_sensorid,andy_device_id,andy_site_name,andy_latitude,andy_longitude,andy_sensor_status",
             "$top": 1
-          }
+          },
+          "authentication": "@parameters('$authentication')"
         },
         "runAfter": {
           "Init_MinDistance": [
@@ -213,14 +214,15 @@
           "host": {
             "operationId": "ListRecords",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
-            "connectionReferenceName": "shared_commondataserviceforapps"
+            "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_dispatch_historys",
             "$filter": "@concat('_andy_sensor_id_value eq ', first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid'], ' and andy_status eq 756150000')",
             "$select": "andy_dispatch_historyid,andy_name",
             "$top": 1
-          }
+          },
+          "authentication": "@parameters('$authentication')"
         },
         "runAfter": {
           "Set_SensorLon": [
@@ -260,13 +262,14 @@
           "host": {
             "operationId": "ListRecords",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
-            "connectionReferenceName": "shared_commondataserviceforapps"
+            "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_technicians",
             "$filter": "andy_availability eq 756150000",
             "$select": "andy_technicianid,andy_name,andy_latitude,andy_longitude"
-          }
+          },
+          "authentication": "@parameters('$authentication')"
         },
         "runAfter": {
           "Condition_NoDuplicate": [
@@ -413,7 +416,7 @@
           "host": {
             "operationId": "CreateRecord",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
-            "connectionReferenceName": "shared_commondataserviceforapps"
+            "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_dispatch_historys",
@@ -423,7 +426,8 @@
             "item/andy_error_message": "@concat('Device: ', triggerOutputs()?['body/andy_deviceid'], ' | Value: ', string(triggerOutputs()?['body/andy_value']))",
             "item/andy_technician_id@odata.bind": "@concat('/andy_technicians(', variables('Var_NearestTechId'), ')')",
             "item/andy_sensor_id@odata.bind": "@concat('/andy_iot_sensors(', first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid'], ')')"
-          }
+          },
+          "authentication": "@parameters('$authentication')"
         },
         "runAfter": {
           "Condition_TechSelected": [
@@ -437,14 +441,15 @@
           "host": {
             "operationId": "UpdateRecord",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
-            "connectionReferenceName": "shared_commondataserviceforapps"
+            "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_iot_sensors",
             "recordId": "@first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid']",
             "item/andy_sensor_status": 756150001,
             "item/andy_active_assignment_id@odata.bind": "@concat('/andy_dispatch_historys(', outputs('Data_CreateDispatch')?['body/andy_dispatch_historyid'], ')')"
-          }
+          },
+          "authentication": "@parameters('$authentication')"
         },
         "runAfter": {
           "Data_CreateDispatch": [
@@ -458,13 +463,14 @@
           "host": {
             "operationId": "UpdateRecord",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
-            "connectionReferenceName": "shared_commondataserviceforapps"
+            "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
             "entityName": "andy_technicians",
             "recordId": "@variables('Var_NearestTechId')",
             "item/andy_availability": 756150001
-          }
+          },
+          "authentication": "@parameters('$authentication')"
         },
         "runAfter": {
           "Data_CreateDispatch": [
@@ -476,4 +482,3 @@
     "outputs": {}
   }
 }
-

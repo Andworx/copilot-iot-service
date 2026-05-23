@@ -17,7 +17,7 @@
     "YOUR_CLOUD_ENV"
   ],
   "optional": [
-    "YOUR_CLIENT_ID",
+    "54323971-c56f-4f26-8b73-c7306de29728",
     "YOUR_AGENT_APP_ID",
     "YOUR_PORTAL_SLUG",
     "YOUR_WEBSITE_ID",
@@ -33,7 +33,7 @@
       "YOUR_CLOUD_ENV": "commercial"
     },
     "optional": {
-      "YOUR_CLIENT_ID": null,
+      "54323971-c56f-4f26-8b73-c7306de29728": null,
       "YOUR_AGENT_APP_ID": null,
       "YOUR_PORTAL_SLUG": null,
       "YOUR_WEBSITE_ID": null,
@@ -50,7 +50,7 @@
       "YOUR_CLOUD_ENV": "commercial"
     },
     "optional": {
-      "YOUR_CLIENT_ID": null,
+      "54323971-c56f-4f26-8b73-c7306de29728": null,
       "YOUR_AGENT_APP_ID": null,
       "YOUR_PORTAL_SLUG": null,
       "YOUR_WEBSITE_ID": null,
@@ -67,7 +67,7 @@
       "YOUR_CLOUD_ENV": "commercial"
     },
     "optional": {
-      "YOUR_CLIENT_ID": null,
+      "54323971-c56f-4f26-8b73-c7306de29728": null,
       "YOUR_AGENT_APP_ID": null,
       "YOUR_PORTAL_SLUG": null,
       "YOUR_WEBSITE_ID": null,

@@ -164,22 +164,43 @@ function Import-Tables {
           }
         }
 
-        # --- AutoNumber format ---
+        # --- AutoNumber format + RequiredLevel fix ---
+        # For AutoNumber primary name columns:
+        #   - PATCH via LogicalName filter returns 405 (not allowed)
+        #   - Must use PUT with MetadataId
+        #   - RequiredLevel must be Recommended (not ApplicationRequired) so the
+        #     Power Automate connector does not demand a value at flow save time
         $autoNumCol = $def.columns | Where-Object { $_.autoNumber } | Select-Object -First 1
         if ($autoNumCol -and -not $DryRun) {
-            Write-Host "    [AUTO-NUM] Setting format on $($autoNumCol.schemaName): $($autoNumCol.autoNumber.format)" -ForegroundColor DarkGray
-            $autoBody = @{ AutoNumberFormat = $autoNumCol.autoNumber.format }
+            Write-Host "    [AUTO-NUM] Setting AutoNumberFormat + RequiredLevel on $($autoNumCol.schemaName): $($autoNumCol.autoNumber.format)" -ForegroundColor DarkGray
             try {
+                # Fetch MetadataIds needed for PUT
+                $entMeta  = Invoke-DataverseApi -Connection $Connection `
+                    -Endpoint "EntityDefinitions(LogicalName='$($def.schemaName)')?`$select=MetadataId"
+                $attrMeta = Invoke-DataverseApi -Connection $Connection `
+                    -Endpoint "EntityDefinitions(LogicalName='$($def.schemaName)')/Attributes(LogicalName='$($autoNumCol.schemaName)')?`$select=MetadataId"
+
+                $entId  = $entMeta.MetadataId
+                $attrId = $attrMeta.MetadataId
+
+                $autoBody = @{
+                    '@odata.type'    = 'Microsoft.Dynamics.CRM.StringAttributeMetadata'
+                    'MetadataId'     = $attrId
+                    'AutoNumberFormat' = $autoNumCol.autoNumber.format
+                    'RequiredLevel'  = @{ 'Value' = 'Recommended' }
+                }
+
                 Invoke-DataverseApi -Connection $Connection `
-                    -Endpoint "EntityDefinitions(LogicalName='$($def.schemaName)')/Attributes(LogicalName='$($autoNumCol.schemaName)')" `
-                    -Method PATCH -Body $autoBody -IncludeSolutionHeader
+                    -Endpoint "EntityDefinitions($entId)/Attributes($attrId)" `
+                    -Method PUT -Body $autoBody -IncludeSolutionHeader
+                Write-Host "    [AUTO-NUM] Set successfully." -ForegroundColor DarkGray
             }
             catch {
                 Write-Warning "    [WARN] AutoNumber format update failed: $_"
             }
         }
         elseif ($autoNumCol -and $DryRun) {
-            Write-Host "    [DRY-RUN] Would set AutoNumberFormat on $($autoNumCol.schemaName)" -ForegroundColor Yellow
+            Write-Host "    [DRY-RUN] Would set AutoNumberFormat + RequiredLevel=Recommended on $($autoNumCol.schemaName)" -ForegroundColor Yellow
         }
 
         # --- Table icon (SVG web resource) ---

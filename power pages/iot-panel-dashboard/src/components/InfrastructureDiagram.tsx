@@ -9,6 +9,8 @@ import copilotIcon   from '../assets/icons/copilot.svg';
 import dataverseIcon from '../assets/icons/dataverse.svg';
 import flowsIcon     from '../assets/icons/flows.svg';
 import pagesIcon     from '../assets/icons/pages.svg';
+import edgeTierIcon  from '../assets/icons/edge-tier.svg';
+import platformTierIcon from '../assets/icons/platform-tier.svg';
 
 const NODE_ICONS: Record<string, string> = {
   iothub:    iothubIcon,
@@ -27,9 +29,9 @@ const HW = NODE_W / 2;
 const HH = NODE_H / 2;
 
 const TIER_BANDS = [
-  { label: 'EDGE',           y: 55,  h: 145, fontSize: 9, fill: 'rgba(34, 197, 94, 0.13)'  },
-  { label: 'CLOUD',          y: 215, h: 115, fontSize: 9, fill: 'rgba(245, 158, 11, 0.11)' },
-  { label: 'POWER PLATFORM', y: 395, h: 115, fontSize: 7, fill: 'rgba(59, 130, 246, 0.11)' },
+  { label: 'EDGE',           y: 55,  h: 145, fontSize: 9, fill: 'rgba(34, 197, 94, 0.13)',  logo: edgeTierIcon,     logoSize: 22 },
+  { label: 'CLOUD',          y: 215, h: 115, fontSize: 9, fill: 'rgba(245, 158, 11, 0.11)', logo: null,             logoSize: 22 },
+  { label: 'POWER PLATFORM', y: 395, h: 115, fontSize: 7, fill: 'rgba(59, 130, 246, 0.11)', logo: platformTierIcon, logoSize: 22 },
 ];
 
 function getPath(from: NodeDef, to: NodeDef): string {
@@ -66,26 +68,54 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
       role="img"
     >
       {/* Tier background bands */}
-      {TIER_BANDS.map(band => (
-        <g key={band.label}>
-          <rect x={0} y={band.y} width={900} height={band.h} style={{ fill: band.fill }} rx={3} />
-          <text
-            x={12}
-            y={band.y + band.h / 2 + 4}
-            fontSize={band.fontSize}
-            style={{ fill: 'rgba(175, 215, 175, 0.95)', fontFamily: "'IBM Plex Mono', monospace" }}
-            letterSpacing={2}
-          >
-            {band.label}
-          </text>
-          {/* Right-side tier divider tick */}
-          <line
-            x1={888} y1={band.y + 8}
-            x2={888} y2={band.y + band.h - 8}
-            style={{ stroke: 'rgba(82, 96, 82, 0.2)', strokeWidth: 1 }}
-          />
-        </g>
-      ))}
+      {TIER_BANDS.map(band => {
+        const iconX = 12;
+        const iconY = band.y + band.h / 2 - band.logoSize / 2;
+        return (
+          <g key={band.label}>
+            <rect x={0} y={band.y} width={900} height={band.h} style={{ fill: band.fill }} rx={3} />
+
+            {/* Tier logo — product icon or inline Azure logo */}
+            {band.logo ? (
+              <image
+                href={band.logo}
+                x={iconX}
+                y={iconY}
+                width={band.logoSize}
+                height={band.logoSize}
+                style={{ opacity: 0.82 }}
+              />
+            ) : (
+              /* Inline Azure logo for CLOUD tier */
+              <g transform={`translate(${iconX}, ${iconY})`} style={{ opacity: 0.82 }}>
+                <defs>
+                  <linearGradient id="azureGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#0078D4" />
+                    <stop offset="100%" stopColor="#50C0FF" />
+                  </linearGradient>
+                </defs>
+                {/* Azure "A" diamond logo simplified */}
+                <path
+                  d="M 11 1 L 21 17 L 16 17 L 11 9 L 6 17 L 1 17 Z"
+                  fill="url(#azureGrad)"
+                />
+                <path
+                  d="M 4 19 L 11 9 L 18 19 Z"
+                  fill="url(#azureGrad)"
+                  opacity={0.55}
+                />
+              </g>
+            )}
+
+            {/* Right-side tier divider tick */}
+            <line
+              x1={888} y1={band.y + 8}
+              x2={888} y2={band.y + band.h - 8}
+              style={{ stroke: 'rgba(82, 96, 82, 0.2)', strokeWidth: 1 }}
+            />
+          </g>
+        );
+      })}
 
       {/* Connection paths */}
       {CONNECTIONS.map(conn => {

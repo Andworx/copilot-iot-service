@@ -6,7 +6,7 @@ import type { NodeDef } from '../data/nodeData';
 const LEGEND = [
   { color: '#22C55E', label: 'Edge' },
   { color: '#F59E0B', label: 'Cloud' },
-  { color: '#3B82F6', label: 'Platform' },
+  { color: '#3B82F6', label: 'Power Platform' },
 ];
 
 export default function Infrastructure() {

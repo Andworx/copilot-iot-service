@@ -1,0 +1,5 @@
+{
+  "resourceGroup": "rg-aw-azcom-iot-copilot",
+  "defaultLocation": "eastus",
+  "tags": "project=iot-copilot owner=andworx"
+}

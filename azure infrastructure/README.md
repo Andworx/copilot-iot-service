@@ -2,38 +2,84 @@
 
 ## Purpose
 
-This directory contains the source-controlled Azure middleware assets for AgenticIoT: the SignalR-backed Function App, the Logic App workflow definition, and the documentation that explains how the Azure middleware is provisioned.
+This directory contains the source-controlled Azure resource definitions, configuration, and code for all AgenticIoT Azure components. Each component has a dedicated subfolder with its own `README.md` and `config.json` — resource names, SKUs, and other non-secret settings live in those files, not in deployment scripts.
+
+## Components
+
+| Component | Folder | Script | Purpose |
+|-----------|--------|--------|---------|
+| IoT Hub | [`iot-hub/`](./iot-hub/) | `New-AzureIotInfrastructure.ps1` | Cloud gateway for Raspberry Pi MQTT telemetry |
+| Device Provisioning Service | [`device-provisioning-service/`](./device-provisioning-service/) | `New-AzureIotInfrastructure.ps1` | Zero-touch device provisioning via symmetric key group enrollment |
+| Event Hub | [`event-hub/`](./event-hub/) | `New-AzureMiddleware.ps1` | Dedicated event stream receiving IoT Hub telemetry for the Function App |
+| Azure Function App | [`azure-functions/`](./azure-functions/) | `New-AzureMiddleware.ps1` | SignalR broadcast endpoint; Event Hub trigger → browser clients |
+| SignalR Service | [`signalr/`](./signalr/) | `New-AzureMiddleware.ps1` | Real-time WebSocket push from Function App to browser dashboard |
+| Storage Account | [`storage-account/`](./storage-account/) | `New-AzureMiddleware.ps1` | Mandatory backing store for the Consumption Function App |
+| Logic App *(deprecated)* | [`azure-logic apps/`](./azure-logic%20apps/) | — | Replaced by Event Hub trigger; retained for reference only |
+
+## Shared Configuration
+
+[`config.json`](./config.json) holds values shared across all components:
+
+```json
+{
+  "resourceGroup": "rg-aw-azcom-iot-copilot",
+  "defaultLocation": "eastus",
+  "tags": "project=iot-copilot owner=andworx"
+}
+```
 
 ## Structure
 
 ```
 azure infrastructure/
+├── config.json                             ← shared: resource group, location, tags
+├── iot-hub/
+│   ├── README.md
+│   └── config.json
+├── device-provisioning-service/
+│   ├── README.md
+│   └── config.json
+├── event-hub/
+│   ├── README.md
+│   └── config.json
 ├── azure-functions/
 │   ├── README.md
-│   └── iot-signalr-func/
-│       ├── src/
+│   ├── config.json
+│   └── iot-signalr-func/                   ← Function App source code
+│       ├── src/app.js
 │       ├── host.json
 │       ├── local.settings.json.template
 │       └── package.json
-└── azure-logic apps/
-    ├── README.md
+├── signalr/
+│   ├── README.md
+│   └── config.json
+├── storage-account/
+│   ├── README.md
+│   └── config.json
+└── azure-logic apps/                       ← deprecated; retained for reference
     └── la-aw-iot-copilot/
-        ├── README.md
         └── workflow.json
 ```
 
-## Usage
+## Deployment
 
-Provision and redeploy the Azure middleware from the repo root:
+### IoT Core Infrastructure (IoT Hub + DPS)
+
+```powershell
+.\scripts\New-AzureIotInfrastructure.ps1 -Environment dev
+```
+
+### Middleware (Function App, SignalR, Event Hub, Storage)
 
 ```powershell
 .\scripts\New-AzureMiddleware.ps1 -Environment dev
 ```
 
-The deployment script reads:
-- `azure infrastructure/azure-functions/iot-signalr-func/` for the Function App package
-- `azure infrastructure/azure-logic apps/la-aw-iot-copilot/workflow.json` for the Logic App workflow definition
+Both scripts read configuration from component folders under this directory. Secrets (connection strings, keys) are retrieved at deploy time via Azure CLI and written to Function App settings — never stored in config files or source control.
 
 ## Updating This README
 
-Update this file when the Azure infrastructure layout changes, when a new Azure middleware component is added, or when the deployment flow changes.
+Update this file when:
+- A new Azure component is added or removed
+- A component folder is renamed
+- The deployment script layout changes

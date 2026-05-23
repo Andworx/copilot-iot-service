@@ -217,7 +217,7 @@
             "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
-            "entityName": "andy_dispatch_historys",
+            "entityName": "andy_dispatch_histories",
             "$filter": "@concat('_andy_sensor_id_value eq ', first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid'], ' and andy_status eq 756150000')",
             "$select": "andy_dispatch_historyid,andy_name",
             "$top": 1
@@ -419,7 +419,7 @@
             "connectionName": "shared_commondataserviceforapps"
           },
           "parameters": {
-            "entityName": "andy_dispatch_historys",
+            "entityName": "andy_dispatch_histories",
             "item/andy_status": 756150000,
             "item/andy_dispatched_at": "@utcNow()",
             "item/andy_error_code": "@triggerOutputs()?['body/andy_eventtype']",
@@ -447,7 +447,7 @@
             "entityName": "andy_iot_sensors",
             "recordId": "@first(outputs('Guard_SensorLookup')?['body/value'])?['andy_iot_sensorid']",
             "item/andy_sensor_status": 756150001,
-            "item/andy_active_assignment_id@odata.bind": "@concat('/andy_dispatch_historys(', outputs('Data_CreateDispatch')?['body/andy_dispatch_historyid'], ')')"
+            "item/andy_active_assignment_id@odata.bind": "@concat('/andy_dispatch_histories(', outputs('Data_CreateDispatch')?['body/andy_dispatch_historyid'], ')')"
           },
           "authentication": "@parameters('$authentication')"
         },

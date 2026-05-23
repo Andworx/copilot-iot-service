@@ -204,14 +204,18 @@ All Dataverse actions (`ListRecords`, `GetRecord`, `CreateRecord`, `UpdateRecord
 
 ## Entity Set Names (Dataverse Pluralisation)
 
-Dataverse OData entity set names are the logical name with `s` appended. Exceptions exist for irregular nouns — verify against `EntityDefinitions` metadata if unsure.
+Dataverse OData entity set names are derived from the logical collection name — NOT always just the logical name + `s`. Dataverse applies **English pluralization rules**: words ending in `-y` become `-ies`. Always verify against `EntityDefinitions` metadata before writing a flow.
 
-| Logical name | Entity set name |
-|---|---|
-| `andy_iottelemetryevent` | `andy_iottelemetryevents` |
-| `andy_iot_sensor` | `andy_iot_sensors` |
-| `andy_technician` | `andy_technicians` |
-| `andy_dispatch_history` | `andy_dispatch_historys` |
+Query to verify: `GET /api/data/v9.2/EntityDefinitions?$filter=LogicalName eq 'andy_mytable'&$select=LogicalName,EntitySetName`
+
+| Logical name | Entity set name | Rule |
+|---|---|---|
+| `andy_iottelemetryevent` | `andy_iottelemetryevents` | + `s` |
+| `andy_iot_sensor` | `andy_iot_sensors` | + `s` |
+| `andy_technician` | `andy_technicians` | + `s` |
+| `andy_dispatch_history` | `andy_dispatch_histories` | `y` → `ies` ⚠️ |
+
+> ⚠️ **`andy_dispatch_history` → `andy_dispatch_histories`**, NOT `andy_dispatch_historys`. Confirmed via `EntityDefinitions` API on dev environment. Dataverse uses English plural rules (`y` → `ies`) for the EntitySetName.
 
 > **Note:** The trigger's `subscriptionRequest/entityname` uses the **singular logical name** (no `s`). The entity set name with `s` is only for action `entityName` parameters.
 
@@ -336,8 +340,7 @@ Every flow definition file in `flows/andy_*.json` must follow this exact structu
 **Rules:**
 - `connectionName` in action `host` blocks uses the **same base connector name without publisher prefix**: `"shared_commondataserviceforapps"`. Do NOT use `connectionReferenceName` here — that is a solution manifest concept, not a WDL host property.
 - `authentication` is **required** on every `OpenApiConnection` action input.
-- `entityName` for ListRecords/CreateRecord/UpdateRecord/DeleteRecord uses the **OData entity set name** = logical name + `s` (e.g. `andy_iottelemetryevent` → `andy_iottelemetryevents`, `andy_technician` → `andy_technicians`).
-- Exception: if the name ends in `y` Dataverse may pluralise to `ies` — verify in metadata if in doubt.
+- `entityName` for ListRecords/CreateRecord/UpdateRecord/DeleteRecord uses the **OData entity set name**. Verify from `EntityDefinitions` — Dataverse applies English plural rules (`y` → `ies`), so `andy_dispatch_history` → `andy_dispatch_histories`, NOT `andy_dispatch_historys`.
 
 ### operationId Reference
 
@@ -356,7 +359,7 @@ Use **flat `item/fieldname` keys** — never a nested `"item": { ... }` object:
 
 ```json
 "parameters": {
-  "entityName": "andy_dispatch_historys",
+  "entityName": "andy_dispatch_histories",
   "item/andy_status": 756150000,
   "item/andy_dispatched_at": "@utcNow()",
   "item/andy_technician_id@odata.bind": "@concat('/andy_technicians(', variables('Var_TechId'), ')')"
@@ -371,10 +374,10 @@ For UpdateRecord also include:
 ### Lookup (odata.bind) Syntax
 
 ```json
-"item/andy_relatedrecord@odata.bind": "@concat('/andy_relatedentitys(', variables('Var_Guid'), ')')"
+"item/andy_relatedrecord@odata.bind": "@concat('/andy_relatedentities(', variables('Var_Guid'), ')')"
 ```
 
-- Entity set name in the bind URL must also be plural (+ `s`).
+- Entity set name in the bind URL must also be the correct OData plural (verify via `EntityDefinitions`).
 
 ### Definition Parameters Block (Required)
 

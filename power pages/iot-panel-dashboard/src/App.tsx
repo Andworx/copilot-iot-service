@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import StatusHome from './pages/StatusHome'
 import History from './pages/History'
 import DeviceStatus from './pages/DeviceStatus'
+import Infrastructure from './pages/Infrastructure'
 import { useSignalR } from './hooks/useSignalR'
 import { SignalRContext } from './context/SignalRContext'
 
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/" element={<StatusHome />} />
           <Route path="/history" element={<History />} />
           <Route path="/devices" element={<DeviceStatus />} />
+          <Route path="/infrastructure" element={<Infrastructure />} />
         </Route>
       </Routes>
     </SignalRContext.Provider>

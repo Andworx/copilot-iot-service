@@ -69,6 +69,30 @@ Every flow JSON file in `flows/andy_*.json` must conform exactly to this top-lev
 - `solutionAware: true` is required for all flows in this project.
 - File must be named `andy_<FlowName>.json` directly in `flows/` root — the import script does not scan subdirectories.
 
+## connection-references.json (Required for Designer Connection Binding)
+
+`flows/connection-references.json` **must exist** for every connector used by any flow in this project. Without it, the import script builds an empty `clientdata.connectionReferences` map, and the Power Automate designer will **never prompt you to sign in to a connector**.
+
+### Format
+
+```json
+[
+  {
+    "schemaName": "andy_shared_commondataserviceforapps",
+    "displayName": "AgenticIoT — Dataverse",
+    "description": "Dataverse connection used by all AgenticIoT flows for triggers and data operations.",
+    "connectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+  }
+]
+```
+
+- `schemaName`: the publisher-prefixed connection reference logical name (matches the string in each flow's `connectionReferences` array)
+- `connectorId`: always `/providers/Microsoft.PowerApps/apis/<connectorName>` (same value as `apiId` in action host blocks, but with the publisher prefix stripped)
+
+### When a flow is created via API Replace (no existing clientdata)
+
+The import script builds `clientdata.connectionReferences` from this file. If the file is missing or the connector isn't listed, `clientdata.connectionReferences` will be empty and the designer cannot resolve the connection. **Always re-import with `-ReplaceExistingFlows` after adding a new entry to this file.**
+
 ---
 
 ## OpenApiConnection Action Format (Critical)

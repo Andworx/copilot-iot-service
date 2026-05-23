@@ -420,7 +420,8 @@
           },
           "parameters": {
             "entityName": "andy_dispatch_histories",
-            "item/andy_status": 756150000,
+            "item/andy_name": "",
+      "item/andy_status": 756150000,
             "item/andy_dispatched_at": "@utcNow()",
             "item/andy_error_code": "@triggerOutputs()?['body/andy_eventtype']",
             "item/andy_error_message": "@concat('Device: ', triggerOutputs()?['body/andy_deviceid'], ' | Value: ', string(triggerOutputs()?['body/andy_value']))",

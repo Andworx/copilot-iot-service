@@ -1,0 +1,6 @@
+{
+  "name": "signalr-aw-iot-copilot",
+  "sku": "Free_F1",
+  "serviceMode": "Serverless",
+  "corsAllowedOrigins": ["*"]
+}

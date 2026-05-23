@@ -1,0 +1,6 @@
+{
+  "name": "stfuncawiotcopilot",
+  "sku": "Standard_LRS",
+  "kind": "StorageV2",
+  "allowBlobPublicAccess": false
+}

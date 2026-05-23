@@ -1,6 +1,26 @@
 import React, { useState } from 'react';
 import { NODE_DATA, CONNECTIONS, type NodeDef } from '../data/nodeData';
 
+import iothubIcon    from '../assets/icons/iothub.svg';
+import functionsIcon from '../assets/icons/functions.svg';
+import signalrIcon   from '../assets/icons/signalr.svg';
+import piIcon        from '../assets/icons/pi.svg';
+import copilotIcon   from '../assets/icons/copilot.svg';
+import dataverseIcon from '../assets/icons/dataverse.svg';
+import flowsIcon     from '../assets/icons/flows.svg';
+import pagesIcon     from '../assets/icons/pages.svg';
+
+const NODE_ICONS: Record<string, string> = {
+  iothub:    iothubIcon,
+  functions: functionsIcon,
+  signalr:   signalrIcon,
+  pi:        piIcon,
+  copilot:   copilotIcon,
+  dataverse: dataverseIcon,
+  flows:     flowsIcon,
+  pages:     pagesIcon,
+};
+
 const NODE_W = 150;
 const NODE_H = 56;
 const HW = NODE_W / 2;
@@ -194,27 +214,54 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
               }}
             />
 
-            {/* Node label */}
-            <text
-              x={node.cx}
-              y={node.cy - 7}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight={600}
-              letterSpacing={0.5}
-              style={{
-                fill: active ? node.accentColor : '#E8F0E8',
-                fontFamily: "'IBM Plex Mono', monospace",
-                transition: 'fill 0.15s',
-              }}
-            >
-              {node.label}
-            </text>
+            {/* Icon — product logo or inline SVG for hardware nodes */}
+            {NODE_ICONS[node.id] ? (
+              <image
+                href={NODE_ICONS[node.id]}
+                x={node.cx - 13}
+                y={node.cy - 25}
+                width={26}
+                height={26}
+                style={{ opacity: active ? 1.0 : 0.82 }}
+              />
+            ) : node.id === 'switch' ? (
+              /* Toggle switch icon */
+              <g>
+                <rect
+                  x={node.cx - 18} y={node.cy - 23}
+                  width={36} height={16} rx={8}
+                  fill={`${node.accentColor}20`}
+                  stroke={active ? node.accentColor : 'rgba(90,145,90,0.75)'}
+                  strokeWidth={1.5}
+                />
+                <circle
+                  cx={node.cx - 8} cy={node.cy - 15}
+                  r={5.5}
+                  fill={active ? node.accentColor : 'rgba(90,145,90,0.75)'}
+                />
+              </g>
+            ) : node.id === 'led' ? (
+              /* LED icon — circle with glow ring */
+              <g>
+                <circle
+                  cx={node.cx} cy={node.cy - 15}
+                  r={10}
+                  fill={`${node.accentColor}18`}
+                  stroke={active ? node.accentColor : 'rgba(90,145,90,0.75)'}
+                  strokeWidth={1.5}
+                />
+                <circle
+                  cx={node.cx} cy={node.cy - 15}
+                  r={5}
+                  fill={active ? node.accentColor : 'rgba(90,145,90,0.75)'}
+                />
+              </g>
+            ) : null}
 
             {/* Node sublabel */}
             <text
               x={node.cx}
-              y={node.cy + 12}
+              y={node.cy + 17}
               textAnchor="middle"
               fontSize={8.5}
               letterSpacing={0.3}

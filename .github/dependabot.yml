@@ -1,0 +1,48 @@
+version: 2
+
+updates:
+  # GitHub Actions workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Azure Functions Node.js dependencies
+  - package-ecosystem: npm
+    directory: /azure infrastructure/azure-functions/iot-signalr-func
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - area:azure
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Power Pages dashboard Node.js dependencies
+  - package-ecosystem: npm
+    directory: /power pages/iot-panel-dashboard
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - area:pages
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Root-level Node.js dependencies (Playwright, etc.)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "chore(deps)"

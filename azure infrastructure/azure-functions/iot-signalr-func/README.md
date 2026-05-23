@@ -32,7 +32,7 @@ A secondary HTTP endpoint (`POST /api/telemetry`) is retained for manual testing
 | `AzureWebJobsStorage` | Storage account connection string (required by Functions runtime) |
 | `IoTHubEventHubConnectionString` | IoT Hub owner connection string in Event Hub-compatible format (see below) |
 | `IoTHubName` | IoT Hub name — used as the Event Hub entity path (default: `iothub-aw-iot-copilot`) |
-| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://orgdec501b8.crm.dynamics.com` — set as an App Setting (see Dataverse Auth below) |
+| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://<your-org>.crm.dynamics.com` — set as an App Setting (see Dataverse Auth below) |
 
 ### IoTHubEventHubConnectionString format
 
@@ -88,7 +88,7 @@ Set `DATAVERSE_URL` as an **App Setting** on the Function App (Azure Portal → 
 az functionapp config appsettings set \
   --resource-group rg-aw-azcom-iot-copilot \
   --name func-aw-iot-copilot \
-  --settings DATAVERSE_URL=https://orgdec501b8.crm.dynamics.com
+  --settings DATAVERSE_URL=https://<your-org>.crm.dynamics.com
 ```
 
 ### Local development
@@ -106,7 +106,7 @@ Add `DATAVERSE_URL` to `local.settings.json`:
 {
   "IsEncrypted": false,
   "Values": {
-    "DATAVERSE_URL": "https://orgdec501b8.crm.dynamics.com",
+    "DATAVERSE_URL": "https://<your-org>.crm.dynamics.com",
     ...
   }
 }
@@ -122,7 +122,7 @@ After deployment, send a test telemetry message and check:
 
 # Or query Dataverse directly:
 curl -H "Authorization: Bearer <token>" \
-  "https://orgdec501b8.crm.dynamics.com/api/data/v9.2/andy_iottelemetryevents?\$top=5&\$orderby=createdon desc"
+  "https://<your-org>.crm.dynamics.com/api/data/v9.2/andy_iottelemetryevents?\$top=5&\$orderby=createdon desc"
 ```
 
 ### Failure behaviour

@@ -1,0 +1,8 @@
+{
+  "name": "func-aw-iot-copilot",
+  "planName": "plan-func-aw-iot-copilot",
+  "planSku": "Y1",
+  "runtime": "node",
+  "runtimeVersion": "24",
+  "os": "Windows"
+}

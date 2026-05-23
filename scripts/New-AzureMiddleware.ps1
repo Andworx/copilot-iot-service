@@ -3,19 +3,22 @@
     Provisions the Azure middleware layer for AgenticIoT: SignalR Service and Function App.
 
 .DESCRIPTION
-    Creates or verifies (idempotent) the following resources in rg-aw-azcom-iot-copilot:
+    Creates or verifies (idempotent) the Azure middleware layer for AgenticIoT.
+    Resource names, SKUs, and settings are read from component config files under
+    azure infrastructure/ — see that folder for the full component list.
 
-      - Azure SignalR Service  : signalr-aw-iot-copilot  (Free tier, Serverless mode)
-      - Azure Function App     : func-aw-iot-copilot      (Consumption, Node.js 24)
-      - App Service Plan       : plan-func-aw-iot-copilot (Y1 Consumption)
-      - Storage Account        : stfuncawiotcopilot        (LRS, required by Functions)
-      - Event Hub Namespace    : evhns-aw-iot-copilot / iot-telemetry
+    Components provisioned:
+      - Azure SignalR Service  (config: azure infrastructure/signalr/config.json)
+      - Azure Function App     (config: azure infrastructure/azure-functions/config.json)
+      - App Service Plan       (Consumption Y1 — auto-created with Function App)
+      - Storage Account        (config: azure infrastructure/storage-account/config.json)
+      - Event Hub Namespace + Event Hub (config: azure infrastructure/event-hub/config.json)
 
     After provisioning:
       - Function App source is deployed from azure infrastructure/azure-functions/iot-signalr-func/
       - Function App is configured with IoTHubEventHubConnectionString so the Event Hub trigger
         reads directly from the dedicated Event Hub namespace.
-      - IoT Hub route for device 'raspberry-pi-iotpanel' → dedicated Event Hub (evhns-aw-iot-copilot / iot-telemetry)
+      - IoT Hub route for the configured device → dedicated Event Hub (see event-hub/config.json)
 
 .PARAMETER Environment
     Target environment: dev, test, or prod.
@@ -64,17 +67,24 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ─── Resource names ───────────────────────────────────────────────────────────
-$ResourceGroup   = 'rg-aw-azcom-iot-copilot'
-$IotHubName      = 'iothub-aw-iot-copilot'
-$SignalRName      = 'signalr-aw-iot-copilot'
-$FuncAppName     = 'func-aw-iot-copilot'
-$StorageName     = 'stfuncawiotcopilot'   # max 24 chars, lowercase, no hyphens
-$EvhNsName       = 'evhns-aw-iot-copilot'  # Event Hub namespace
-$EvhName         = 'iot-telemetry'          # Event Hub inside the namespace
-$DeviceId        = 'raspberry-pi-iotpanel'
-
+# ─── Load config from component folders ───────────────────────────────────────
 $AzureInfraPath  = Join-Path $PSScriptRoot '..\azure infrastructure'
+$sharedConfig    = Get-Content (Join-Path $AzureInfraPath 'config.json') | ConvertFrom-Json
+$iotHubConfig    = Get-Content (Join-Path $AzureInfraPath 'iot-hub\config.json') | ConvertFrom-Json
+$signalRConfig   = Get-Content (Join-Path $AzureInfraPath 'signalr\config.json') | ConvertFrom-Json
+$funcConfig      = Get-Content (Join-Path $AzureInfraPath 'azure-functions\config.json') | ConvertFrom-Json
+$storageConfig   = Get-Content (Join-Path $AzureInfraPath 'storage-account\config.json') | ConvertFrom-Json
+$evhConfig       = Get-Content (Join-Path $AzureInfraPath 'event-hub\config.json') | ConvertFrom-Json
+
+$ResourceGroup   = $sharedConfig.resourceGroup
+$IotHubName      = $iotHubConfig.name
+$SignalRName      = $signalRConfig.name
+$FuncAppName     = $funcConfig.name
+$StorageName     = $storageConfig.name
+$EvhNsName       = $evhConfig.namespaceName
+$EvhName         = $evhConfig.eventHubName
+$DeviceId        = $iotHubConfig.deviceId
+
 $FuncSrcPath     = Join-Path $AzureInfraPath 'azure-functions\iot-signalr-func'
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -117,7 +127,7 @@ if ($rg) {
 }
 
 # ─── 2. SignalR Service ───────────────────────────────────────────────────────
-Write-Step "SignalR Service: $SignalRName (Free, Serverless)"
+Write-Step "SignalR Service: $SignalRName ($($signalRConfig.sku), $($signalRConfig.serviceMode))"
 $sr = az signalr show --name $SignalRName --resource-group $ResourceGroup 2>$null
 if ($sr) {
     Write-Skip "Already exists"
@@ -127,8 +137,8 @@ if ($sr) {
         '--name',$SignalRName,
         '--resource-group',$ResourceGroup,
         '--location',$Location,
-        '--sku','Free_F1',
-        '--service-mode','Serverless'
+        '--sku',$signalRConfig.sku,
+        '--service-mode',$signalRConfig.serviceMode
     ) | Out-Null
     Write-Ok "Created"
 }
@@ -167,9 +177,9 @@ if ($st) {
         '--name',$StorageName,
         '--resource-group',$ResourceGroup,
         '--location',$Location,
-        '--sku','Standard_LRS',
-        '--kind','StorageV2',
-        '--allow-blob-public-access','false'
+        '--sku',$storageConfig.sku,
+        '--kind',$storageConfig.kind,
+        '--allow-blob-public-access',($storageConfig.allowBlobPublicAccess ? 'true' : 'false')
     ) | Out-Null
     Write-Ok "Created"
 }
@@ -187,7 +197,7 @@ if ($evhns) {
         '--name',$EvhNsName,
         '--resource-group',$ResourceGroup,
         '--location',$Location,
-        '--sku','Basic'
+        '--sku',$evhConfig.sku
     ) | Out-Null
     Write-Ok "Created"
 }
@@ -299,18 +309,18 @@ if (-not $fa -or ($fa -and $faOs -match 'linux')) {
         '--name',$FuncAppName,
         '--resource-group',$ResourceGroup,
         '--consumption-plan-location',$Location,
-        '--runtime','node',
-        '--runtime-version','24',
+        '--runtime',$funcConfig.runtime,
+        '--runtime-version',$funcConfig.runtimeVersion,
         '--functions-version','4',
         '--storage-account',$StorageName,
-        '--os-type','Windows'
+        '--os-type',$funcConfig.os
     ) | Out-Null
-    Write-Ok "Created (Windows Consumption, Node 20)"
+    Write-Ok "Created ($($funcConfig.os) Consumption, Node $($funcConfig.runtimeVersion))"
 }
 
 Write-Step "Configuring Function App settings (SignalR + Event Hub connection strings)"
 
-# Use the dedicated Event Hub namespace (evhns-aw-iot-copilot / iot-telemetry) — this is where
+# Use the dedicated Event Hub namespace ($EvhNsName / $EvhName) — this is where
 # IoT Hub routes messages via the custom route 'route-iotpanel'.
 # The IoT Hub built-in endpoint is NOT used because the custom route (condition: true) intercepts
 # all messages before they reach the fallback/built-in endpoint.
@@ -357,7 +367,7 @@ if ($SkipFunctionDeploy) {
 } else {
     Write-Step "Deploying Function App from $FuncSrcPath"
     if (-not $DryRun) {
-        $zipPath = Join-Path $env:TEMP 'func-aw-iot-copilot-deploy.zip'
+        $zipPath = Join-Path $env:TEMP "$($FuncAppName)-deploy.zip"
         Push-Location $FuncSrcPath
         try {
             Write-Info "npm install (production deps)..."

@@ -128,14 +128,35 @@ If the Event Hubs trigger still shows a broken connection after deployment, open
 
 > **Why Logic App?** Event Hub triggers on Consumption Function Apps suffer cold-start issues. Logic App provides reliable 5-second polling with built-in retry and run history for debugging.
 
+## Configuration
+
+Key settings for the Function App are stored in [`config.json`](./config.json). Do not hardcode these values in scripts.
+
+```json
+{
+  "name": "func-aw-iot-copilot",
+  "planName": "plan-func-aw-iot-copilot",
+  "planSku": "Y1",
+  "runtime": "node",
+  "runtimeVersion": "24",
+  "os": "Windows"
+}
+```
+
+For other resources used by the Function App, see their dedicated config files:
+- SignalR Service → [`../signalr/config.json`](../signalr/config.json)
+- Storage Account → [`../storage-account/config.json`](../storage-account/config.json)
+- Event Hub → [`../event-hub/config.json`](../event-hub/config.json)
+
 ## Azure Resources
 
 | Resource | Name | SKU | Notes |
 |----------|------|-----|-------|
 | Function App | `func-aw-iot-copilot` | Consumption Y1 | Node.js 24, Windows |
-| SignalR Service | `signalr-aw-iot-copilot` | Free_F1 | Serverless mode, 20 concurrent connections |
-| Logic App | `la-aw-iot-copilot` | Consumption | Polls Event Hub every 5s |
-| Storage Account | `stfuncawiotcopilot` | Standard LRS | Required by Function App |
+| App Service Plan | `plan-func-aw-iot-copilot` | Y1 Consumption | Auto-created with Function App |
+| SignalR Service | `signalr-aw-iot-copilot` | Free_F1 | Serverless mode — see `../signalr/` |
+| Storage Account | `stfuncawiotcopilot` | Standard LRS | Required by Function App — see `../storage-account/` |
+| Event Hub | `evhns-aw-iot-copilot / iot-telemetry` | Basic | Telemetry source — see `../event-hub/` |
 
 ## Verify End-to-End
 

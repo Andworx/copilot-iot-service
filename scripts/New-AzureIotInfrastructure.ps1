@@ -3,13 +3,16 @@
     Provisions all Azure IoT infrastructure for the AgenticIoT copilot-iot-service project.
 
 .DESCRIPTION
-    Creates or verifies all Azure resources in the resource group rg-aw-azcom-iot-copilot:
+    Creates or verifies all Azure resources for the AgenticIoT IoT core infrastructure.
+    Resource names, SKUs, and settings are read from component config files under
+    azure infrastructure/ — see that folder for the full component list.
 
-      - Resource Group   : rg-aw-azcom-iot-copilot
-      - IoT Hub          : iothub-aw-iot-copilot  (Free tier for dev, S1 for prod)
-      - Device Provisioning Service : dps-aw-iot-copilot
+    Components provisioned:
+      - Resource Group
+      - IoT Hub          (config: azure infrastructure/iot-hub/config.json)
+      - Device Provisioning Service (config: azure infrastructure/device-provisioning-service/config.json)
       - DPS → IoT Hub link
-      - DPS Group Enrollment: iotpanel-fleet (symmetric key)
+      - DPS Group Enrollment (symmetric key)
 
     All operations are idempotent — safe to re-run. Existing resources are not modified.
     Use -DryRun to preview what would be created without making changes.
@@ -75,17 +78,20 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# ─── Resource names (fixed, not per-environment) ─────────────────────────────
-$resourceGroup   = "rg-aw-azcom-iot-copilot"
-$iotHubName      = "iothub-aw-iot-copilot"
-$dpsName         = "dps-aw-iot-copilot"
-$enrollmentId    = "iotpanel-fleet"
+# ─── Load config from component folders ───────────────────────────────────────
+$AzureInfraPath = Join-Path $PSScriptRoot '..\azure infrastructure'
+$sharedConfig   = Get-Content (Join-Path $AzureInfraPath 'config.json') | ConvertFrom-Json
+$iotHubConfig   = Get-Content (Join-Path $AzureInfraPath 'iot-hub\config.json') | ConvertFrom-Json
+$dpsConfig      = Get-Content (Join-Path $AzureInfraPath 'device-provisioning-service\config.json') | ConvertFrom-Json
 
-# IoT Hub SKU: S1 Standard for all environments (F1 free tier limited to 1 per subscription)
-$iotHubSku = 'S1'
-$iotHubUnits = 1
+$resourceGroup  = $sharedConfig.resourceGroup
+$iotHubName     = $iotHubConfig.name
+$iotHubSku      = $iotHubConfig.sku
+$iotHubUnits    = $iotHubConfig.units
+$dpsName        = $dpsConfig.name
+$enrollmentId   = $dpsConfig.enrollmentGroupId
 
-$tags = "project=iot-copilot env=$Environment owner=andworx"
+$tags = $sharedConfig.tags + " env=$Environment"
 
 # ─── Header ───────────────────────────────────────────────────────────────────
 Write-Host ""
@@ -172,13 +178,12 @@ if ($hubExists) {
     Write-Host "[Azure] IoT Hub '$iotHubName' already exists — skipping." -ForegroundColor Gray
 } else {
     Invoke-AzStep "Create IoT Hub '$iotHubName' (SKU: $iotHubSku)" {
-        $partitions = if ($iotHubSku -eq 'F1') { 2 } else { 4 }
         az iot hub create `
             --name $iotHubName `
             --resource-group $resourceGroup `
             --sku $iotHubSku `
             --unit $iotHubUnits `
-            --partition-count $partitions `
+            --partition-count $iotHubConfig.partitionCount `
             --location $Location `
             --tags $tags `
             --output none
@@ -186,22 +191,23 @@ if ($hubExists) {
 }
 
 # ─── 3. Register device (backwards compatibility) ────────────────────────────
+$deviceId     = $iotHubConfig.deviceId
 $deviceExists = $false
 if (-not $DryRun) {
     $deviceExists = az iot hub device-identity list `
         --hub-name $iotHubName `
-        --query "[?deviceId=='raspberry-pi-iotpanel'] | length(@)" `
+        --query "[?deviceId=='$deviceId'] | length(@)" `
         --output tsv 2>$null
     $deviceExists = ($deviceExists -and [int]$deviceExists -gt 0)
 }
 
 if ($deviceExists) {
-    Write-Host "[Azure] Device 'raspberry-pi-iotpanel' already exists — skipping." -ForegroundColor Gray
+    Write-Host "[Azure] Device '$deviceId' already exists — skipping." -ForegroundColor Gray
 } else {
-    Invoke-AzStep "Register device 'raspberry-pi-iotpanel' in IoT Hub" {
+    Invoke-AzStep "Register device '$deviceId' in IoT Hub" {
         az iot hub device-identity create `
             --hub-name $iotHubName `
-            --device-id "raspberry-pi-iotpanel" `
+            --device-id $deviceId `
             --output none
     }
 }

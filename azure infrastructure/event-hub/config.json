@@ -1,0 +1,5 @@
+{
+  "namespaceName": "evhns-aw-iot-copilot",
+  "eventHubName": "iot-telemetry",
+  "sku": "Basic"
+}

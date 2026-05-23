@@ -1,0 +1,7 @@
+{
+  "name": "iothub-aw-iot-copilot",
+  "sku": "S1",
+  "units": 1,
+  "partitionCount": 4,
+  "deviceId": "raspberry-pi-iotpanel"
+}

@@ -1,6 +1,6 @@
 # Contributing to AgenticIoT
 
-All contributions — features, fixes, documentation, and configuration changes — must follow the branch-and-PR workflow described here. Direct pushes to `main` are not permitted.
+Contributions are welcome from anyone — whether you're fixing a typo, improving documentation, or adding a new feature. All contributions must follow the branch-and-PR workflow described here. Direct pushes to `main` are not permitted.
 
 ## Prerequisites
 

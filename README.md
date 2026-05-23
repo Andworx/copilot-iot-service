@@ -1,5 +1,7 @@
 # AgenticIoT — Copilot IoT Service
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
 An end-to-end IoT demonstration connecting physical hardware to Microsoft Power Platform, Azure cloud services, and Copilot Studio AI agents. A Raspberry Pi reads physical GPIO switches, sends telemetry to Azure, and the data surfaces in a real-time Power Pages portal with an AI troubleshooting agent.
 
 ---
@@ -170,16 +172,16 @@ Agent YAML files are in `copilot agents/`. Use `pac copilot push/pull` to sync w
 
 ## 🔒 Security
 
-This repository is currently **private**. Before it is made public:
+This repository has been audited before public release:
 
-- Secrets scan across full git history (issue #16)
-- `.gitignore` audit for all sensitive file types (issue #17)
-- Documentation audit for embedded credentials (issue #18)
-- Branch protection and Dependabot configuration (issues #19–#21)
+- ✅ Full git history secrets scan — zero findings
+- ✅ `.gitignore` hardened for certificates, credentials, and secrets
+- ✅ Documentation audited — no embedded credentials or internal URLs
+- ✅ GitHub Actions workflows audited for injection and token risks
+- ✅ Dependabot enabled for automated dependency updates
+- ✅ `SECURITY.md` and `LICENSE` present
 
-See the [Security Review milestone](https://github.com/Andworx/copilot-iot-service/issues?q=label%3A%22project%3Aiot-service%22+%5BSECURITY%5D) for the full checklist.
-
-**To report a vulnerability:** see [SECURITY.md](SECURITY.md) (coming in issue #22).
+**To report a vulnerability:** see [SECURITY.md](SECURITY.md).
 
 ---
 

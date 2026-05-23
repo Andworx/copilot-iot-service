@@ -162,10 +162,10 @@ For other resources used by the Function App, see their dedicated config files:
 
 ```bash
 # 1. Health check
-curl https://func-aw-iot-copilot.azurewebsites.net/api/health
+curl https://<your-function-app>.azurewebsites.net/api/health
 
 # 2. Push a test SignalR message
-curl https://func-aw-iot-copilot.azurewebsites.net/api/test-signalr
+curl https://<your-function-app>.azurewebsites.net/api/test-signalr
 
 # 3. Press a switch on the Pi — check Logic App run history in portal
 # 4. Connect a browser SignalR client to /api/negotiate and watch for SendTelemetryUpdate

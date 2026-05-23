@@ -72,9 +72,13 @@ async function fetchDataverseEvents(): Promise<DisplayEvent[]> {
     // Relative URL works in Power Pages portal context; absolute in dev with proxy
     const url = '/api/data/v9.2/andy_iottelemetryevents?$orderby=createdon desc&$top=100&$select=andy_iottelemetryeventid,andy_deviceid,andy_eventtype,andy_gpiopin,andy_value,createdon';
     const res = await fetch(url, {
-      headers: { 'OData-MaxVersion': '4.0', 'OData-Version': '4.0', 'Accept': 'application/json' },
+      headers: {
+        'OData-MaxVersion': '4.0',
+        'OData-Version': '4.0',
+        'Accept': 'application/json; odata.metadata=none',
+      },
     });
-    if (!res.ok) throw new Error(`Dataverse HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`Dataverse HTTP ${res.status} ${res.statusText}`);
     const json = await res.json();
     return ((json.value ?? []) as DataverseRecord[]).map(dataverseRecordToDisplay);
   } catch {

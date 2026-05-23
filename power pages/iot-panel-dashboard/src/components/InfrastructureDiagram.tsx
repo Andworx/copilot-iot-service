@@ -7,9 +7,9 @@ const HW = NODE_W / 2;
 const HH = NODE_H / 2;
 
 const TIER_BANDS = [
-  { label: 'EDGE',           y: 55,  h: 145, fontSize: 9, fill: 'rgba(34, 197, 94, 0.07)'  },
-  { label: 'CLOUD',          y: 215, h: 115, fontSize: 9, fill: 'rgba(245, 158, 11, 0.07)' },
-  { label: 'POWER PLATFORM', y: 395, h: 115, fontSize: 7, fill: 'rgba(59, 130, 246, 0.07)' },
+  { label: 'EDGE',           y: 55,  h: 145, fontSize: 9, fill: 'rgba(34, 197, 94, 0.13)'  },
+  { label: 'CLOUD',          y: 215, h: 115, fontSize: 9, fill: 'rgba(245, 158, 11, 0.11)' },
+  { label: 'POWER PLATFORM', y: 395, h: 115, fontSize: 7, fill: 'rgba(59, 130, 246, 0.11)' },
 ];
 
 function getPath(from: NodeDef, to: NodeDef): string {
@@ -53,7 +53,7 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
             x={12}
             y={band.y + band.h / 2 + 4}
             fontSize={band.fontSize}
-            style={{ fill: 'rgba(150, 185, 150, 0.85)', fontFamily: "'IBM Plex Mono', monospace" }}
+            style={{ fill: 'rgba(175, 215, 175, 0.95)', fontFamily: "'IBM Plex Mono', monospace" }}
             letterSpacing={2}
           >
             {band.label}
@@ -85,9 +85,9 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
               d={d}
               fill="none"
               style={{
-                stroke: isHighlighted ? from.accentColor : 'rgba(65, 110, 65, 0.55)',
+                stroke: isHighlighted ? from.accentColor : 'rgba(80, 140, 80, 0.75)',
                 strokeWidth: isHighlighted ? 1.5 : 1,
-                opacity: isHighlighted ? 0.80 : 0.70,
+                opacity: isHighlighted ? 0.90 : 0.85,
                 strokeDasharray: isHighlighted ? 'none' : '4 3',
                 transition: 'stroke 0.2s, opacity 0.2s',
               }}
@@ -175,8 +175,8 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
               height={NODE_H}
               rx={3}
               style={{
-                fill: active ? '#192219' : '#111A11',
-                stroke: active ? node.accentColor : 'rgba(75, 120, 75, 0.60)',
+                fill: active ? '#1E2A1E' : '#141E14',
+                stroke: active ? node.accentColor : 'rgba(90, 145, 90, 0.80)',
                 strokeWidth: active ? 1.5 : 1,
                 transition: 'fill 0.15s, stroke 0.15s',
               }}
@@ -187,9 +187,9 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
               points={`${node.cx - HW + 8},${node.cy - HH} ${node.cx - HW},${node.cy - HH} ${node.cx - HW},${node.cy - HH + 8}`}
               fill="none"
               style={{
-                stroke: active ? node.accentColor : 'rgba(100, 140, 100, 0.55)',
+                stroke: active ? node.accentColor : 'rgba(120, 170, 120, 0.75)',
                 strokeWidth: 1.2,
-                opacity: active ? 0.9 : 0.55,
+                opacity: active ? 1.0 : 0.75,
                 transition: 'stroke 0.15s, opacity 0.15s',
               }}
             />
@@ -219,7 +219,7 @@ export const InfrastructureDiagram: React.FC<Props> = ({ onNodeClick, selectedId
               fontSize={8.5}
               letterSpacing={0.3}
               style={{
-                fill: active ? 'rgba(210,225,210,0.75)' : '#8AAA8A',
+                fill: active ? 'rgba(220,235,220,0.85)' : '#AACAAA',
                 fontFamily: "'IBM Plex Mono', monospace",
                 transition: 'fill 0.15s',
               }}

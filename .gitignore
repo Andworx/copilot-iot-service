@@ -1,6 +1,32 @@
-# Secrets
+# Secrets and credentials
 .env
+.env.*
+!.env.template
+!.env.*.template
+!.env.*.example
 raspberry-pi/.env
+iot-credentials.env
+
+# Certificate and key files
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+*.jks
+*.keystore
+
+# App config with secrets
+appsettings.Development.json
+appsettings.Staging.json
+appsettings.Production.json
+*.secrets.json
+serviceAccountKey.json
+credentials.json
+
+# Secret directories
+secrets/
 
 # Project token files — contain real tenant IDs, client IDs, and org URLs
 project.tokens.json
@@ -39,3 +65,9 @@ scripts/data/
 **/*.pbix
 **/*.abf
 **/*localSettings.json
+
+# Crash and debug logs (may contain stack traces with paths/data)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+crash.log

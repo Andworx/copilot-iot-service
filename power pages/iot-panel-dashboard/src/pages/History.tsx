@@ -69,13 +69,13 @@ const PAGE_SIZE = 10;
 /* ── Fetch Dataverse events ─────────────────── */
 async function fetchDataverseEvents(): Promise<DisplayEvent[]> {
   try {
-    // Relative URL works in Power Pages portal context; absolute in dev with proxy
-    const url = '/api/data/v9.2/andy_iottelemetryevents?$orderby=createdon desc&$top=100&$select=andy_iottelemetryeventid,andy_deviceid,andy_eventtype,andy_gpiopin,andy_value,createdon';
+    // Power Pages Web API uses /_api/ (not /api/data/v9.2/) and requires a CSRF token
+    const url = '/_api/andy_iottelemetryevents?$orderby=createdon desc&$top=100&$select=andy_iottelemetryeventid,andy_deviceid,andy_eventtype,andy_gpiopin,andy_value,createdon';
+    const csrfToken = (document.querySelector<HTMLInputElement>('input[name="__RequestVerificationToken"]')?.value) ?? '';
     const res = await fetch(url, {
       headers: {
-        'OData-MaxVersion': '4.0',
-        'OData-Version': '4.0',
-        'Accept': 'application/json; odata.metadata=none',
+        'Accept': 'application/json',
+        '__RequestVerificationToken': csrfToken,
       },
     });
     if (!res.ok) throw new Error(`Dataverse HTTP ${res.status} ${res.statusText}`);

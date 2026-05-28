@@ -1,0 +1,103 @@
+/* ═══════════════════════════════════════════════════════════════
+   Kiosk layout — Raspberry Pi 7-inch touchscreen (800×480)
+   Target: Chromium kiosk mode, touch-only workflow, no keyboard
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Overflow guard — no horizontal scroll ── */
+html, body, #root {
+  max-width: 100%;
+}
+
+@media (max-width: 800px) {
+  html, body, #root {
+    overflow-x: hidden;
+  }
+}
+
+/* ── Main content area ── */
+.main-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5);
+}
+
+@media (max-width: 800px) {
+  .main-content {
+    max-width: 100%;
+    padding: var(--sp-4) var(--sp-4);
+  }
+}
+
+/* ── Navbar inner container ── */
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--sp-5);
+  height: 52px;
+  gap: var(--sp-5);
+}
+
+@media (max-width: 800px) {
+  .nav-inner {
+    max-width: 100%;
+    padding: 0 var(--sp-4);
+    height: 56px; /* taller for reliable touch */
+    gap: var(--sp-3);
+  }
+}
+
+/* ── Nav link list ── */
+.nav-list {
+  display: flex;
+  gap: var(--sp-5);
+  list-style: none;
+  align-items: center;
+}
+
+@media (max-width: 800px) {
+  .nav-list {
+    gap: var(--sp-3);
+  }
+
+  /* 44×44px minimum touch target on nav links */
+  .nav-list a {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding-left: var(--sp-2);
+    padding-right: var(--sp-2);
+  }
+}
+
+/* ── LED output grid ── */
+.led-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 800px) {
+  /* 2×2 grid fits the 4 LEDs above the fold at 800px */
+  .led-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Agent / Help Fix button — 44px touch target ── */
+.agent-btn {
+  min-height: 44px;
+}
+
+/* ── Site footer — hide at 480px height to reclaim vertical space ── */
+@media (max-height: 480px) {
+  .site-footer {
+    display: none;
+  }
+}
+
+/* ── Status page debug note — hide on kiosk viewport ── */
+@media (max-width: 800px) and (max-height: 480px) {
+  .status-footer-note {
+    display: none;
+  }
+}

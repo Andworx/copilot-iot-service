@@ -16,7 +16,7 @@ export default function Layout() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar connectionStatus={connectionStatus} />
-      <main id="main-content" style={{ flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' }}>
+      <main id="main-content" className="main-content" style={{ flex: 1 }}>
         <Outlet />
       </main>
       <Footer />

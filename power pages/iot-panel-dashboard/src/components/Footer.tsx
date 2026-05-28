@@ -2,6 +2,7 @@ import React from 'react';
 
 export const Footer: React.FC = () => (
   <footer
+    className="site-footer"
     aria-label="Site footer"
     style={{
       borderTop: '1px solid var(--color-border)',

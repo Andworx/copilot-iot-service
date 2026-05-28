@@ -270,7 +270,7 @@ export default function StatusHome() {
             ))}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-4)' }}>
+          <div className="led-grid" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
             {leds.map(led => (
               <BigLed key={led.gpio} label={led.label} gpio={led.gpio} color={led.color} on={led.on} unknown={isDisconnected} />
             ))}
@@ -398,7 +398,7 @@ export default function StatusHome() {
         </div>
       </div>
 
-      <p style={{ marginTop: 'var(--sp-6)', fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-border-strong)', textAlign: 'center', letterSpacing: '0.04em' }}>
+      <p className="status-footer-note" style={{ marginTop: 'var(--sp-6)', fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-border-strong)', textAlign: 'center', letterSpacing: '0.04em' }}>
         Live data via Azure SignalR · Issue #12 · andy_iottelemetryevent
       </p>
     </div>

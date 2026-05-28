@@ -13,14 +13,9 @@ const navStyle: React.CSSProperties = {
 };
 
 const innerStyle: React.CSSProperties = {
-  maxWidth: '1200px',
-  margin: '0 auto',
-  padding: '0 var(--sp-5)',
-  height: '52px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: 'var(--sp-5)',
 };
 
 const linkStyle: React.CSSProperties = {
@@ -44,7 +39,7 @@ const activeLinkStyle: React.CSSProperties = {
 
 export const Navbar: React.FC<NavbarProps> = ({ connectionStatus }) => (
   <nav style={navStyle} aria-label="Main navigation">
-    <div style={innerStyle}>
+    <div style={innerStyle} className="nav-inner">
       {/* Wordmark */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexShrink: 0 }}>
         <span style={{
@@ -72,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({ connectionStatus }) => (
       </div>
 
       {/* Nav links */}
-      <ul role="list" style={{ display: 'flex', gap: 'var(--sp-5)', listStyle: 'none', alignItems: 'center' }}>
+      <ul role="list" className="nav-list">
         {[
           { to: '/',              label: 'Status'     },
           { to: '/history',       label: 'History'    },

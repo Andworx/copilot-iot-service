@@ -228,33 +228,6 @@ export default function StatusHome() {
 
   return (
     <div>
-      {/* Page header */}
-      <div
-        className="animate-in"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 'var(--sp-3)',
-          marginBottom: 'var(--sp-6)',
-          paddingBottom: 'var(--sp-4)',
-          borderBottom: '1px solid var(--color-border-strong)',
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: '18px', marginBottom: '4px' }}>System Status</h1>
-          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-            raspberry-pi-iotpanel · 4 LEDs · 4 GPIO switches
-          </p>
-        </div>
-        {lastUpdated && (
-          <span style={{ fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-            Updated {lastUpdated.toLocaleTimeString()}
-          </span>
-        )}
-      </div>
-
       {/* ── LED SECTION ─────────────────────────── */}
       <section aria-labelledby="led-heading" style={{ marginBottom: 'var(--sp-6)' }}>
         <h2
@@ -292,13 +265,13 @@ export default function StatusHome() {
           Switch Input — Pull-up, LOW when pressed
         </h2>
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="shimmer" style={{ height: '56px', borderRadius: 'var(--radius-md)' }} />
             ))}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
             {switches.map(sw => (
               <SwitchRow key={sw.gpio} label={sw.label} gpio={sw.gpio} pressed={sw.pressed} unknown={isDisconnected} />
             ))}

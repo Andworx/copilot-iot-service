@@ -99,8 +99,9 @@ The main loop hot-reloads `logic_map.json` every 20 seconds — no restart neede
 ```bash
 # IoT Monitor service (the Python GPIO → IoT Hub service)
 sudo systemctl status iot-monitor
-sudo systemctl start  iot-monitor
-sudo systemctl stop   iot-monitor
+sudo systemctl start   iot-monitor
+sudo systemctl stop    iot-monitor
+sudo systemctl restart iot-monitor
 sudo journalctl -u iot-monitor -f
 
 # Auto-Deploy service (runs once at boot to pull latest code)

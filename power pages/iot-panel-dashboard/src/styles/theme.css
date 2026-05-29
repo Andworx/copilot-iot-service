@@ -175,6 +175,31 @@ hr {
   .animate-in, .shimmer { animation: none; opacity: 1; transform: none; }
 }
 
+/* ── Kiosk spacing overrides — Raspberry Pi 7-inch (800×480) ── */
+@media (max-width: 800px) {
+  :root {
+    --sp-6: 20px;
+    --sp-7: 32px;
+    --sp-8: 40px;
+  }
+
+  /* Slightly larger base font for arm's-length (30–50 cm) legibility */
+  html, body {
+    font-size: 15px;
+  }
+
+  h1 { font-size: 16px; }
+}
+
+/* Landscape 480px — tighten vertical rhythm */
+@media (max-height: 480px) {
+  :root {
+    --sp-5: 14px;
+    --sp-6: 14px;
+    --sp-7: 20px;
+  }
+}
+
 /* ── Infrastructure diagram animations ──────── */
 
 /* Animated data-flow dots travelling along SVG connector paths */

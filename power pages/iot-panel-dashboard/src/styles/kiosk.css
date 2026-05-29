@@ -77,9 +77,21 @@ html, body, #root {
 }
 
 @media (max-width: 800px) {
-  /* 2×2 grid fits the 4 LEDs above the fold at 800px */
+  /* 4×1 row at kiosk width — circles shrink to fit */
   .led-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Shrink LED card padding */
+  .led-grid > div {
+    padding: var(--sp-3) var(--sp-2) !important;
+    gap: var(--sp-2) !important;
+  }
+
+  /* Shrink the LED circle */
+  .led-circle {
+    width: 52px !important;
+    height: 52px !important;
   }
 }
 

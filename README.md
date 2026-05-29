@@ -111,8 +111,8 @@ cp project.tokens.example.json project.tokens.json
 ### 2 — Set up the Raspberry Pi
 
 ```bash
-# On a fresh Raspberry Pi:
-curl -sSL https://raw.githubusercontent.com/Andworx/copilot-iot-service/main/raspberry-pi/bootstrap.sh | sudo bash
+# On a fresh Raspberry Pi (replace <owner> with your GitHub org or username):
+curl -sSL https://raw.githubusercontent.com/<owner>/copilot-iot-service/main/raspberry-pi/bootstrap.sh | sudo bash
 ```
 
 The bootstrap script installs dependencies, sets up SSH auth to GitHub, clones the repo, and configures a systemd service that auto-pulls updates on every boot.
@@ -121,7 +121,7 @@ The bootstrap script installs dependencies, sets up SSH auth to GitHub, clones t
 
 Provision in order:
 1. Azure IoT Hub → register device `raspberry-pi-iotpanel`
-2. Azure Event Hub → namespace + hub `andworxiotagenteventhub`
+2. Azure Event Hub → namespace + hub (e.g. `iot-agent-eventhub`)
 3. Azure SignalR Service → Serverless mode
 4. Azure Function App → deploy from `azure infrastructure/azure-functions/iot-signalr-func/`
 5. Azure Logic App → Event Hub trigger → HTTP POST to Function
@@ -146,8 +146,8 @@ pac copilot push --bot <agent-name> --environment <env-url>
 ## 📊 Message Flow Detail
 
 1. **Raspberry Pi** detects a switch state change
-2. **IoT Hub** receives the MQTT message from device `raspberry-pi-iotpanel`
-3. **Event Hub** (`andworxiotagenteventhub`) receives the message via IoT Hub route `routeforiotpanel`
+2. **IoT Hub** receives the MQTT message from the registered device
+3. **Event Hub** receives the message via the configured IoT Hub route
 4. **Logic App** polls Event Hub every 5 s using `$Default` consumer group
 5. **Azure Function** (`/api/telemetry`) receives the HTTP POST and broadcasts via SignalR
 6. **Power Pages browser** receives the WebSocket update and re-renders the dashboard

@@ -64,7 +64,7 @@ jobs:
             --tenant "${{ secrets.DATAVERSE_TENANT_ID }}" \
             --applicationId "${{ secrets.DATAVERSE_CLIENT_ID }}" \
             --clientSecret "${{ secrets.DATAVERSE_CLIENT_SECRET }}" \
-            --environment "https://iot-agents.crm.dynamics.com/"
+            --environment "https://YOUR_ORG_NAME.crm.dynamics.com/"
 
       - name: Upload code site to Power Pages
         working-directory: "power pages/iot-panel-dashboard"

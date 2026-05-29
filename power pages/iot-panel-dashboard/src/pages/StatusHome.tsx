@@ -212,12 +212,6 @@ export default function StatusHome() {
     <div>
       {/* ── LED SECTION ─────────────────────────── */}
       <section aria-labelledby="led-heading" style={{ marginBottom: 'var(--sp-6)' }}>
-        <h2
-          id="led-heading"
-          style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)', fontFamily: 'var(--font-heading)' }}
-        >
-          LED Output — Active HIGH, 330Ω
-        </h2>
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-4)' }}>
             {Array.from({ length: 4 }).map((_, i) => (
@@ -240,12 +234,6 @@ export default function StatusHome() {
 
       {/* ── SWITCH SECTION ──────────────────────── */}
       <section aria-labelledby="switch-heading" style={{ marginBottom: 'var(--sp-6)' }}>
-        <h2
-          id="switch-heading"
-          style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)', fontFamily: 'var(--font-heading)' }}
-        >
-          Switch Input — Pull-up, LOW when pressed
-        </h2>
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
             {Array.from({ length: 4 }).map((_, i) => (

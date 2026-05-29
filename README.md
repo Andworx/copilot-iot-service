@@ -16,17 +16,15 @@ flowchart TD
     Func["⚡ Azure Function App\n(Node.js)"]
     SR["🔁 Azure SignalR Service\n(Serverless)"]
     Browser["🌐 Power Pages Portal\n(Live dashboard)"]
-    PA["🔄 Power Automate Flow"]
     DV["🗄️ Dataverse"]
     Agent["🤖 Copilot Studio Agent\n(Troubleshooting)"]
 
     Pi -- "MQTT / TLS" --> Hub
     Hub -- "Device routing" --> EH
-    EH -- "HTTP POST" --> Func
+    EH -- "Event Hub trigger" --> Func
     Func -- "WebSocket broadcast" --> SR
     SR -- "Real-time update" --> Browser
-    Func -- "Trigger" --> PA
-    PA -- "Write telemetry" --> DV
+    Func -- "Write telemetry" --> DV
     DV -- "Query live state" --> Agent
     Agent -- "Embedded in portal" --> Browser
 ```
@@ -45,7 +43,6 @@ flowchart TD
 | **Real-time backend** | Azure Function App (Node.js 24) | Receives Event Hub messages, broadcasts via SignalR |
 | **Real-time transport** | Azure SignalR Service (Serverless) | WebSocket push to browser |
 | **Data store** | Dataverse | IoT devices, telemetry events, panel state tables |
-| **Automation** | Power Automate | Ingests telemetry from Azure into Dataverse |
 | **Portal** | Power Pages | Live dashboard + historical event log |
 | **AI agent** | Copilot Studio | Panel Troubleshooting Agent — queries live state, walks through diagnostics |
 
@@ -150,9 +147,8 @@ pac copilot push --bot <agent-name> --environment <env-url>
 1. **Raspberry Pi** detects a switch state change
 2. **IoT Hub** receives the MQTT message from the registered device
 3. **Event Hub** receives the message via the configured IoT Hub route
-4. **Azure Function** is triggered by the Event Hub and broadcasts via SignalR
+4. **Azure Function** is triggered by the Event Hub, writes the telemetry directly to Dataverse, and broadcasts via SignalR
 5. **Power Pages browser** receives the WebSocket update and re-renders the dashboard
-6. **Power Automate flow** (in parallel) writes the event to Dataverse for history and agent queries
 
 **Typical end-to-end latency:** 5–10 seconds.
 

@@ -1,0 +1,28 @@
+displayName: IoT Panel Troubleshooting Agent
+schemaName: andy_IoTPanelTroubleshootingAgent
+accessControlPolicy: GroupMembership
+authenticationMode: None
+authenticationTrigger: AsNeeded
+configuration:
+  settings:
+    AnonymousAccessDisabled: true
+    GenerativeActionsEnabled: true
+
+  isAgentConnectable: true
+  gPTSettings:
+    defaultSchemaName: andy_IoTPanelTroubleshootingAgent.gpt.default
+
+  aISettings:
+    useModelKnowledge: true
+    isFileAnalysisEnabled: true
+    isSemanticSearchEnabled: true
+    contentModeration: Low
+    optInUseLatestModels: false
+
+  recognizer:
+    kind: GenerativeAIRecognizer
+
+authenticationConfiguration: {}
+publishedOn: 2026-05-29T10:33:35.0000000Z
+template: default-2.1.0
+language: 1033

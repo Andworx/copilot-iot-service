@@ -1,0 +1,23 @@
+mcs.metadata:
+  componentName: Pi Connection Issues
+  description: Guides the user through diagnosing Raspberry Pi connectivity and IoT Hub connection problems
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent:
+    displayName: Pi Connection Issues
+    triggerQueries:
+      - Pi is offline
+      - Pi not connecting
+      - IoT Hub connection failed
+      - service not running
+      - Pi not sending data
+      - device offline
+      - can't connect to IoT Hub
+  actions:
+    - kind: SendActivity
+      id: sendMessage_hY2cM7
+      activity:
+        text:
+          - "Let's diagnose the Pi connection step by step:\n\n1. Check the service status: sudo systemctl status iot-monitor\n2. If the service is stopped, start it: sudo systemctl start iot-monitor\n3. Watch the live service logs: sudo journalctl -u iot-monitor -f\n4. Confirm the local API is responding: curl http://localhost:8080/api/status\n5. Check your .env credentials — device ID must be raspberry-pi-iotpanel, IoT Hub must be iothub-aw-iot-copilot\n6. In the Azure portal, open iothub-aw-iot-copilot and check whether the device shows as Connected or Disconnected\n\nWhat does step 1 show you?"

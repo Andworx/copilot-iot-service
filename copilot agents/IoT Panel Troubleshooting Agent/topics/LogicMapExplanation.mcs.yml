@@ -1,0 +1,22 @@
+mcs.metadata:
+  componentName: Logic Map Explanation
+  description: Explains how the logic map controls LED behaviour on the IoT panel, including all 7 rules and their switch combinations
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent:
+    displayName: Logic Map Explanation
+    triggerQueries:
+      - what does the logic map do
+      - explain the rules
+      - how do switches control LEDs
+      - what is the logic map
+      - explain logic map
+      - switch rules
+  actions:
+    - kind: SendActivity
+      id: sendMessage_pR4tL8
+      activity:
+        text:
+          - "The logic map is a rule engine running on the Raspberry Pi that translates switch input combinations into LED output patterns. It has 7 named rules: all_lights_on, single_light, pattern_lights, diagnostic_mode, shutdown_sequence, switch_4_only, and fallback. The healthy state is all_lights_on — flip SW1 (military-style red toggle switch) to ON and turn SW3 (keyed switch) with its key to turn on all 4 LEDs. Let me explain each rule in detail."

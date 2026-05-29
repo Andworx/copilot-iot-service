@@ -8,25 +8,28 @@ An end-to-end IoT demonstration connecting physical hardware to Microsoft Power 
 
 ## 🏗️ Architecture
 
-```
-Raspberry Pi (GPIO)
-      │  MQTT / TLS
-      ▼
-Azure IoT Hub
-      │  Device routing
-      ▼
-Azure Event Hub
-      │  5-second poll
-      ▼
-Azure Logic App
-      │  HTTP POST
-      ▼
-Azure Function App  ──── Azure SignalR Service ──── Browser (Power Pages)
-      │                                                      │
-      └─── Power Automate Flow ──── Dataverse ──── Copilot Studio Agent
+```mermaid
+flowchart TD
+    Pi["🍓 Raspberry Pi\n(GPIO switches + LEDs)"]
+    Hub["☁️ Azure IoT Hub"]
+    EH["📨 Azure Event Hub"]
+    Func["⚡ Azure Function App\n(Node.js)"]
+    SR["🔁 Azure SignalR Service\n(Serverless)"]
+    Browser["🌐 Power Pages Portal\n(Live dashboard)"]
+    DV["🗄️ Dataverse"]
+    Agent["🤖 Copilot Studio Agent\n(Troubleshooting)"]
+
+    Pi -- "MQTT / TLS" --> Hub
+    Hub -- "Device routing" --> EH
+    EH -- "Event Hub trigger" --> Func
+    Func -- "WebSocket broadcast" --> SR
+    SR -- "Real-time update" --> Browser
+    Func -- "Write telemetry" --> DV
+    DV -- "Query live state" --> Agent
+    Agent -- "Embedded in portal" --> Browser
 ```
 
-**Data flow:** Physical switch toggle → IoT Hub → Event Hub → Logic App → Azure Function → SignalR → live dashboard update in ~10 seconds.
+**Data flow:** Physical switch toggle → IoT Hub → Event Hub → Azure Function → SignalR → live dashboard update in ~10 seconds.
 
 ---
 
@@ -37,11 +40,9 @@ Azure Function App  ──── Azure SignalR Service ──── Browser (Pow
 | **Hardware** | Raspberry Pi + GPIO | 4 toggle switches, 4 LEDs, configurable logic map |
 | **Device connectivity** | Azure IoT Hub (Standard S1) | MQTT device-to-cloud messaging |
 | **Message buffer** | Azure Event Hub | Decouples IoT Hub from the processing pipeline |
-| **Message forwarder** | Azure Logic App | Polls Event Hub every 5 s, POSTs to Function |
-| **Real-time backend** | Azure Function App (Node.js 24) | SignalR broadcaster + telemetry endpoint |
+| **Real-time backend** | Azure Function App (Node.js 24) | Receives Event Hub messages, broadcasts via SignalR |
 | **Real-time transport** | Azure SignalR Service (Serverless) | WebSocket push to browser |
 | **Data store** | Dataverse | IoT devices, telemetry events, panel state tables |
-| **Automation** | Power Automate | Ingests telemetry from Azure into Dataverse |
 | **Portal** | Power Pages | Live dashboard + historical event log |
 | **AI agent** | Copilot Studio | Panel Troubleshooting Agent — queries live state, walks through diagnostics |
 
@@ -53,8 +54,7 @@ Azure Function App  ──── Azure SignalR Service ──── Browser (Pow
 copilot-iot-service/
 ├── raspberry-pi/               # Pi GPIO service, IoT client, auto-deploy scripts
 ├── azure infrastructure/       # Azure middleware source and deployment documentation
-│   ├── azure-functions/        # Node.js Azure Function (SignalR broadcaster)
-│   └── azure-logic apps/       # Logic App workflow definitions
+│   └── azure-functions/        # Node.js Azure Function (SignalR broadcaster)
 ├── tables/                     # Dataverse table definitions (JSON)
 ├── flows/                      # Power Automate flow definitions
 ├── power pages/                # Power Pages portal (PAC CLI v2 format)
@@ -96,7 +96,7 @@ Switch states are polled only when a switch chages postion. On any change, a tel
 ### Prerequisites
 
 - Raspberry Pi (any model with GPIO) running Raspberry Pi OS
-- Azure subscription (IoT Hub, Event Hub, Logic App, Function App, SignalR)
+- Azure subscription (IoT Hub, Event Hub, Function App, SignalR)
 - Power Platform environment (Dataverse, Power Pages, Copilot Studio)
 - PowerShell 7+, [PAC CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction), Node.js 18+, [GitHub CLI](https://cli.github.com)
 
@@ -111,8 +111,8 @@ cp project.tokens.example.json project.tokens.json
 ### 2 — Set up the Raspberry Pi
 
 ```bash
-# On a fresh Raspberry Pi:
-curl -sSL https://raw.githubusercontent.com/Andworx/copilot-iot-service/main/raspberry-pi/bootstrap.sh | sudo bash
+# On a fresh Raspberry Pi (replace <owner> with your GitHub org or username):
+curl -sSL https://raw.githubusercontent.com/<owner>/copilot-iot-service/main/raspberry-pi/bootstrap.sh | sudo bash
 ```
 
 The bootstrap script installs dependencies, sets up SSH auth to GitHub, clones the repo, and configures a systemd service that auto-pulls updates on every boot.
@@ -120,11 +120,10 @@ The bootstrap script installs dependencies, sets up SSH auth to GitHub, clones t
 ### 3 — Deploy Azure infrastructure
 
 Provision in order:
-1. Azure IoT Hub → register device `raspberry-pi-iotpanel`
-2. Azure Event Hub → namespace + hub `andworxiotagenteventhub`
+1. Azure IoT Hub → register your device
+2. Azure Event Hub → namespace + hub (e.g. `iot-agent-eventhub`); configure IoT Hub routing to forward messages here
 3. Azure SignalR Service → Serverless mode
-4. Azure Function App → deploy from `azure infrastructure/azure-functions/iot-signalr-func/`
-5. Azure Logic App → Event Hub trigger → HTTP POST to Function
+4. Azure Function App → deploy from `azure infrastructure/azure-functions/iot-signalr-func/`; configure Event Hub trigger
 
 See `azure infrastructure/README.md` for detailed Azure middleware configuration and source layout.
 
@@ -146,12 +145,10 @@ pac copilot push --bot <agent-name> --environment <env-url>
 ## 📊 Message Flow Detail
 
 1. **Raspberry Pi** detects a switch state change
-2. **IoT Hub** receives the MQTT message from device `raspberry-pi-iotpanel`
-3. **Event Hub** (`andworxiotagenteventhub`) receives the message via IoT Hub route `routeforiotpanel`
-4. **Logic App** polls Event Hub every 5 s using `$Default` consumer group
-5. **Azure Function** (`/api/telemetry`) receives the HTTP POST and broadcasts via SignalR
-6. **Power Pages browser** receives the WebSocket update and re-renders the dashboard
-7. **Power Automate flow** (in parallel) writes the event to Dataverse for history and agent queries
+2. **IoT Hub** receives the MQTT message from the registered device
+3. **Event Hub** receives the message via the configured IoT Hub route
+4. **Azure Function** is triggered by the Event Hub, writes the telemetry directly to Dataverse, and broadcasts via SignalR
+5. **Power Pages browser** receives the WebSocket update and re-renders the dashboard
 
 **Typical end-to-end latency:** 5–10 seconds.
 

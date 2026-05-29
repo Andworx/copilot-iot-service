@@ -21,6 +21,6 @@ configuration:
   recognizer:
     kind: GenerativeAIRecognizer
 
-publishedOn: 2026-05-22T20:05:55.0000000Z
+publishedOn: 2026-05-22T20:13:35.0000000Z
 template: default-2.1.0
 language: 1033

@@ -19,4 +19,4 @@ beginDialog:
       id: sendMessage_pR4tL8
       activity:
         text:
-          - "The logic map is a rule engine running on the Raspberry Pi that translates switch input combinations into LED output patterns. It has 7 named rules: all_lights_on, single_light, pattern_lights, diagnostic_mode, shutdown_sequence, switch_4_only, and fallback. The healthy state is all_lights_on — press SW1 and SW3 together to turn on all 4 LEDs. Let me explain each rule in detail."
+          - "The logic map is a rule engine running on the Raspberry Pi that translates switch input combinations into LED output patterns. It has 7 named rules: all_lights_on, single_light, pattern_lights, diagnostic_mode, shutdown_sequence, switch_4_only, and fallback. The healthy state is all_lights_on — flip SW1 (military-style red toggle switch) to ON and turn SW3 (keyed switch) with its key to turn on all 4 LEDs. Let me explain each rule in detail."

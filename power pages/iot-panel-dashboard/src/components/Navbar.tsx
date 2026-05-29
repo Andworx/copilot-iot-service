@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { StatusBadge, type Status } from './StatusBadge';
+import type { ConnectionStatus } from '../types/telemetry';
 
 interface NavbarProps {
-  connectionStatus: Status;
+  connectionStatus: ConnectionStatus;
 }
 
 const navStyle: React.CSSProperties = {
@@ -13,14 +13,9 @@ const navStyle: React.CSSProperties = {
 };
 
 const innerStyle: React.CSSProperties = {
-  maxWidth: '1200px',
-  margin: '0 auto',
-  padding: '0 var(--sp-5)',
-  height: '52px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: 'var(--sp-5)',
 };
 
 const linkStyle: React.CSSProperties = {
@@ -44,7 +39,7 @@ const activeLinkStyle: React.CSSProperties = {
 
 export const Navbar: React.FC<NavbarProps> = ({ connectionStatus }) => (
   <nav style={navStyle} aria-label="Main navigation">
-    <div style={innerStyle}>
+    <div style={innerStyle} className="nav-inner">
       {/* Wordmark */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexShrink: 0 }}>
         <span style={{
@@ -72,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({ connectionStatus }) => (
       </div>
 
       {/* Nav links */}
-      <ul role="list" style={{ display: 'flex', gap: 'var(--sp-5)', listStyle: 'none', alignItems: 'center' }}>
+      <ul role="list" className="nav-list">
         {[
           { to: '/',              label: 'Status'     },
           { to: '/history',       label: 'History'    },
@@ -91,9 +86,43 @@ export const Navbar: React.FC<NavbarProps> = ({ connectionStatus }) => (
         ))}
       </ul>
 
-      {/* Connection status */}
-      <div style={{ flexShrink: 0 }}>
-        <StatusBadge status={connectionStatus} />
+      {/* Connection status — device name + SignalR state */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{
+          width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
+          background: connectionStatus === 'connected'    ? 'var(--color-success)'
+                    : connectionStatus === 'reconnecting' || connectionStatus === 'connecting' ? 'var(--color-warning)'
+                    : connectionStatus === 'error'        ? 'var(--color-danger)'
+                    : 'var(--color-text-muted)',
+          animation: connectionStatus === 'connected' ? 'ledPulse 3s ease-in-out infinite'
+                   : connectionStatus === 'connecting' || connectionStatus === 'reconnecting' ? 'ledPulseError 0.8s ease-in-out infinite'
+                   : 'none',
+        }} />
+        <span style={{
+          fontFamily: 'var(--font-heading)',
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.06em',
+          color: 'var(--color-text-bright)',
+        }}>
+          raspberry-pi-iotpanel
+        </span>
+        <span style={{
+          fontFamily: 'var(--font-heading)',
+          fontSize: '10px',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: connectionStatus === 'connected'    ? 'var(--color-success)'
+               : connectionStatus === 'reconnecting' || connectionStatus === 'connecting' ? 'var(--color-warning)'
+               : connectionStatus === 'error'        ? 'var(--color-danger)'
+               : 'var(--color-text-muted)',
+        }}>
+          {connectionStatus === 'connected'    ? 'Connected'
+         : connectionStatus === 'connecting'   ? 'Connecting…'
+         : connectionStatus === 'reconnecting' ? 'Reconnecting…'
+         : connectionStatus === 'error'        ? 'Error'
+         : 'Disconnected'}
+        </span>
       </div>
     </div>
   </nav>

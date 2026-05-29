@@ -68,6 +68,7 @@ export function AgentButton({ iotState, hasMismatch }: AgentButtonProps) {
         <div style={{ flex: 1, height: '1px', background: lineColor }} />
 
         <button
+          className="agent-btn"
           onClick={handleClick}
           disabled={disabled}
           aria-label="Ask AI agent to diagnose the current panel state and suggest a fix"

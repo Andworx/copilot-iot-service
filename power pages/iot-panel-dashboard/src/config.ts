@@ -3,7 +3,7 @@
 
 export const config = {
   // Azure Function base URL (without trailing slash or path)
-  // e.g. https://func-aw-iot-signalr.azurewebsites.net
+  // e.g. https://func-aw-iot-copilot.azurewebsites.net
   signalrNegotiateUrl: import.meta.env.VITE_SIGNALR_NEGOTIATE_URL as string,
 
   // Azure Function access key for the negotiate endpoint

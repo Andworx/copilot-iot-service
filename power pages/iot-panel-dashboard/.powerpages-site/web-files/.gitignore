@@ -1,0 +1,5 @@
+# Compiled SPA bundle web-files — these are uploaded directly to Power Pages
+# by the CI workflow (deploy-pages-spa.yml) via `pac pages upload-code-site`.
+# Never commit built bundles manually — they may contain embedded secrets.
+index-*.js/
+index-*.css/

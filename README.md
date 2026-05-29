@@ -87,7 +87,7 @@ copilot-iot-service/
 | LED 3 (Green) | GPIO 25 |
 | LED 4 (Yellow) | GPIO 12 |
 
-Switch states are polled every 2 seconds. On any change, a telemetry message is published to Azure IoT Hub. LED behaviour is governed by `raspberry-pi/logic_map.json` — modify rules in the repo and the Pi pulls the update automatically on next boot.
+Switch states are polled only when a switch chages postion. On any change, a telemetry message is published to Azure IoT Hub. LED behaviour is governed by `raspberry-pi/logic_map.json` — modify rules in the repo and the Pi pulls the update automatically on next boot.
 
 ---
 

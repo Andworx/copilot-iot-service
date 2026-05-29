@@ -49,6 +49,7 @@ function BigLed({ label, gpio, color, on, unknown = false }: LedProps) {
     >
       {/* Circle */}
       <div
+        className="led-circle"
         aria-label={ariaLabel}
         style={{
           width: '90px',
@@ -129,7 +130,7 @@ function SwitchRow({ label, gpio, pressed, unknown = false }: SwitchProps) {
   return (
     <div
       className="animate-in"
-      aria-label={`${label}: ${unknown ? 'unknown (Pi disconnected)' : pressed ? 'pressed' : 'open'}`}
+      aria-label={`${label}: ${unknown ? 'unknown (Pi disconnected)' : pressed ? 'on' : 'off'}`}
       style={{
         background: 'var(--color-surface)',
         border: `1px solid ${pressed && !unknown ? 'var(--color-primary)' : 'var(--color-border)'}`,
@@ -186,28 +187,11 @@ function SwitchRow({ label, gpio, pressed, unknown = false }: SwitchProps) {
         color: pressed && !unknown ? 'var(--color-primary)' : 'var(--color-text-muted)',
         border: `1px solid ${pressed && !unknown ? 'rgba(245,158,11,0.40)' : 'var(--color-border)'}`,
       }}>
-        {unknown ? '—' : pressed ? 'PRESSED' : 'OPEN'}
+        {unknown ? '—' : pressed ? 'ON' : 'OFF'}
       </div>
     </div>
   );
 }
-
-/* ── Connection status banner ───────────────── */
-const STATUS_COLOR: Record<string, string> = {
-  connected:    'var(--color-success)',
-  connecting:   'var(--color-primary)',
-  reconnecting: 'var(--color-warning)',
-  disconnected: 'var(--color-text-muted)',
-  error:        'var(--color-danger)',
-};
-
-const STATUS_TEXT: Record<string, string> = {
-  connected:    'CONNECTED',
-  connecting:   'CONNECTING…',
-  reconnecting: 'RECONNECTING…',
-  disconnected: 'DISCONNECTED',
-  error:        'CONNECTION ERROR',
-};
 
 /* ── Page ───────────────────────────────────── */
 export default function StatusHome() {
@@ -216,53 +200,18 @@ export default function StatusHome() {
   const loading = iotState === null && (connectionStatus === 'connecting' || connectionStatus === 'disconnected');
   const hasData  = iotState !== null;
 
-  // True when we have stale data but are no longer connected — state is unknown
   const isDisconnected = hasData && connectionStatus !== 'connected';
 
   const leds     = hasData ? GPIO_CONFIG.leds.map((cfg, i) => ({ ...cfg, on: isDisconnected ? false : (iotState!.leds[i] ?? false) })) : [];
   const switches = hasData ? GPIO_CONFIG.switches.map((cfg, i) => ({ ...cfg, pressed: iotState!.switches[i] ?? false })) : [];
 
-  const lastUpdated = hasData ? new Date(iotState!.lastUpdated) : null;
-  const allNominal  = hasData && !iotState!.mismatch && connectionStatus === 'connected';
-  const allLedsOn   = hasData && iotState!.leds.every(Boolean);
+  const allNominal = hasData && !iotState!.mismatch && connectionStatus === 'connected';
+  const allLedsOn  = hasData && iotState!.leds.every(Boolean);
 
   return (
     <div>
-      {/* Page header */}
-      <div
-        className="animate-in"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 'var(--sp-3)',
-          marginBottom: 'var(--sp-6)',
-          paddingBottom: 'var(--sp-4)',
-          borderBottom: '1px solid var(--color-border-strong)',
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: '18px', marginBottom: '4px' }}>System Status</h1>
-          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-            raspberry-pi-iotpanel · 4 LEDs · 4 GPIO switches
-          </p>
-        </div>
-        {lastUpdated && (
-          <span style={{ fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-            Updated {lastUpdated.toLocaleTimeString()}
-          </span>
-        )}
-      </div>
-
       {/* ── LED SECTION ─────────────────────────── */}
       <section aria-labelledby="led-heading" style={{ marginBottom: 'var(--sp-6)' }}>
-        <h2
-          id="led-heading"
-          style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)', fontFamily: 'var(--font-heading)' }}
-        >
-          LED Output — Active HIGH, 330Ω
-        </h2>
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-4)' }}>
             {Array.from({ length: 4 }).map((_, i) => (
@@ -270,7 +219,7 @@ export default function StatusHome() {
             ))}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-4)' }}>
+          <div className="led-grid" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
             {leds.map(led => (
               <BigLed key={led.gpio} label={led.label} gpio={led.gpio} color={led.color} on={led.on} unknown={isDisconnected} />
             ))}
@@ -285,20 +234,14 @@ export default function StatusHome() {
 
       {/* ── SWITCH SECTION ──────────────────────── */}
       <section aria-labelledby="switch-heading" style={{ marginBottom: 'var(--sp-6)' }}>
-        <h2
-          id="switch-heading"
-          style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--sp-4)', fontFamily: 'var(--font-heading)' }}
-        >
-          Switch Input — Pull-up, LOW when pressed
-        </h2>
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="shimmer" style={{ height: '56px', borderRadius: 'var(--radius-md)' }} />
             ))}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
             {switches.map(sw => (
               <SwitchRow key={sw.gpio} label={sw.label} gpio={sw.gpio} pressed={sw.pressed} unknown={isDisconnected} />
             ))}
@@ -337,68 +280,7 @@ export default function StatusHome() {
         </section>
       )}
 
-      {/* ── BOTTOM: connection status ────────────── */}
-      <div style={{ borderTop: '1px solid var(--color-border-strong)', paddingTop: 'var(--sp-5)', marginTop: 'var(--sp-2)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        {/* Overall system status */}
-        {!loading && (
-          <div
-            className="animate-in"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: 'var(--sp-3) var(--sp-5)',
-              background: 'var(--color-surface)',
-              border: `1px solid ${allNominal ? 'var(--color-success)' : 'var(--color-danger)'}`,
-              borderRadius: 'var(--radius-md)',
-              boxShadow: allNominal ? 'var(--shadow-glow-accent)' : 'var(--shadow-glow-danger)',
-            }}
-          >
-            <div style={{
-              width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
-              background: allNominal ? 'var(--color-success)' : 'var(--color-danger)',
-              animation: allNominal ? 'ledPulse 3s ease-in-out infinite' : 'ledPulseError 1s ease-in-out infinite',
-            }} />
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: allNominal ? 'var(--color-success)' : 'var(--color-danger)' }}>
-              {allNominal ? 'All Systems Nominal' : 'Faults Detected'}
-            </span>
-          </div>
-        )}
-
-        {/* SignalR connection pill */}
-        <div
-          className="animate-in"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: 'var(--sp-3) var(--sp-5)',
-            background: 'var(--color-surface)',
-            border: `1px solid ${connectionStatus === 'connected' ? 'rgba(34,197,94,0.30)' : 'var(--color-border)'}`,
-            borderRadius: 'var(--radius-md)',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '8px', height: '8px', borderRadius: '50%',
-              background: STATUS_COLOR[connectionStatus] ?? 'var(--color-text-muted)',
-              animation: connectionStatus === 'connected' ? 'ledPulse 3s ease-in-out infinite'
-                : connectionStatus === 'reconnecting' || connectionStatus === 'connecting' ? 'ledPulseError 0.8s ease-in-out infinite'
-                : 'none',
-            }} />
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-bright)', letterSpacing: '0.04em' }}>
-              raspberry-pi-iotpanel
-            </span>
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: STATUS_COLOR[connectionStatus] ?? 'var(--color-text-muted)' }}>
-              {STATUS_TEXT[connectionStatus] ?? connectionStatus.toUpperCase()}
-            </span>
-          </div>
-          {lastUpdated && (
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-text-muted)' }}>
-              {lastUpdated.toLocaleTimeString()}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <p style={{ marginTop: 'var(--sp-6)', fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-border-strong)', textAlign: 'center', letterSpacing: '0.04em' }}>
+      <p className="status-footer-note" style={{ marginTop: 'var(--sp-6)', fontFamily: 'var(--font-heading)', fontSize: '10px', color: 'var(--color-border-strong)', textAlign: 'center', letterSpacing: '0.04em' }}>
         Live data via Azure SignalR · Issue #12 · andy_iottelemetryevent
       </p>
     </div>

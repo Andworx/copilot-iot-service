@@ -1,0 +1,71 @@
+name: Deploy Power Pages SPA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "power pages/iot-panel-dashboard/src/**"
+      - "power pages/iot-panel-dashboard/public/**"
+      - "power pages/iot-panel-dashboard/index.html"
+      - "power pages/iot-panel-dashboard/vite.config.ts"
+      - "power pages/iot-panel-dashboard/tsconfig*.json"
+      - "power pages/iot-panel-dashboard/package*.json"
+      - ".github/workflows/deploy-pages-spa.yml"
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, prod]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & upload to Power Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "power pages/iot-panel-dashboard/package-lock.json"
+
+      - name: Install dependencies
+        working-directory: "power pages/iot-panel-dashboard"
+        run: npm ci
+
+      - name: Build SPA
+        working-directory: "power pages/iot-panel-dashboard"
+        env:
+          VITE_SIGNALR_NEGOTIATE_URL: ${{ secrets.VITE_SIGNALR_NEGOTIATE_URL }}
+          VITE_SIGNALR_FUNC_KEY: ${{ secrets.VITE_SIGNALR_FUNC_KEY }}
+          VITE_COPILOT_DIRECTLINE_SECRET: ${{ secrets.VITE_COPILOT_DIRECTLINE_SECRET }}
+          VITE_TARGET_DEVICE_ID: ${{ secrets.VITE_TARGET_DEVICE_ID || 'raspberry-pi-iotpanel' }}
+        run: npm run build
+
+      - name: Install PAC CLI
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Authenticate with Power Platform
+        run: |
+          pac auth create \
+            --tenant "${{ secrets.DATAVERSE_TENANT_ID }}" \
+            --applicationId "${{ secrets.DATAVERSE_CLIENT_ID }}" \
+            --clientSecret "${{ secrets.DATAVERSE_CLIENT_SECRET }}" \
+            --environment "https://iot-agents.crm.dynamics.com/"
+
+      - name: Upload code site to Power Pages
+        working-directory: "power pages/iot-panel-dashboard"
+        run: pac pages upload-code-site --rootPath "."

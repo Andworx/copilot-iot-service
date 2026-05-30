@@ -213,10 +213,14 @@ app.eventHub('iotTelemetry', {
 });
 
 // ─── negotiate ────────────────────────────────────────────────────────────────
+//
+// authLevel changed from 'function' to 'anonymous' — the function key is no
+// longer passed to the browser. CORS is restricted to the Power Pages domain
+// via ALLOWED_ORIGIN app setting (falls back to '*' for local dev).
 
 app.http('negotiate', {
     methods: ['GET', 'POST', 'OPTIONS'],
-    authLevel: 'function',
+    authLevel: 'anonymous',
     extraInputs: [signalRConnectionInfo],
     handler: async (request, context) => {
         if (request.method === 'OPTIONS') {
@@ -234,6 +238,76 @@ app.http('negotiate', {
             headers: { 'Content-Type': 'application/json', ...corsHeaders() },
             body: JSON.stringify(connectionInfo)
         };
+    }
+});
+
+// ─── directline-token ─────────────────────────────────────────────────────────
+//
+// Returns a short-lived (~30 min) Direct Line token in exchange for the channel
+// secret stored in the DIRECTLINE_SECRET app setting.
+//
+// The secret never leaves the server — the SPA only ever receives the token.
+// authLevel is 'anonymous' so the browser needs no key; CORS restricts callers
+// to the Power Pages domain via the ALLOWED_ORIGIN app setting.
+
+app.http('directlineToken', {
+    methods: ['GET', 'OPTIONS'],
+    authLevel: 'anonymous',
+    route: 'directline-token',
+    handler: async (request, context) => {
+        if (request.method === 'OPTIONS') {
+            return {
+                status: 200,
+                headers: corsHeaders()
+            };
+        }
+
+        const secret = process.env.DIRECTLINE_SECRET;
+        if (!secret) {
+            context.log.error('[DL] DIRECTLINE_SECRET app setting is not configured');
+            return {
+                status: 503,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+                body: JSON.stringify({ error: 'Direct Line not configured on server' })
+            };
+        }
+
+        try {
+            const fetch = require('node-fetch');
+            const res = await fetch(
+                'https://directline.botframework.com/v3/directline/tokens/generate',
+                {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${secret}` }
+                }
+            );
+
+            if (!res.ok) {
+                const errText = await res.text();
+                context.log.error(`[DL] Token generation failed (${res.status}): ${errText}`);
+                return {
+                    status: 502,
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+                    body: JSON.stringify({ error: `Direct Line token request failed (${res.status})` })
+                };
+            }
+
+            const tokenData = await res.json();
+            context.log('[DL] Short-lived Direct Line token issued');
+
+            return {
+                status: 200,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+                body: JSON.stringify({ token: tokenData.token })
+            };
+        } catch (err) {
+            context.log.error('[DL] directlineToken error:', err.message);
+            return {
+                status: 500,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+                body: JSON.stringify({ error: 'Internal server error' })
+            };
+        }
     }
 });
 
@@ -355,8 +429,12 @@ app.http('health', {
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 function corsHeaders() {
+    // ALLOWED_ORIGIN should be set to the Power Pages domain in production
+    // (e.g. https://your-portal.powerappsportals.com). Falls back to '*' for
+    // local development when the setting is absent.
+    const origin = process.env.ALLOWED_ORIGIN || '*';
     return {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };

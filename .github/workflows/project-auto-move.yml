@@ -2,7 +2,7 @@ name: Project Auto-Move on PR Status
 
 on:
   pull_request_target:
-    types: [opened, reopened, edited, synchronize, closed]
+    types: [opened, reopened, closed]
 
 permissions:
   contents: read
@@ -51,7 +51,7 @@ jobs:
           echo "Fix PAT_PROJECT by authorizing it for iot-agents org and scopes repo, read:project, write:project."
         shell: bash
 
-      - name: Handle PR opened/reopened/edited - Move to In Review
+      - name: Handle PR opened/reopened - Move to In Review
         if: github.event.action != 'closed' && steps.get-issue.outputs.issue_number != '' && steps.project-access.outputs.ok == 'true'
         uses: leonsteinhaeuser/project-beta-automations@v2.2.1
         with:

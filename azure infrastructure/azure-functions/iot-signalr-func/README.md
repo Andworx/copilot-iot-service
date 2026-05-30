@@ -19,7 +19,8 @@ A secondary HTTP endpoint (`POST /api/telemetry`) is retained for manual testing
 | Trigger | Name | Auth | Purpose |
 |---------|------|------|---------|
 | EventHub | `iotTelemetry` | — | **Primary** — reads IoT Hub built-in EH, broadcasts to SignalR |
-| HTTP GET | `/api/negotiate` | function | SignalR connection info for browser clients |
+| HTTP GET | `/api/negotiate` | anonymous | SignalR connection info for browser clients (CORS-restricted by `ALLOWED_ORIGIN`) |
+| HTTP GET | `/api/directline-token` | anonymous | Issues a short-lived Direct Line token — secret stays server-side (CORS-restricted by `ALLOWED_ORIGIN`) |
 | HTTP POST | `/api/telemetry` | function | **Secondary/test** — manual telemetry injection |
 | HTTP GET | `/api/test-signalr` | anonymous | Smoke-test SignalR broadcast |
 | HTTP GET | `/api/health` | anonymous | Health check |
@@ -32,7 +33,9 @@ A secondary HTTP endpoint (`POST /api/telemetry`) is retained for manual testing
 | `AzureWebJobsStorage` | Storage account connection string (required by Functions runtime) |
 | `IoTHubEventHubConnectionString` | IoT Hub owner connection string in Event Hub-compatible format (see below) |
 | `IoTHubName` | IoT Hub name — used as the Event Hub entity path (default: `iothub-aw-iot-copilot`) |
-| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://<your-org>.crm.dynamics.com` — set as an App Setting (see Dataverse Auth below) |
+| `DATAVERSE_URL` | Dataverse environment URL e.g. `https://<your-org>.crm.dynamics.com` |
+| `DIRECTLINE_SECRET` | Copilot Studio Direct Line channel secret — **never** put this in the SPA; the `/api/directline-token` endpoint exchanges it for a short-lived token server-side |
+| `ALLOWED_ORIGIN` | Power Pages portal URL used for CORS (e.g. `https://your-portal.powerappsportals.com`). Falls back to `*` if not set (local dev only) |
 
 ### IoTHubEventHubConnectionString format
 

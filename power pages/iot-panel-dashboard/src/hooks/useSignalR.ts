@@ -76,8 +76,8 @@ export function useSignalR(): SignalRState {
   useEffect(() => {
     isMountedRef.current = true;
 
-    if (!config.signalrNegotiateUrl || !config.signalrFuncKey) {
-      console.warn('[useSignalR] Missing VITE_SIGNALR_NEGOTIATE_URL or VITE_SIGNALR_FUNC_KEY — skipping SignalR connection');
+    if (!config.signalrNegotiateUrl) {
+      console.warn('[useSignalR] Missing VITE_SIGNALR_NEGOTIATE_URL — skipping SignalR connection');
       setConnectionStatus('error');
       return;
     }
@@ -91,9 +91,8 @@ export function useSignalR(): SignalRState {
       // Step 1: negotiate — Azure SignalR Serverless requires explicit negotiate
       let negotiateInfo: { url: string; accessToken: string };
       try {
-        const res = await fetch(
-          `${config.signalrNegotiateUrl}/api/negotiate?code=${config.signalrFuncKey}`
-        );
+        // negotiate is now anonymous — no function key required
+        const res = await fetch(`${config.signalrNegotiateUrl}/api/negotiate`);
         if (!res.ok) throw new Error(`negotiate HTTP ${res.status}`);
         negotiateInfo = await res.json();
       } catch (err) {

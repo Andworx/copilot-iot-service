@@ -13,17 +13,16 @@ Raspberry Pi
 Azure IoT Hub (iothub-aw-iot-copilot)
     │  built-in Event Hub endpoint
     ▼
-Azure Logic App (la-aw-iot-copilot)
-    │  polls every 5s → HTTP POST
-    ▼
 Azure Function App (func-aw-iot-copilot)  ◄── this directory
-    │  /api/telemetry
+    │  EventHub trigger (iotTelemetry) + HTTP endpoints
     ▼
 Azure SignalR Service (signalr-aw-iot-copilot)
     │  WebSocket broadcast → SendTelemetryUpdate / TriggerAgentHelp
     ▼
 Power Pages Browser Dashboard
 ```
+
+> **Note:** An Azure Logic App (`la-aw-iot-copilot`) was previously used to poll Event Hubs and forward to the function's `/api/telemetry` HTTP endpoint. It has been superseded by the native Event Hub trigger and is retained only for reference in `azure-logic apps/`. See [#101](https://github.com/Andworx/copilot-iot-service/issues/101).
 
 ## Structure
 

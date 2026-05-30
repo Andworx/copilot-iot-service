@@ -42,9 +42,8 @@ export function useAgentChat(): AgentChatState {
   }, []);
 
   const sendPrompt = useCallback(async (prompt: string) => {
-    const secret = config.copilotDirectLineSecret;
-    if (!secret) {
-      setError('Copilot agent not configured. Set VITE_COPILOT_DIRECTLINE_SECRET in .env.local.');
+    if (!config.directlineTokenUrl) {
+      setError('Copilot agent not configured. Set VITE_DIRECTLINE_TOKEN_URL in .env.local.');
       setStatus('error');
       return;
     }
@@ -55,33 +54,41 @@ export function useAgentChat(): AgentChatState {
     setError(null);
 
     try {
-      // 1. Start a Direct Line conversation using the secret as the Bearer token
-      const convRes = await fetch(`${DIRECTLINE_BASE}/conversations`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${secret}` },
-      });
-      if (!convRes.ok) throw new Error(`Start conversation failed (${convRes.status})`);
-      const conv = await convRes.json() as { conversationId: string; token: string };
-      const { conversationId, token } = conv;
+      // 1. Fetch a short-lived Direct Line token from the server-side token endpoint.
+      //    The Direct Line channel secret never reaches the browser.
+      const tokenRes = await fetch(config.directlineTokenUrl);
+      if (!tokenRes.ok) throw new Error(`Failed to obtain Direct Line token (${tokenRes.status})`);
+      const { token } = await tokenRes.json() as { token: string };
 
       if (abortRef.current) return;
 
-      // 2. Get initial watermark — skip any greeting the bot fires on open
-      const initRes = await fetch(`${DIRECTLINE_BASE}/conversations/${conversationId}/activities`, {
+      // 2. Start a Direct Line conversation using the short-lived token
+      const convRes = await fetch(`${DIRECTLINE_BASE}/conversations`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!convRes.ok) throw new Error(`Start conversation failed (${convRes.status})`);
+      const conv = await convRes.json() as { conversationId: string; token: string };
+      const { conversationId, token: convToken } = conv;
+
+      if (abortRef.current) return;
+
+      // 3. Get initial watermark — skip any greeting the bot fires on open
+      const initRes = await fetch(`${DIRECTLINE_BASE}/conversations/${conversationId}/activities`, {
+        headers: { Authorization: `Bearer ${convToken}` },
       });
       const initData = await initRes.json() as DLActivities;
       let watermark = initData.watermark ?? '0';
 
       if (abortRef.current) return;
 
-      // 3. Send the user's prompt
+      // 4. Send the user's prompt
       const sendRes = await fetch(
         `${DIRECTLINE_BASE}/conversations/${conversationId}/activities`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${convToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -95,7 +102,7 @@ export function useAgentChat(): AgentChatState {
 
       if (abortRef.current) return;
 
-      // 4. Poll for the bot's response
+      // 5. Poll for the bot's response
       for (let i = 0; i < MAX_POLL_ATTEMPTS; i++) {
         if (abortRef.current) return;
 
@@ -103,7 +110,7 @@ export function useAgentChat(): AgentChatState {
 
         const pollRes = await fetch(
           `${DIRECTLINE_BASE}/conversations/${conversationId}/activities?watermark=${watermark}`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${convToken}` } },
         );
         if (!pollRes.ok) throw new Error(`Poll failed (${pollRes.status})`);
 

@@ -48,8 +48,7 @@ jobs:
         working-directory: "power pages/iot-panel-dashboard"
         env:
           VITE_SIGNALR_NEGOTIATE_URL: ${{ secrets.VITE_SIGNALR_NEGOTIATE_URL }}
-          VITE_SIGNALR_FUNC_KEY: ${{ secrets.VITE_SIGNALR_FUNC_KEY }}
-          VITE_COPILOT_DIRECTLINE_SECRET: ${{ secrets.VITE_COPILOT_DIRECTLINE_SECRET }}
+          VITE_DIRECTLINE_TOKEN_URL: ${{ secrets.VITE_DIRECTLINE_TOKEN_URL }}
           VITE_TARGET_DEVICE_ID: ${{ secrets.VITE_TARGET_DEVICE_ID || 'raspberry-pi-iotpanel' }}
         run: npm run build
 

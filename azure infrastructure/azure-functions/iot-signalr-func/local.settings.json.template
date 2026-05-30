@@ -5,6 +5,8 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "AzureSignalRConnectionString": "Endpoint=https://<signalr-name>.service.signalr.net;AccessKey=<key>;Version=1.0;",
     "IoTHubEventHubConnectionString": "Endpoint=sb://evhns-aw-iot-copilot.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=<key>;EntityPath=iot-telemetry",
-    "IoTHubName": "iot-telemetry"
+    "IoTHubName": "iot-telemetry",
+    "DIRECTLINE_SECRET": "<your-copilot-studio-direct-line-channel-secret>",
+    "ALLOWED_ORIGIN": "https://your-portal.powerappsportals.com"
   }
 }

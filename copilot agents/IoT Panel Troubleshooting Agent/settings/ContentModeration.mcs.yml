@@ -1,0 +1,4 @@
+mcs.metadata:
+  componentName: ContentModeration
+kind: ContentModerationSettings
+moderatedCustomResponse: I can not help with that

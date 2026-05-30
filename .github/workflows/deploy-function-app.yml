@@ -1,0 +1,66 @@
+name: Deploy Function App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "azure infrastructure/azure-functions/iot-signalr-func/**"
+      - ".github/workflows/deploy-function-app.yml"
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, prod]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build & deploy to Azure Functions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "azure infrastructure/azure-functions/iot-signalr-func/package-lock.json"
+
+      - name: Install dependencies
+        working-directory: "azure infrastructure/azure-functions/iot-signalr-func"
+        run: npm ci
+
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy function code
+        working-directory: "azure infrastructure/azure-functions/iot-signalr-func"
+        run: func azure functionapp publish func-aw-iot-copilot --node
+
+      - name: Set DIRECTLINE_SECRET app setting
+        run: |
+          az functionapp config appsettings set \
+            --resource-group rg-aw-azcom-iot-copilot \
+            --name func-aw-iot-copilot \
+            --settings "DIRECTLINE_SECRET=${{ secrets.DIRECTLINE_SECRET }}"
+
+      - name: Set ALLOWED_ORIGIN app setting
+        run: |
+          az functionapp config appsettings set \
+            --resource-group rg-aw-azcom-iot-copilot \
+            --name func-aw-iot-copilot \
+            --settings "ALLOWED_ORIGIN=${{ secrets.POWER_PAGES_ORIGIN }}"

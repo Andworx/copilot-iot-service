@@ -8,13 +8,13 @@ configuration:
     AnonymousAccessDisabled: true
     GenerativeActionsEnabled: true
 
-  isAgentConnectable: true
+  isAgentConnectable: false
   gPTSettings:
     defaultSchemaName: andy_IoTPanelTroubleshootingAgent.gpt.default
 
   aISettings:
-    useModelKnowledge: true
-    isFileAnalysisEnabled: true
+    useModelKnowledge: false
+    isFileAnalysisEnabled: false
     isSemanticSearchEnabled: true
     contentModeration: Low
     optInUseLatestModels: false
@@ -23,6 +23,6 @@ configuration:
     kind: GenerativeAIRecognizer
 
 authenticationConfiguration: {}
-publishedOn: 2026-05-29T10:33:35.0000000Z
+publishedOn: 2026-05-29T22:15:35.0000000Z
 template: default-2.1.0
 language: 1033

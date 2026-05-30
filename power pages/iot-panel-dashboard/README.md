@@ -186,7 +186,7 @@ The dashboard currently uses mock data stubs. Replace with real data calls when 
 |------|-------------|---------------|
 | Dashboard | SignalR hub (Issue #12) + Dataverse `andy_iottelemetryevent` | `Home.tsx` — `useEffect` timer mock |
 | History | Dataverse WebAPI `andy_iottelemetryevents` | `History.tsx` — `useEffect` timer mock |
-| Device Status | Dataverse WebAPI (device table TBD) | `DeviceStatus.tsx` — `useEffect` timer mock |
+| Device Status | Dataverse WebAPI `andy_iot_sensors` | `DeviceStatus.tsx` — `useEffect` timer mock |
 
 **Dataverse WebAPI base URL:**  
 `https://orgdec501b8.crm.dynamics.com/api/data/v9.2/`

@@ -9,21 +9,25 @@ Use plugins for synchronous server-side logic such as validation, calculated upd
 ```text
 plugins/
 ├── README.md
-├── dataverse-plugin-template/      # Starter plugin project scaffold
-│   ├── DataversePluginTemplate.csproj
-│   ├── Generate-StrongNameKey.ps1
-│   ├── SamplePlugin.cs
-│   ├── Properties/AssemblyInfo.cs
-│   └── README.md
-└── YOUR_PLUGIN_PROJECT/
-    ├── Properties/
-    │   └── AssemblyInfo.cs
-    ├── FeaturePlugin.cs
-    ├── YOUR_PLUGIN_PROJECT.csproj
-    ├── YOUR_PLUGIN_PROJECT.snk
-    ├── packages.config
-    ├── README.md
-    └── FEATURE_REGISTRATION.md
+└── dataverse-plugin-template/      # Starter plugin project scaffold
+    ├── DataversePluginTemplate.csproj
+    ├── Generate-StrongNameKey.ps1
+    ├── SamplePlugin.cs
+    ├── Properties/AssemblyInfo.cs
+    └── README.md
+```
+
+When you create a new plugin, copy `dataverse-plugin-template/` to a new folder (e.g. `plugins/andy-iot-plugin/`) and follow the template README. Each plugin project should contain:
+
+```text
+plugins/<your-plugin>/
+├── Properties/AssemblyInfo.cs
+├── FeaturePlugin.cs
+├── <YourPlugin>.csproj
+├── <YourPlugin>.snk
+├── packages.config
+├── README.md
+└── <Feature>_REGISTRATION.md
 ```
 
 ## Before You Start
@@ -44,12 +48,18 @@ plugins/
 
 ## Build Command
 
+From inside your plugin project folder:
+
 ```powershell
-msbuild YOUR_PLUGIN_PROJECT.csproj /p:Configuration=Release
+# Generate strong-name key (first time only)
+.\Generate-StrongNameKey.ps1
+
+# Build
+dotnet build .\<YourPlugin>.csproj -c Release
 ```
 
 Output:
-- `bin/Release/YOUR_PLUGIN_PROJECT.dll`
+- `bin/Release/net471/<YourPlugin>.dll`
 
 ## Registration and Deployment
 

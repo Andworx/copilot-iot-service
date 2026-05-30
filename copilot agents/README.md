@@ -2,17 +2,27 @@
 
 This folder contains Copilot Studio agent assets for `AgenticIoT`.
 
+## Agents
+
+| Folder | Purpose |
+|--------|---------|
+| `IoT Panel Troubleshooting Agent/` | Embedded in the Power Pages portal. Reports live switch/LED state, walks users through hardware and cloud diagnostics, and escalates to a human engineer when needed. |
+| `IoT Dispatch Agent/` | Handles fault dispatch requests. Looks up sensor records, checks for open dispatch duplicates, selects the nearest available technician, and creates a dispatch history record. |
+
 ## Structure
 
 ```
 copilot agents/
-└── YOUR_AGENT_NAME/         # One folder per agent
-    ├── README.md            # Agent documentation and operating context
-    ├── settings.mcs.yml     # Agent-level settings (exported from Copilot Studio)
-    └── topics/              # One .mcs.yml file per topic
-        ├── Greeting.mcs.yml
-        ├── Escalation.mcs.yml
-        └── Fallback.mcs.yml
+└── <AgentName>/               # One folder per agent
+    ├── agent.mcs.yml          # Agent definition
+    ├── settings.mcs.yml       # Agent-level settings (exported from Copilot Studio)
+    ├── icon.png               # Agent icon
+    ├── topics/                # One .mcs.yml file per topic
+    │   ├── Greeting.mcs.yml
+    │   ├── Escalate.mcs.yml
+    │   └── Fallback.mcs.yml
+    ├── knowledge/             # Knowledge source files (if any)
+    └── settings/              # Content moderation settings
 ```
 
 ## Before You Start

@@ -1,7 +1,7 @@
 {
-  "environmentUrl": "https://orgdec501b8.crm.dynamics.com/",
+  "environmentUrl": "YOUR_ORG_URL",
   "apiVersion": "v9.2",
-  "tenantId": "7cea0515-a5e4-4e8a-8f2a-6d1ad5d6b9f8",
+  "tenantId": "YOUR_TENANT_ID",
   "clientId": "54323971-c56f-4f26-8b73-c7306de29728",
   "cloudEnvironment": "commercial",
   "publisherPrefix": "andy",
@@ -17,7 +17,7 @@
   },
   "dps": {
     "name": "dps-aw-iot-copilot",
-    "idScope": "0ne011EB47B",
+    "idScope": "YOUR_DPS_ID_SCOPE",
     "enrollmentGroupId": "iotpanel-fleet"
   }
 }

@@ -20,7 +20,7 @@ Config files (`config-dev.json`, `config-test.json`, `config-prod.json`) are git
 | Script | Purpose |
 |--------|---------|
 | `New-AzureIotInfrastructure.ps1` | Provision resource group, IoT Hub, DPS, and group enrollment |
-| `New-AzureMiddleware.ps1` | Provision Event Hub routing, SignalR, Function App, and Logic App middleware |
+| `New-AzureMiddleware.ps1` | Provision Event Hub routing, SignalR, and Function App middleware |
 | `New-PiBootConfig.ps1` | Write zero-touch credentials to Raspberry Pi SD card boot partition |
 | `deploy-pi-update.ps1` | Deploy updated Pi monitor code over SCP and restart the `iot-monitor` service |
 
@@ -86,23 +86,17 @@ $key = az iot dps enrollment-group show `
 
 ### New-AzureMiddleware.ps1
 
-Idempotent — safe to re-run. Provisions and redeploys the Azure middleware stack in `rg-aw-azcom-iot-copilot`.
+Idempotent — safe to re-run. Provisions and configures the Azure middleware stack in `rg-aw-azcom-iot-copilot`.
+
+> **Function App code deployment** is handled automatically by the `deploy-function-app.yml` GitHub Actions workflow on every push to `main`. Use this script only to provision or re-configure the infrastructure (SignalR, Event Hub, Function App resource, app settings, CORS, IoT Hub routing).
 
 ```powershell
 .\New-AzureMiddleware.ps1 -Environment dev
 .\New-AzureMiddleware.ps1 -Environment dev -DryRun
-.\New-AzureMiddleware.ps1 -Environment dev -SkipFunctionDeploy
-.\New-AzureMiddleware.ps1 -Environment dev -RefreshLogicAppResources
 ```
 
 **Source-controlled assets used by the script:**
 - Function App code: `azure infrastructure/azure-functions/iot-signalr-func/`
-- Logic App workflow: `azure infrastructure/azure-logic apps/la-aw-iot-copilot/workflow.json`
-
-**When to use `-RefreshLogicAppResources`:**
-- The portal designer shows the Event Hubs trigger as broken or disconnected
-- You need to rebuild the managed Event Hubs connection instead of updating it in place
-- You want to rule out stale portal metadata on an existing Logic App resource
 
 ### deploy-pi-update.ps1
 
@@ -123,7 +117,6 @@ Deploy updated `raspberry-pi/main.py` (or the full `raspberry-pi/` folder) to a 
 ```
 
 **Defaults:** SSH target `pi@iotpanel`, remote directory `/opt/iot-monitor/raspberry-pi/`. Override with `-SshHost` and `-RemoteDir`.
-
 ---
 
 ## Dataverse / Power Platform
@@ -198,7 +191,6 @@ All exports go to `scripts/exports/AgenticIoT/` organized by component type.
 | Script | Purpose |
 |--------|---------|
 | `Invoke-DataverseApi.ps1` | Low-level Dataverse API helper used by other scripts |
-| `Migrate-TokensToEnvironments.ps1` | Migrate token config between environment files |
 | `Sync-BaselineUpdate.ps1` | Cherry-pick baseline updates from template repo |
 | `Sync-RemoteCopilotAssets.ps1` | Sync Copilot Studio assets from environment |
 

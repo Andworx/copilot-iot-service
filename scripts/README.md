@@ -22,6 +22,7 @@ Config files (`config-dev.json`, `config-test.json`, `config-prod.json`) are git
 | `New-AzureIotInfrastructure.ps1` | Provision resource group, IoT Hub, DPS, and group enrollment |
 | `New-AzureMiddleware.ps1` | Provision Event Hub routing, SignalR, Function App, and Logic App middleware |
 | `New-PiBootConfig.ps1` | Write zero-touch credentials to Raspberry Pi SD card boot partition |
+| `deploy-pi-update.ps1` | Deploy updated Pi monitor code over SCP and restart the `iot-monitor` service |
 
 ### New-AzureIotInfrastructure.ps1
 
@@ -103,6 +104,26 @@ Idempotent — safe to re-run. Provisions and redeploys the Azure middleware sta
 - You need to rebuild the managed Event Hubs connection instead of updating it in place
 - You want to rule out stale portal metadata on an existing Logic App resource
 
+### deploy-pi-update.ps1
+
+Deploy updated `raspberry-pi/main.py` (or the full `raspberry-pi/` folder) to a running Pi over SSH/SCP, then restart the `iot-monitor` service and tail recent logs for quick verification.
+
+```powershell
+# Deploy only main.py (most common — quick patch)
+.\deploy-pi-update.ps1
+
+# Deploy all files under raspberry-pi/
+.\deploy-pi-update.ps1 -CopyAll
+
+# Target a specific host
+.\deploy-pi-update.ps1 -SshHost pi@192.168.1.42
+
+# Skip creating a timestamped backup of remote main.py before overwriting
+.\deploy-pi-update.ps1 -SkipBackup
+```
+
+**Defaults:** SSH target `pi@iotpanel`, remote directory `/opt/iot-monitor/raspberry-pi/`. Override with `-SshHost` and `-RemoteDir`.
+
 ---
 
 ## Dataverse / Power Platform
@@ -112,6 +133,7 @@ Idempotent — safe to re-run. Provisions and redeploys the Azure middleware sta
 | `Apply-ProjectTokens.ps1` | Stamp `YOUR_*` placeholders across the repo from `project.tokens.json` |
 | `Connect-Dataverse.ps1` | Authenticate to Dataverse and return a connection object |
 | `Deploy-Project.ps1` | Full solution deployment (tables → choices → relationships → flows) |
+| `Seed-TechnicianData.ps1` | Seed `andy_technician` and `andy_iot_sensor` tables with realistic test data |
 | `Validate-DeploymentSetup.ps1` | Pre-flight check before deploying |
 | `Validate-TableDefinitions.ps1` | Validate all `tables/*/definition.json` files |
 
@@ -128,6 +150,15 @@ Run this after filling in `project.tokens.json`:
 ```powershell
 .\Deploy-Project.ps1 -Environment dev
 .\Deploy-Project.ps1 -Environment prod -DryRun
+```
+
+### Seed-TechnicianData.ps1
+
+Seeds `andy_technician` (25 records) and `andy_iot_sensor` (12 records) with realistic simulated data for the US East corridor. Run after `Import-Choices`, `Import-Tables`, and `Import-Relationships`. Idempotent — skips records that already exist.
+
+```powershell
+.\Seed-TechnicianData.ps1 -Environment dev
+.\Seed-TechnicianData.ps1 -Environment dev -DryRun
 ```
 
 ---

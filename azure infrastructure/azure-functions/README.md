@@ -13,43 +13,41 @@ Raspberry Pi
 Azure IoT Hub (iothub-aw-iot-copilot)
     │  built-in Event Hub endpoint
     ▼
-Azure Logic App (la-aw-iot-copilot)
-    │  polls every 5s → HTTP POST
-    ▼
 Azure Function App (func-aw-iot-copilot)  ◄── this directory
-    │  /api/telemetry
-    ▼
-Azure SignalR Service (signalr-aw-iot-copilot)
-    │  WebSocket broadcast → SendTelemetryUpdate / TriggerAgentHelp
-    ▼
-Power Pages Browser Dashboard
+    │  EventHub trigger (iotTelemetry) + HTTP endpoints
+    ├──► Azure SignalR Service (signalr-aw-iot-copilot)
+    │       WebSocket broadcast → SendTelemetryUpdate / TriggerAgentHelp
+    │       ▼
+    │    Power Pages Browser Dashboard
+    └──► Dataverse (andy_iottelemetryevent)
+             Persisted event log — System-Assigned MSI auth
 ```
 
 ## Structure
 
 ```
 azure infrastructure/
-├── azure-functions/
-│   └── iot-signalr-func/
-│       ├── src/
-│       │   └── app.js                     # All function handlers (negotiate, telemetry, test, health)
-│       ├── host.json                      # Functions runtime config (v4, extension bundle 4.x)
-│       ├── package.json                   # Node.js dependencies
-│       ├── local.settings.json.template   # Copy → local.settings.json for local dev
-│       └── .gitignore                     # Excludes node_modules, local.settings.json
-└── azure-logic apps/
-  └── la-aw-iot-copilot/
-    └── workflow.json                  # Source-controlled Logic App workflow definition
+└── azure-functions/
+    ├── config.json
+    └── iot-signalr-func/
+        ├── src/
+        │   └── app.js                     # All function handlers
+        ├── host.json                      # Functions runtime config (v4, extension bundle 4.x)
+        ├── package.json                   # Node.js dependencies
+        ├── local.settings.json.template   # Copy → local.settings.json for local dev
+        └── .gitignore                     # Excludes node_modules, local.settings.json
 ```
 
 ## Endpoints
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| `GET`  | `/api/negotiate` | Function key | SignalR connection info for browser clients |
-| `POST` | `/api/telemetry` | Function key | Receive telemetry from Logic App, broadcast via SignalR |
-| `GET`  | `/api/test-signalr` | Anonymous | Manually push a test message to SignalR |
-| `GET`  | `/api/health` | Anonymous | Health check |
+| EventHub | `iotTelemetry` | — | **Primary** — reads IoT Hub built-in EH endpoint, broadcasts to SignalR + writes to Dataverse |
+| `GET` | `/api/negotiate` | Anonymous | SignalR connection info for browser clients (CORS-restricted by `ALLOWED_ORIGIN`) |
+| `GET` | `/api/directline-token` | Anonymous | Issues a short-lived Direct Line token — the channel secret stays server-side (CORS-restricted by `ALLOWED_ORIGIN`) |
+| `POST` | `/api/telemetry` | Function key | **Secondary/test** — manual telemetry injection; broadcasts via SignalR + writes to Dataverse |
+| `GET` | `/api/test-signalr` | Anonymous | Manually push a test `SendTelemetryUpdate` message to SignalR |
+| `GET` | `/api/health` | Anonymous | Health check |
 
 ## SignalR Messages
 
@@ -91,7 +89,7 @@ Sent when `needs_help === true` (mismatch detected or rule ≠ `all_lights_on`).
 ### Full infrastructure + deploy (recommended)
 
 ```powershell
-# From repo root — provisions SignalR, Function App, Logic App, then deploys code
+# From repo root — provisions SignalR, Function App, Event Hub, Storage, then deploys code
 .\scripts\New-AzureMiddleware.ps1 -Environment dev
 ```
 
@@ -115,18 +113,18 @@ npm install
 npm start
 ```
 
-## Logic App Source
+## Verify End-to-End
 
-The paired Logic App workflow now lives in `../azure-logic apps/la-aw-iot-copilot/workflow.json` and is deployed by `scripts/New-AzureMiddleware.ps1`.
+```bash
+# 1. Health check
+curl https://func-aw-iot-copilot.azurewebsites.net/api/health
 
-The workflow definition uses two placeholders that the deployment script injects at deploy time:
+# 2. Push a test SignalR message
+curl https://func-aw-iot-copilot.azurewebsites.net/api/test-signalr
 
-- `__EVENT_HUB_NAME__` → `iot-telemetry`
-- `__TELEMETRY_URL__` → the function endpoint including the host key
-
-If the Event Hubs trigger still shows a broken connection after deployment, open the Logic App in the portal and verify the managed API connection named `eventhubs`.
-
-> **Why Logic App?** Event Hub triggers on Consumption Function Apps suffer cold-start issues. Logic App provides reliable 5-second polling with built-in retry and run history for debugging.
+# 3. Press a switch on the Pi — check Function App invocations in Azure Portal (Monitor → Invocations)
+# 4. Connect a browser SignalR client to /api/negotiate and watch for SendTelemetryUpdate
+```
 
 ## Configuration
 
@@ -157,19 +155,6 @@ For other resources used by the Function App, see their dedicated config files:
 | SignalR Service | `signalr-aw-iot-copilot` | Free_F1 | Serverless mode — see `../signalr/` |
 | Storage Account | `stfuncawiotcopilot` | Standard LRS | Required by Function App — see `../storage-account/` |
 | Event Hub | `evhns-aw-iot-copilot / iot-telemetry` | Basic | Telemetry source — see `../event-hub/` |
-
-## Verify End-to-End
-
-```bash
-# 1. Health check
-curl https://<your-function-app>.azurewebsites.net/api/health
-
-# 2. Push a test SignalR message
-curl https://<your-function-app>.azurewebsites.net/api/test-signalr
-
-# 3. Press a switch on the Pi — check Logic App run history in portal
-# 4. Connect a browser SignalR client to /api/negotiate and watch for SendTelemetryUpdate
-```
 
 ## Updating This README
 

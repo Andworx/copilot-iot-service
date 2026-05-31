@@ -2,17 +2,17 @@
 
 Real-time IoT panel status dashboard — React 19 + Vite SPA deployed as a Power Pages code site.
 
-Tracks switch states, LED indicators, and device health for Raspberry Pi IoT nodes connected to the AgenticIoT Dataverse environment.
+Displays live switch states and LED indicators from Raspberry Pi IoT nodes, surfacing telemetry via Azure SignalR Service and persisting events to Dataverse. Also embeds the **IoT Panel Troubleshooting Agent** (Copilot Studio) so users can query live device state and walk through diagnostics without leaving the portal.
 
 ---
 
 ## Pages
 
-| Route | Page | Description |
+| Route | Page | Data source |
 |-------|------|-------------|
-| `/` | Dashboard | Live switch grid + LED indicator grid with shimmer loading |
-| `/history` | Event History | Paginated telemetry event log from `andy_iottelemetryevent` |
-| `/devices` | Device Status | Health cards per node — online/offline, firmware, last seen |
+| `/` | Dashboard | SignalR `SendTelemetryUpdate` messages — live switch + LED state |
+| `/history` | Event History | Dataverse WebAPI `andy_iottelemetryevents` — paginated event log |
+| `/devices` | Device Status | Dataverse WebAPI `andy_iot_sensors` — health cards per node |
 
 ---
 
@@ -38,102 +38,88 @@ iot-panel-dashboard/
 │   └── main.tsx                # React entry point
 ├── public/
 ├── dist/                       # Built output (gitignored) — uploaded to Power Pages
+├── .env.local.example          # Template for local dev environment variables
 ├── index.html                  # HTML entry — loads IBM Plex fonts from Google Fonts
 ├── package.json
-├── powerpages.config.json      # Power Pages deployment config
+├── powerpages.config.json      # Power Pages deployment config (siteName, compiledPath)
 ├── vite.config.ts
 └── tsconfig.json
 ```
 
 ---
 
-## Prerequisites
+## Environment Variables
 
-| Tool | Minimum Version | How to Install |
-|------|----------------|----------------|
-| Node.js | 18.x | https://nodejs.org |
-| npm | 9.x (bundled with Node) | — |
-| PAC CLI | latest | `dotnet tool install --global Microsoft.PowerApps.CLI.Tool` |
-| .NET SDK | 6+ (for PAC CLI) | https://dot.net |
+The SPA reads three Vite environment variables at build time. In CI these are injected as repository secrets (see the GitHub Actions workflow). For local dev, copy `.env.local.example` to `.env.local` and fill in real values.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_SIGNALR_NEGOTIATE_URL` | ✅ | Base URL of the Azure Function App — e.g. `https://func-aw-iot-copilot.azurewebsites.net` |
+| `VITE_DIRECTLINE_TOKEN_URL` | ✅ | Full URL to `/api/directline-token` — the Function App endpoint that exchanges the Direct Line secret for a short-lived token. The secret itself stays server-side. |
+| `VITE_TARGET_DEVICE_ID` | optional | IoT Hub device ID to scope SignalR messages to. Defaults to `raspberry-pi-iotpanel`. |
+| `VITE_DATAVERSE_URL` | local dev only | Dataverse org URL — used by the Vite dev server proxy for `/api/data/*` calls. Not injected in CI. |
+
+> **Security:** All `VITE_*` values are baked into the JS bundle at build time and are visible to any browser user. Never put secrets here. The Direct Line secret stays in the Azure Function App settings — the `/api/directline-token` endpoint handles the exchange.
 
 ---
 
 ## Local Development
 
 ```powershell
-# 1. Install dependencies (first time only)
+# 1. Copy and fill in env vars
 cd "power pages\iot-panel-dashboard"
+cp .env.local.example .env.local
+# Edit .env.local — add real Function App URL, DirectLine token URL, Dataverse URL
+
+# 2. Install dependencies (first time only)
 npm install
 
-# 2. Start the dev server
+# 3. Start the dev server
 npm run dev
 # → http://localhost:5173
 
-# 3. Production build (generates dist/)
+# 4. Production build (generates dist/)
 npm run build
 
-# 4. Preview the production build locally
+# 5. Preview the production build locally
 npm run preview
 # → http://localhost:4173
 ```
 
 ---
 
-## Deployment to Power Pages
+## Deployment
 
-### 1. Authenticate with PAC CLI
+### Automated (recommended) — GitHub Actions
 
-```powershell
-# Create an auth profile for the IoT-Agents environment
-pac auth create --environment "https://<your-org>.crm.dynamics.com"
+Merging to `main` automatically builds and publishes the site. The workflow `deploy-pages-spa.yml` triggers on any change to `src/`, `public/`, `index.html`, `vite.config.ts`, `tsconfig*.json`, or `package*.json`. See [`power pages/README.md`](../README.md#github-actions-deployment) for the full workflow documentation including required secrets.
 
-# Verify you are connected to the correct environment
-pac auth who
-```
+### Manual — ad-hoc deploy
 
-Expected output from `pac auth who`:
-```
-Connected to...
-Environment: IoT-Agents
-Environment URL: https://<your-org>.crm.dynamics.com
-```
-
-### 2. Build the site
+Use this when you need to deploy without going through a PR, e.g. after environment re-provisioning.
 
 ```powershell
+# 1. Authenticate
+pac auth create \
+  --tenant "<TENANT_ID>" \
+  --applicationId "<CLIENT_ID>" \
+  --clientSecret "<CLIENT_SECRET>" \
+  --environment "https://orgdec501b8.crm.dynamics.com/"
+
+# 2. Build with real env vars
 cd "power pages\iot-panel-dashboard"
+# Set VITE_* variables in .env.local first, then:
 npm run build
-```
 
-This compiles TypeScript and produces the `dist/` folder (≈250 KB JS + CSS).
-
-### 3. Upload to Power Pages
-
-```powershell
-# From inside the project folder
+# 3. Upload
 pac pages upload-code-site --rootPath "."
-
-# Or from the repo root
-pac pages upload-code-site --rootPath "power pages\iot-panel-dashboard"
 ```
 
-> **Never use `pac pages upload`** — that command is for portal-studio sites and will corrupt code site metadata if run against this project.
-
-### 4. Verify deployment
-
-After upload, PAC CLI creates/updates a `.powerpages-site/` folder containing:
-
-```
-.powerpages-site/
-├── orgdec501b8.crm.dynamics.com-manifest.yml   # file → Dataverse record ID map
-├── site-settings/
-├── table-permissions/
-└── web-roles/
-```
+> **Never use `pac pages upload`** — that command targets portal-studio sites and will corrupt code site metadata.
 
 ### First deployment — activate the site
 
-If this is the first deployment, the site needs to be provisioned with a live URL:
+If this is the very first deploy to a new environment, the site needs to be provisioned with a live URL before it is reachable:
 
 ```powershell
 pac pages activate --webSiteId <WEBSITE_GUID>
@@ -147,53 +133,24 @@ Or activate via the [Power Pages admin center](https://make.powerpages.microsoft
 
 ### Upload fails — `.js` attachments blocked
 
-If you see an error like:
 ```
 Error: Unable to upload webfile ... as '.js' type attachments are currently blocked
 ```
 
-Remove `js` from the environment's blocked attachments list:
+Remove `js` from the environment blocked attachments list:
 
 ```powershell
-# 1. Get the current list
 pac env list-settings | Select-String "blockedattachments"
-
-# 2. Update — paste the full list with 'js' removed
-pac env update-settings --name blockedattachments --value "<list-without-js>"
+pac env update-settings --name blockedattachments --value "<current-list-without-js>"
 ```
 
-Then retry the upload.
-
-### Upload fails — `.html` blocked (misleading error)
+### Upload fails — stale manifest (misleading `.html` error)
 
 If the error mentions `.html` being blocked, the real cause is a stale manifest file:
 
 ```powershell
-# Delete the stale manifest
 Remove-Item "power pages\iot-panel-dashboard\.powerpages-site\orgdec501b8.crm.dynamics.com-manifest.yml"
-
-# Retry upload
 pac pages upload-code-site --rootPath "power pages\iot-panel-dashboard"
-```
-
----
-
-## Data Integration
-
-The dashboard currently uses mock data stubs. Replace with real data calls when the Azure middleware stack is ready:
-
-| Page | Data source | Stub location |
-|------|-------------|---------------|
-| Dashboard | SignalR hub (Issue #12) + Dataverse `andy_iottelemetryevent` | `Home.tsx` — `useEffect` timer mock |
-| History | Dataverse WebAPI `andy_iottelemetryevents` | `History.tsx` — `useEffect` timer mock |
-| Device Status | Dataverse WebAPI (device table TBD) | `DeviceStatus.tsx` — `useEffect` timer mock |
-
-**Dataverse WebAPI base URL:**  
-`https://orgdec501b8.crm.dynamics.com/api/data/v9.2/`
-
-**Example query — latest 50 telemetry events:**
-```
-GET /andy_iottelemetryevents?$orderby=createdon desc&$top=50
 ```
 
 ---
@@ -219,7 +176,8 @@ All tokens are defined in `src/styles/theme.css`.
 ## Updating This README
 
 Update this README when:
-- A new page or route is added
+- A new page or route is added (update the Pages table)
+- Environment variables change (update the Environment Variables table)
 - The Dataverse table names or WebAPI endpoint changes
-- The PAC CLI auth environment URL changes
-- SignalR integration (Issue #12) is implemented — update the Data Integration table
+- The GitHub Actions workflow trigger paths or secrets change
+- SignalR or Direct Line integration details change

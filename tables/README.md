@@ -110,24 +110,11 @@ Example: `https://api.iconify.design/fluent/people-team-20-regular.svg`
 
 Download the `.svg` response and save it as `icon.svg` in the table folder. Browse icons at [icon-sets.iconify.design/fluent](https://icon-sets.iconify.design/fluent/).
 
-### Verification Checklist
+### Verification
 
-#### Dry-run verification
+Run `Import-Tables.ps1 -DryRun` first. Expected log output per icon-enabled table: `[DRY-RUN] Would upsert web resource`, `[DRY-RUN] Would publish`, and `[DRY-RUN] Would PATCH EntityDefinitions IconVectorName`. Tables without `iconSvgFile` produce no icon log lines. A missing SVG file or absent `iconWebResourceName` logs `[ICON-SKIP]`.
 
-- [ ] Run `Import-Tables.ps1 -DryRun` and confirm `[DRY-RUN] Would upsert web resource` appears for each table that has an icon
-- [ ] Confirm `[DRY-RUN] Would publish` and `[DRY-RUN] Would PATCH EntityDefinitions IconVectorName` are also logged per icon
-- [ ] Tables without `iconSvgFile` produce no icon log lines
-- [ ] A table with `iconSvgFile` set but a missing SVG file on disk shows `[ICON-SKIP]`
-- [ ] A table with `iconSvgFile` set but no `iconWebResourceName` shows `[ICON-SKIP]`
-
-#### Real deployment verification
-
-- [ ] `[ICON-NEW]` logged on first deploy, `[ICON-UPDATE]` on subsequent reruns — no errors
-- [ ] `[ICON-PUBLISH]` logged with no errors
-- [ ] `[ICON-ASSIGN]` logged with no errors
-- [ ] In `make.powerapps.com` → **Solutions → Web resources**, the web resource is present and type is **SVG**
-- [ ] Navigate to **Tables → \<table\> → Properties** — the icon is visible
-- [ ] Rerun `Import-Tables.ps1` without `-DryRun` confirms `[ICON-UPDATE]` (idempotent, no duplicate creation)
+On a real deployment, look for `[ICON-NEW]` on first run and `[ICON-UPDATE]` on reruns (idempotent). Confirm the web resource appears in **Solutions → Web resources** as type **SVG** and the icon is visible in the table properties in make.powerapps.com.
 
 ## Relationship Definition Schema
 

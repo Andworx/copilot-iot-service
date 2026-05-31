@@ -1,187 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="draw.io" modified="2026-05-31" agent="Copilot" version="1.0" type="device">
-  <diagram id="agentic-iot-arch" name="AgenticIoT Architecture">
-    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1008" pageHeight="612" background="ffffff" math="0" shadow="0">
+<mxfile host="app.diagrams.net" version="21.7.5" type="github">
+  <diagram name="AgenticIoT Architecture" id="agentic-iot-arch">
+    <mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="0" arrows="1" fold="0" page="1" pageScale="1" pageWidth="1654" pageHeight="827" math="0" shadow="1">
       <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
 
-        <!-- Engineering Border -->
-        <mxCell id="2" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=none;strokeWidth=2;dashed=0;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="928" height="460" as="geometry"/>
+        <!-- Section Backgrounds -->
+        <mxCell id="bg-hw" value="🔧 Hardware" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;overflow=hidden;whiteSpace=wrap;rounded=1;arcSize=5;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;opacity=80;" vertex="1" parent="1">
+          <mxGeometry x="20" y="195" width="175" height="145" as="geometry" />
         </mxCell>
-
-        <!-- Row Labels A-D (outside border, left) -->
-        <mxCell id="3" value="A" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="15" y="83" width="22" height="18" as="geometry"/>
+        <mxCell id="bg-az" value="☁️ Azure Cloud" style="text;html=1;align=right;verticalAlign=top;spacingRight=8;spacingTop=6;overflow=hidden;whiteSpace=wrap;rounded=1;arcSize=3;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;opacity=60;" vertex="1" parent="1">
+          <mxGeometry x="210" y="105" width="820" height="285" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="B" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="15" y="179" width="22" height="18" as="geometry"/>
-        </mxCell>
-        <mxCell id="5" value="C" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="15" y="291" width="22" height="18" as="geometry"/>
-        </mxCell>
-        <mxCell id="6" value="D" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="15" y="398" width="22" height="18" as="geometry"/>
+        <mxCell id="bg-pp" value="⚡ Power Platform" style="text;html=1;align=right;verticalAlign=top;spacingRight=8;spacingTop=6;overflow=hidden;whiteSpace=wrap;rounded=1;arcSize=3;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;opacity=60;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="105" width="290" height="465" as="geometry" />
         </mxCell>
 
-        <!-- Column Labels 4-1 (outside border, top) -->
-        <mxCell id="7" value="4" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="158" y="15" width="30" height="22" as="geometry"/>
+        <!-- Components -->
+        <mxCell id="pi" value="🍓 Raspberry Pi&#xa;GPIO switches + LEDs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="235" width="135" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="8" value="3" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="388" y="15" width="30" height="22" as="geometry"/>
+        <mxCell id="iot-hub" value="☁️ Azure IoT Hub&#xa;Standard S1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="235" width="150" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="9" value="2" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="618" y="15" width="30" height="22" as="geometry"/>
+        <mxCell id="event-hub" value="📨 Azure Event Hub&#xa;Message buffer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="235" width="155" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="10" value="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="848" y="15" width="30" height="22" as="geometry"/>
+        <mxCell id="func" value="⚡ Azure Function App&#xa;Node.js 24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="635" y="235" width="165" height="70" as="geometry" />
         </mxCell>
-
-        <!-- Band A: Hardware (y=50..133) -->
-        <mxCell id="11" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="50" width="928" height="83" as="geometry"/>
+        <mxCell id="signalr" value="🔁 Azure SignalR&#xa;Serverless" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="855" y="150" width="155" height="70" as="geometry" />
         </mxCell>
-
-        <!-- Band B: Azure IoT (y=133..241) -->
-        <mxCell id="12" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="133" width="928" height="108" as="geometry"/>
+        <mxCell id="dv" value="🗄️ Dataverse&#xa;Telemetry + device state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="290" width="200" height="70" as="geometry" />
         </mxCell>
-
-        <!-- Band C: Power Platform (y=241..356) -->
-        <mxCell id="13" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="241" width="928" height="115" as="geometry"/>
+        <mxCell id="pages" value="🌐 Power Pages Portal&#xa;Live dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="150" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="agent" value="🤖 Copilot Studio Agent&#xa;Panel Troubleshooter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="430" width="200" height="80" as="geometry" />
         </mxCell>
 
-        <!-- Band D: AI Layer (y=356..456) -->
-        <mxCell id="14" value="" style="rounded=0;shadow=0;strokeColor=#333333;fillColor=#E8E8F0;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="356" width="928" height="100" as="geometry"/>
+        <!-- Edges -->
+        <mxCell id="e1" value="MQTT / TLS" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#444444;" edge="1" source="pi" target="iot-hub" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Lane label column separator (x=130) -->
-        <mxCell id="15" value="" style="rounded=0;strokeColor=#333333;fillColor=#333333;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="130" y="50" width="1" height="406" as="geometry"/>
+        <mxCell id="e2" value="Device routing" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#444444;" edge="1" source="iot-hub" target="event-hub" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Lane Name Labels -->
-        <mxCell id="16" value="Hardware" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="46" y="83" width="72" height="18" as="geometry"/>
+        <mxCell id="e3" value="Event Hub trigger" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#444444;" edge="1" source="event-hub" target="func" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="17" value="Azure IoT" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="46" y="179" width="72" height="18" as="geometry"/>
+        <mxCell id="e4" value="WebSocket broadcast" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="func" target="signalr" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="18" value="Power Platform" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="43" y="291" width="80" height="18" as="geometry"/>
+        <mxCell id="e5" value="Write telemetry" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#9673a6;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="func" target="dv" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="19" value="AI" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=center;verticalAlign=middle;rotation=-90;" vertex="1" parent="1">
-          <mxGeometry x="46" y="398" width="72" height="18" as="geometry"/>
+        <mxCell id="e6" value="Real-time update" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#9673a6;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="signalr" target="pages" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Raspberry Pi (A: center y=91) -->
-        <mxCell id="20" value="Raspberry Pi&amp;#xa;GPIO Switches + LEDs" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=10;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="145" y="68" width="135" height="46" as="geometry"/>
+        <mxCell id="e7" value="Query live state" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#9673a6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="dv" target="agent" parent="1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Azure IoT Hub (B: center y=187) -->
-        <mxCell id="21" value="Azure IoT Hub" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="200" y="164" width="112" height="46" as="geometry"/>
+        <mxCell id="e8" value="Embedded in portal" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=9;fontStyle=1;endArrow=block;endFill=1;strokeColor=#9673a6;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" source="agent" target="pages" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1025" y="470" />
+              <mxPoint x="1025" y="230" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-
-        <!-- Azure Event Hub (B: center y=187) -->
-        <mxCell id="22" value="Azure Event Hub" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="385" y="164" width="120" height="46" as="geometry"/>
-        </mxCell>
-
-        <!-- Function App (B: center y=187) -->
-        <mxCell id="23" value="Function App&amp;#xa;(Node.js)" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="577" y="164" width="122" height="46" as="geometry"/>
-        </mxCell>
-
-        <!-- Azure SignalR (B: center y=187) -->
-        <mxCell id="24" value="Azure SignalR&amp;#xa;(Serverless)" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="768" y="164" width="122" height="46" as="geometry"/>
-        </mxCell>
-
-        <!-- Dataverse (C: center y=299) -->
-        <mxCell id="25" value="Dataverse" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="577" y="276" width="120" height="46" as="geometry"/>
-        </mxCell>
-
-        <!-- Power Pages (C: center y=299) -->
-        <mxCell id="26" value="Power Pages&amp;#xa;Live Dashboard" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=11;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="800" y="276" width="122" height="46" as="geometry"/>
-        </mxCell>
-
-        <!-- Copilot Studio Agent (D: center y=406) -->
-        <mxCell id="27" value="Copilot Studio&amp;#xa;Troubleshooting Agent" style="rounded=1;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=2;fontSize=10;fontFamily=Helvetica;whiteSpace=wrap;align=center;" vertex="1" parent="1">
-          <mxGeometry x="677" y="383" width="135" height="46" as="geometry"/>
-        </mxCell>
-
-        <!-- 1. Raspberry Pi to IoT Hub: MQTT/TLS -->
-        <mxCell id="30" value="MQTT / TLS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="20" target="21">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 2. IoT Hub to Event Hub: Device routing -->
-        <mxCell id="31" value="Device routing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="21" target="22">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 3. Event Hub to Function App: Event Hub trigger -->
-        <mxCell id="32" value="Event Hub trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="22" target="23">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 4. Function App to SignalR: WebSocket broadcast -->
-        <mxCell id="33" value="WebSocket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="24">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 5. Function App to Dataverse: Write telemetry -->
-        <mxCell id="34" value="Write telemetry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="25">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 6. SignalR to Power Pages: Real-time update -->
-        <mxCell id="35" value="Real-time update" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="24" target="26">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 7. Dataverse to Copilot Agent: Query live state -->
-        <mxCell id="36" value="Query live state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="25" target="27">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- 8. Copilot Agent to Power Pages: Embedded in portal -->
-        <mxCell id="37" value="Embedded in portal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontSize=9;fontFamily=Helvetica;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="27" target="26">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <!-- Title Block -->
-        <mxCell id="40" value="" style="rounded=0;shadow=1;strokeColor=#333333;fillColor=#FFFFFF;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="608" y="512" width="360" height="66" as="geometry"/>
-        </mxCell>
-        <mxCell id="41" value="AgenticIoT — End-to-End Architecture" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontFamily=Helvetica;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="614" y="516" width="185" height="20" as="geometry"/>
-        </mxCell>
-        <mxCell id="42" value="Andworx / iot-agents" style="text;html=1;strokeColor=none;fillColor=none;fontSize=8;fontFamily=Helvetica;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="614" y="540" width="185" height="16" as="geometry"/>
-        </mxCell>
-        <mxCell id="43" value="v1.0" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="803" y="529" width="80" height="20" as="geometry"/>
-        </mxCell>
-        <mxCell id="44" value="Page 1 of 1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="888" y="529" width="78" height="20" as="geometry"/>
-        </mxCell>
-        <!-- Title block dividers -->
-        <mxCell id="45" value="" style="rounded=0;strokeColor=#333333;fillColor=#333333;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="803" y="512" width="1" height="66" as="geometry"/>
-        </mxCell>
-        <mxCell id="46" value="" style="rounded=0;strokeColor=#333333;fillColor=#333333;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="888" y="512" width="1" height="66" as="geometry"/>
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>

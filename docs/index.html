@@ -5,185 +5,489 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AgenticIoT — Interactive Architecture</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0d1117;
-      color: #c9d1d9;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#06090f;color:#c9d1d9;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
-    /* ── Header ─────────────────────────────────────────── */
-    header {
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .header-title h1 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #f0f6fc;
-      line-height: 1.3;
-    }
-    .header-title p {
-      font-size: 12px;
-      color: #8b949e;
-      margin-top: 2px;
-    }
-    .header-links {
-      display: flex;
-      gap: 8px;
-      margin-left: auto;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 12px;
-      color: #c9d1d9;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .btn:hover { background: #30363d; border-color: #8b949e; color: #f0f6fc; }
+    /* ── Header ── */
+    header{background:#0d1117;border-bottom:1px solid #1c2128;padding:11px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+    .h-logo{font-size:22px}
+    .h-title h1{font-size:15px;font-weight:600;color:#f0f6fc}
+    .h-title p{font-size:11px;color:#8b949e;margin-top:2px}
+    .h-links{margin-left:auto;display:flex;gap:7px}
+    .btn{display:inline-flex;align-items:center;gap:4px;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:5px 11px;font-size:11px;color:#c9d1d9;text-decoration:none;transition:all .15s}
+    .btn:hover{background:#21262d;border-color:#58a6ff;color:#f0f6fc}
 
-    /* ── Main ────────────────────────────────────────────── */
-    main {
-      flex: 1;
-      padding: 20px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .toolbar-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #f0f6fc;
-    }
-    .toolbar-hint {
-      font-size: 11px;
-      color: #8b949e;
-      font-weight: 400;
-    }
-    .legend {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: #8b949e;
-    }
-    .legend-swatch {
-      width: 11px;
-      height: 11px;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
+    /* ── Diagram wrapper ── */
+    #dw{flex:1;padding:16px 20px;max-width:1440px;width:100%;margin:0 auto}
+    svg#arch{width:100%;height:auto;display:block}
 
-    /* ── Diagram container ───────────────────────────────── */
-    .diagram-card {
-      background: #ffffff;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      overflow: hidden;
-      flex: 1;
-      min-height: 580px;
-    }
-    .mxgraph {
-      width: 100% !important;
-      min-height: 580px !important;
-    }
+    /* ── SVG node interactions ── */
+    .node-g{cursor:pointer}
+    .node-bg{transition:fill .15s,stroke .15s,filter .15s}
+    .node-g:hover .node-bg{fill:rgba(255,255,255,.09)!important;stroke:rgba(255,255,255,.44)!important;filter:drop-shadow(0 0 6px rgba(88,166,255,.35))}
+    .node-g.sel .node-bg{fill:rgba(88,166,255,.12)!important;stroke:#58a6ff!important;filter:drop-shadow(0 0 9px rgba(88,166,255,.45))}
+    .nlabel{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:11px;fill:#d0dae8;pointer-events:none}
+    .nsub{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:9.5px;fill:#6a7a8a;pointer-events:none}
+    .conn{stroke:rgba(180,210,255,.28);stroke-dasharray:7 5;stroke-width:1.5;fill:none}
+    .conn-lbl{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:9.5px;fill:rgba(160,195,255,.5)}
+    .band-lbl{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px}
 
-    /* ── Footer ─────────────────────────────────────────── */
-    footer {
-      background: #161b22;
-      border-top: 1px solid #30363d;
-      padding: 10px 24px;
-      text-align: center;
-      font-size: 11px;
-      color: #8b949e;
-    }
-    footer a { color: #58a6ff; text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    /* ── Info panel + overlay ── */
+    #ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:190;opacity:0;pointer-events:none;transition:opacity .25s}
+    #ov.show{opacity:1;pointer-events:auto}
+    #panel{position:fixed;top:0;right:-400px;width:375px;height:100vh;background:#0d1117;border-left:1px solid #21262d;z-index:200;overflow-y:auto;transition:right .28s cubic-bezier(.4,0,.2,1)}
+    #panel.open{right:0}
+    .ph{padding:15px 17px;border-bottom:1px solid #21262d;display:flex;align-items:flex-start;gap:11px;position:sticky;top:0;background:#0d1117;z-index:1}
+    .pi{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+    .pt{font-size:14px;font-weight:600;color:#f0f6fc}
+    .ps{font-size:11px;color:#8b949e;margin-top:3px}
+    .pc{margin-left:auto;background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;padding:3px 7px;border-radius:4px;line-height:1}
+    .pc:hover{color:#f0f6fc;background:#21262d}
+    .pb{padding:16px 17px;display:flex;flex-direction:column;gap:16px}
+    .ps2 h3{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#8b949e;margin-bottom:7px}
+    .ps2 p{font-size:12.5px;color:#c9d1d9;line-height:1.55}
+    .dt{width:100%;border-collapse:collapse}
+    .dt tr{border-bottom:1px solid #1c2128}
+    .dt tr:last-child{border:none}
+    .dt td{padding:6px 3px;font-size:11.5px}
+    .dt td:first-child{color:#8b949e;width:115px;vertical-align:top}
+    .dt td:last-child{color:#e6edf3;font-family:'SFMono-Regular',Consolas,monospace;font-size:10.5px}
+    .tags{display:flex;flex-wrap:wrap;gap:5px}
+    .tag{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:500}
+    .tg{background:rgba(46,160,67,.15);color:#3fb950;border:1px solid rgba(63,185,80,.25)}
+    .tb{background:rgba(88,166,255,.1);color:#58a6ff;border:1px solid rgba(88,166,255,.25)}
+    .to{background:rgba(210,153,34,.15);color:#e3b341;border:1px solid rgba(227,179,65,.25)}
+    .tp{background:rgba(188,140,255,.1);color:#bc8cff;border:1px solid rgba(188,140,255,.25)}
+
+    /* ── Footer ── */
+    footer{background:#0d1117;border-top:1px solid #1c2128;padding:9px 20px;text-align:center;font-size:11px;color:#8b949e}
+    footer a{color:#58a6ff;text-decoration:none}
+    footer a:hover{text-decoration:underline}
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="header-title">
-      <h1>🤖 AgenticIoT &mdash; Copilot IoT Service</h1>
-      <p>End-to-end IoT solution connecting Raspberry Pi to Azure and Power Platform with AI troubleshooting</p>
-    </div>
-    <nav class="header-links">
-      <a class="btn" href="https://github.com/Andworx/copilot-iot-service" target="_blank" rel="noreferrer">📂 GitHub Repo</a>
-      <a class="btn" href="https://github.com/Andworx/copilot-iot-service/blob/main/README.md" target="_blank" rel="noreferrer">📖 README</a>
-      <a class="btn" href="https://github.com/Andworx/copilot-iot-service/blob/main/architecture.drawio" target="_blank" rel="noreferrer">⬇️ Download .drawio</a>
-    </nav>
-  </header>
+<header>
+  <span class="h-logo">🤖</span>
+  <div class="h-title">
+    <h1>AgenticIoT — Copilot IoT Service</h1>
+    <p>Click any component to explore — end-to-end IoT architecture</p>
+  </div>
+  <nav class="h-links">
+    <a class="btn" href="https://github.com/Andworx/copilot-iot-service" target="_blank" rel="noreferrer">📂 Repo</a>
+    <a class="btn" href="https://github.com/Andworx/copilot-iot-service/blob/main/README.md" target="_blank" rel="noreferrer">📖 README</a>
+    <a class="btn" href="https://github.com/Andworx/copilot-iot-service/blob/main/architecture.drawio" target="_blank" rel="noreferrer">⬇️ .drawio</a>
+  </nav>
+</header>
 
-  <main>
-    <div class="toolbar">
-      <span class="toolbar-title">
-        🏗️ Solution Architecture
-        <span class="toolbar-hint"> &mdash; Use the toolbar to zoom, pan, and explore layers</span>
-      </span>
-      <div class="legend">
-        <span class="legend-item">
-          <span class="legend-swatch" style="background:#d5e8d4;border:1px solid #82b366;"></span>
-          Hardware
-        </span>
-        <span class="legend-item">
-          <span class="legend-swatch" style="background:#dae8fc;border:1px solid #6c8ebf;"></span>
-          Azure Cloud
-        </span>
-        <span class="legend-item">
-          <span class="legend-swatch" style="background:#fff2cc;border:1px solid #d6b656;"></span>
-          Azure Functions
-        </span>
-        <span class="legend-item">
-          <span class="legend-swatch" style="background:#e1d5e7;border:1px solid #9673a6;"></span>
-          Power Platform
-        </span>
+<div id="dw">
+<svg id="arch" viewBox="0 0 1300 653" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ah" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 1 L 6 4 L 0 7 Z" fill="rgba(180,210,255,.5)" />
+    </marker>
+    <linearGradient id="hw-g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0b1e0c" />
+      <stop offset="100%" stop-color="#081408" />
+    </linearGradient>
+    <linearGradient id="az-g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#14100a" />
+      <stop offset="100%" stop-color="#0e0b05" />
+    </linearGradient>
+    <linearGradient id="pp-g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#070d1a" />
+      <stop offset="100%" stop-color="#050910" />
+    </linearGradient>
+  </defs>
+
+  <!-- ══ Band backgrounds ══ -->
+  <rect x="12" y="12" width="1276" height="180" rx="10" fill="url(#hw-g)" stroke="#1e4a1e" stroke-width="1.5" />
+  <rect x="12" y="204" width="1276" height="162" rx="10" fill="url(#az-g)" stroke="#302210" stroke-width="1.5" />
+  <rect x="12" y="378" width="1276" height="265" rx="10" fill="url(#pp-g)" stroke="#0e2244" stroke-width="1.5" />
+
+  <!-- ══ Band accent bars + labels ══ -->
+  <rect x="17" y="20" width="4" height="32" rx="2" fill="#2a8a2a" />
+  <text x="28" y="36" dominant-baseline="central" class="band-lbl" fill="#3a9a3a">HARDWARE</text>
+
+  <rect x="17" y="212" width="4" height="32" rx="2" fill="#7a6a14" />
+  <text x="28" y="228" dominant-baseline="central" class="band-lbl" fill="#8a8a24">AZURE CLOUD</text>
+
+  <rect x="17" y="386" width="4" height="32" rx="2" fill="#1a4a9a" />
+  <text x="28" y="402" dominant-baseline="central" class="band-lbl" fill="#4a7aca">POWER PLATFORM</text>
+
+  <!-- ══ Connectors ══ -->
+  <!-- 1. GPIO Input → Edge IoT Device -->
+  <path class="conn" d="M 200 83 Q 510 50 818 92" marker-end="url(#ah)" />
+  <!-- 2. GPIO Output → Edge IoT Device -->
+  <path class="conn" d="M 200 151 Q 510 180 818 98" marker-end="url(#ah)" />
+  <!-- 3. Edge IoT → IoT Hub (MQTT / TLS) -->
+  <path class="conn" d="M 909 128 Q 523 183 136 238" marker-end="url(#ah)" />
+  <text class="conn-lbl" x="500" y="174" text-anchor="middle">MQTT / TLS</text>
+  <!-- 4. IoT Hub → Event Processing -->
+  <path class="conn" d="M 220 271 H 495" marker-end="url(#ah)" />
+  <text class="conn-lbl" x="358" y="264" text-anchor="middle">Device routing</text>
+  <!-- 5. Event Processing → Real-time Push -->
+  <path class="conn" d="M 707 271 H 1030" marker-end="url(#ah)" />
+  <text class="conn-lbl" x="868" y="264" text-anchor="middle">WebSocket broadcast</text>
+  <!-- 6. Event Processing → Dataverse -->
+  <path class="conn" d="M 601 304 Q 382 358 162 426" marker-end="url(#ah)" />
+  <text class="conn-lbl" x="378" y="350" text-anchor="middle">Write telemetry</text>
+  <!-- 7. SignalR → Power Pages -->
+  <path class="conn" d="M 1126 304 Q 794 358 461 426" marker-end="url(#ah)" />
+  <text class="conn-lbl" x="794" y="350" text-anchor="middle">Real-time update</text>
+  <!-- 8. Dataverse → Power Pages -->
+  <path class="conn" d="M 246 459 H 370" marker-end="url(#ah)" />
+  <!-- 9. Power Pages → AI Agent -->
+  <path class="conn" d="M 552 459 H 640" marker-end="url(#ah)" />
+  <!-- 10. AI Agent → Power Automate -->
+  <path class="conn" d="M 828 459 H 934" marker-end="url(#ah)" />
+  <!-- 11. AI Agent queries Dataverse (arc below nodes) -->
+  <path class="conn" d="M 640 471 Q 415 530 246 471" marker-end="url(#ah)" />
+  <text class="conn-lbl" x="415" y="528" text-anchor="middle">Query live state</text>
+
+  <!-- ══════════════════════════════════════
+       HARDWARE BAND NODES
+       ══════════════════════════════════════ -->
+
+  <!-- GPIO Input -->
+  <g class="node-g" id="n-gpio-in" onclick="openPanel('gpio-in')">
+    <rect class="node-bg" x="52" y="50" width="148" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="64" y="67" width="32" height="32" rx="7" fill="#1a3a12" />
+    <text x="80" y="83" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🔘</text>
+    <text x="152" y="75" text-anchor="middle" dominant-baseline="central" class="nlabel">GPIO Input</text>
+    <text x="152" y="91" text-anchor="middle" dominant-baseline="central" class="nsub">4 toggle switches</text>
+  </g>
+
+  <!-- GPIO Output -->
+  <g class="node-g" id="n-gpio-out" onclick="openPanel('gpio-out')">
+    <rect class="node-bg" x="52" y="118" width="148" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="64" y="135" width="32" height="32" rx="7" fill="#2a2808" />
+    <text x="80" y="151" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">💡</text>
+    <text x="152" y="143" text-anchor="middle" dominant-baseline="central" class="nlabel">GPIO Output</text>
+    <text x="152" y="159" text-anchor="middle" dominant-baseline="central" class="nsub">4 LEDs</text>
+  </g>
+
+  <!-- Edge IoT Device -->
+  <g class="node-g" id="n-edge" onclick="openPanel('edge')">
+    <rect class="node-bg" x="818" y="62" width="182" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="830" y="79" width="32" height="32" rx="7" fill="#2a0808" />
+    <text x="846" y="95" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🍓</text>
+    <text x="935" y="87" text-anchor="middle" dominant-baseline="central" class="nlabel">Edge IoT Device</text>
+    <text x="935" y="103" text-anchor="middle" dominant-baseline="central" class="nsub">Raspberry Pi</text>
+  </g>
+
+  <!-- ══════════════════════════════════════
+       AZURE CLOUD BAND NODES
+       ══════════════════════════════════════ -->
+
+  <!-- Cloud Messaging / IoT Hub -->
+  <g class="node-g" id="n-iothub" onclick="openPanel('iothub')">
+    <rect class="node-bg" x="52" y="238" width="168" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="64" y="255" width="32" height="32" rx="7" fill="#00306a" />
+    <text x="80" y="271" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">📡</text>
+    <text x="162" y="263" text-anchor="middle" dominant-baseline="central" class="nlabel">Cloud Messaging</text>
+    <text x="162" y="279" text-anchor="middle" dominant-baseline="central" class="nsub">Azure IoT Hub</text>
+  </g>
+
+  <!-- Event Processing / Event Hub + Functions -->
+  <g class="node-g" id="n-func" onclick="openPanel('func')">
+    <rect class="node-bg" x="495" y="238" width="212" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="507" y="255" width="32" height="32" rx="7" fill="#2e1a00" />
+    <text x="523" y="271" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">⚡</text>
+    <text x="627" y="263" text-anchor="middle" dominant-baseline="central" class="nlabel">Event Processing</text>
+    <text x="627" y="279" text-anchor="middle" dominant-baseline="central" class="nsub">Event Hub + Functions</text>
+  </g>
+
+  <!-- Real-time Push / SignalR -->
+  <g class="node-g" id="n-signalr" onclick="openPanel('signalr')">
+    <rect class="node-bg" x="1030" y="238" width="192" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="1042" y="255" width="32" height="32" rx="7" fill="#003838" />
+    <text x="1058" y="271" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🔄</text>
+    <text x="1152" y="263" text-anchor="middle" dominant-baseline="central" class="nlabel">Real-time Push</text>
+    <text x="1152" y="279" text-anchor="middle" dominant-baseline="central" class="nsub">Azure SignalR</text>
+  </g>
+
+  <!-- ══════════════════════════════════════
+       POWER PLATFORM BAND NODES
+       ══════════════════════════════════════ -->
+
+  <!-- Persistent Storage / Dataverse -->
+  <g class="node-g" id="n-dataverse" onclick="openPanel('dataverse')">
+    <rect class="node-bg" x="78" y="426" width="168" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="90" y="443" width="32" height="32" rx="7" fill="#180a38" />
+    <text x="106" y="459" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🗄️</text>
+    <text x="188" y="451" text-anchor="middle" dominant-baseline="central" class="nlabel">Persistent Storage</text>
+    <text x="188" y="467" text-anchor="middle" dominant-baseline="central" class="nsub">Dataverse</text>
+  </g>
+
+  <!-- Web Front-End / Power Pages -->
+  <g class="node-g" id="n-pages" onclick="openPanel('pages')">
+    <rect class="node-bg" x="370" y="426" width="182" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="382" y="443" width="32" height="32" rx="7" fill="#002848" />
+    <text x="398" y="459" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🌐</text>
+    <text x="487" y="451" text-anchor="middle" dominant-baseline="central" class="nlabel">Web Front-End</text>
+    <text x="487" y="467" text-anchor="middle" dominant-baseline="central" class="nsub">Power Pages</text>
+  </g>
+
+  <!-- AI Agent / Copilot Studio -->
+  <g class="node-g" id="n-agent" onclick="openPanel('agent')">
+    <rect class="node-bg" x="640" y="426" width="188" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="652" y="443" width="32" height="32" rx="7" fill="#002828" />
+    <text x="668" y="459" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🤖</text>
+    <text x="760" y="451" text-anchor="middle" dominant-baseline="central" class="nlabel">AI Agent</text>
+    <text x="760" y="467" text-anchor="middle" dominant-baseline="central" class="nsub">Copilot Studio</text>
+  </g>
+
+  <!-- Automation Layer / Power Automate -->
+  <g class="node-g" id="n-flows" onclick="openPanel('flows')">
+    <rect class="node-bg" x="934" y="426" width="188" height="66" rx="8"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1" />
+    <rect x="946" y="443" width="32" height="32" rx="7" fill="#081838" />
+    <text x="962" y="459" text-anchor="middle" dominant-baseline="central"
+          font-size="17" font-family="-apple-system,'Segoe UI Emoji','Apple Color Emoji',sans-serif">🔀</text>
+    <text x="1054" y="451" text-anchor="middle" dominant-baseline="central" class="nlabel">Automation Layer</text>
+    <text x="1054" y="467" text-anchor="middle" dominant-baseline="central" class="nsub">Power Automate</text>
+  </g>
+
+</svg>
+</div>
+
+<footer>
+  Powered by <a href="https://github.com/Andworx/copilot-iot-service" target="_blank" rel="noreferrer">Andworx/copilot-iot-service</a>
+  &nbsp;·&nbsp; Azure IoT Hub &middot; Azure Functions &middot; Power Platform &middot; Copilot Studio
+</footer>
+
+<!-- Click overlay -->
+<div id="ov" onclick="closePanel()"></div>
+
+<!-- Info panel -->
+<div id="panel">
+  <div class="ph">
+    <div class="pi" id="p-icon"></div>
+    <div>
+      <div class="pt" id="p-title"></div>
+      <div class="ps" id="p-sub"></div>
+    </div>
+    <button class="pc" onclick="closePanel()" aria-label="Close">&#x2715;</button>
+  </div>
+  <div class="pb" id="p-body"></div>
+</div>
+
+<script>
+const nodes = {
+  'gpio-in': {
+    name: 'GPIO Input',
+    sub: 'Raspberry Pi — 4 Toggle Switches',
+    icon: '🔘', iconBg: '#1a3a12',
+    desc: 'Four physical toggle switches wired to Raspberry Pi GPIO input pins. A polling loop detects each state change and immediately publishes a JSON telemetry event to Azure IoT Hub over MQTT/TLS. Each event carries the switch number, new state, and a timestamp.',
+    details: [
+      ['Switch 1','GPIO 5'],['Switch 2','GPIO 6'],
+      ['Switch 3','GPIO 13'],['Switch 4','GPIO 19'],
+      ['Protocol','MQTT over TLS'],
+      ['Trigger','State-change (edge detection)'],
+      ['Payload','JSON — switch id, state, timestamp'],
+    ],
+    tags: [['Hardware','tg'],['GPIO','tg']],
+  },
+  'gpio-out': {
+    name: 'GPIO Output',
+    sub: 'Raspberry Pi — 4 LEDs',
+    icon: '💡', iconBg: '#2a2808',
+    desc: 'Four LEDs driven by GPIO output pins. LED state is determined by logic_map.json — a JSON rules file that maps input switch combinations to output LED patterns. The file is pulled automatically from the repo on each Pi boot, enabling remote rule updates without SSH access.',
+    details: [
+      ['LED 1 (Blue)','GPIO 18'],['LED 2 (Orange)','GPIO 24'],
+      ['LED 3 (Green)','GPIO 25'],['LED 4 (Yellow)','GPIO 12'],
+      ['Rules file','raspberry-pi/logic_map.json'],
+      ['Update method','Auto git pull on boot'],
+    ],
+    tags: [['Hardware','tg'],['GPIO','tg']],
+  },
+  'edge': {
+    name: 'Edge IoT Device',
+    sub: 'Raspberry Pi',
+    icon: '🍓', iconBg: '#2a0808',
+    desc: 'Raspberry Pi running the AgenticIoT service. It continuously polls GPIO switch states, evaluates logic_map.json to set LED outputs, and publishes telemetry to Azure IoT Hub. A systemd service ensures automatic start on boot and pulls the latest repo changes on each boot cycle.',
+    details: [
+      ['Hardware','Raspberry Pi (any GPIO-capable model)'],
+      ['OS','Raspberry Pi OS'],
+      ['Service','systemd (auto-start on boot)'],
+      ['Connection','MQTT over TLS → Azure IoT Hub'],
+      ['Auto-update','git pull on every boot'],
+      ['Bootstrap','raspberry-pi/bootstrap.sh'],
+    ],
+    tags: [['Hardware','tg'],['IoT Device','to'],['MQTT','tb']],
+  },
+  'iothub': {
+    name: 'Cloud Messaging',
+    sub: 'Azure IoT Hub',
+    icon: '📡', iconBg: '#00306a',
+    desc: 'Azure IoT Hub is the cloud gateway for device-to-cloud messaging. It authenticates and registers the Raspberry Pi as a managed IoT device, receives incoming MQTT telemetry messages over TLS, and routes them downstream to Azure Event Hub for processing.',
+    details: [
+      ['Tier','Standard S1'],
+      ['Protocols','MQTT, AMQP, HTTPS'],
+      ['Device auth','SAS token / X.509 certificate'],
+      ['Routing','Message route → Event Hub'],
+      ['Retention','1 day (default)'],
+    ],
+    tags: [['Azure','tb'],['IoT Hub','tb'],['MQTT','tb']],
+  },
+  'func': {
+    name: 'Event Processing',
+    sub: 'Azure Event Hub + Functions',
+    icon: '⚡', iconBg: '#2e1a00',
+    desc: 'Azure Event Hub buffers incoming telemetry from IoT Hub, decoupling ingestion from processing and enabling message replay. An Azure Function (Node.js 24) triggers on each Event Hub message — it writes the telemetry record to Dataverse and broadcasts the updated panel state to all connected browsers via Azure SignalR.',
+    details: [
+      ['Event Hub namespace','iot-agent-eventhub'],
+      ['Function runtime','Node.js 24'],
+      ['Trigger','Event Hub trigger (batch)'],
+      ['Output 1','Dataverse — write telemetry row'],
+      ['Output 2','SignalR — broadcast to all clients'],
+      ['Source','azure infrastructure/azure-functions/'],
+    ],
+    tags: [['Azure','tb'],['Functions','to'],['Event Hub','tb']],
+  },
+  'signalr': {
+    name: 'Real-time Push',
+    sub: 'Azure SignalR Service',
+    icon: '🔄', iconBg: '#003838',
+    desc: 'Azure SignalR Service in Serverless mode maintains persistent WebSocket connections to all active browser clients on the Power Pages portal. When the Azure Function broadcasts a state update, SignalR pushes it to every connected session simultaneously — delivering a sub-second real-time dashboard experience.',
+    details: [
+      ['Tier','Serverless'],
+      ['Transport','WebSocket'],
+      ['Pattern','Broadcast to all clients'],
+      ['Cloud to browser','< 1 second latency'],
+      ['End-to-end latency','5–10 seconds (typical)'],
+    ],
+    tags: [['Azure','tb'],['SignalR','tb'],['Real-time','to']],
+  },
+  'dataverse': {
+    name: 'Persistent Storage',
+    sub: 'Microsoft Dataverse',
+    icon: '🗄️', iconBg: '#180a38',
+    desc: 'Microsoft Dataverse stores all structured data for the solution: registered IoT devices, a full historical telemetry event log, and current panel state for each device. The Copilot Studio AI agent queries Dataverse for live switch and LED states. Power Automate flows are triggered by Dataverse row changes.',
+    details: [
+      ['Tables','andy_iotdevice, andy_telemetryevent, andy_panelstate'],
+      ['API version','Dataverse Web API v9.2'],
+      ['Publisher prefix','andy_'],
+      ['Access','Service principal + OAuth2'],
+      ['Deploy','scripts/Deploy-Project.ps1 -Job Tables'],
+    ],
+    tags: [['Power Platform','tp'],['Dataverse','tp']],
+  },
+  'pages': {
+    name: 'Web Front-End',
+    sub: 'Power Pages Portal',
+    icon: '🌐', iconBg: '#002848',
+    desc: 'A Power Pages portal serves as the live IoT dashboard. It displays current switch and LED states from Dataverse, receives real-time updates via a WebSocket connection to Azure SignalR, shows a historical telemetry event log, and embeds the Copilot Studio AI troubleshooting agent directly in the page.',
+    details: [
+      ['Data model','PAC CLI v2 enhanced format'],
+      ['Real-time transport','SignalR WebSocket'],
+      ['AI agent','Copilot Studio (embedded)'],
+      ['Deploy','pac pages upload --modelVersion 2'],
+      ['Source','power pages/'],
+    ],
+    tags: [['Power Platform','tp'],['Portal','tb']],
+  },
+  'agent': {
+    name: 'AI Agent',
+    sub: 'Copilot Studio',
+    icon: '🤖', iconBg: '#002828',
+    desc: 'The IoT Panel Troubleshooting Agent, built in Copilot Studio and embedded in the Power Pages portal. It connects to Dataverse to query live device state in real time — explaining current switch and LED states, interpreting logic_map.json rules, walking users through hardware and cloud diagnostics, and escalating to a human engineer when needed.',
+    details: [
+      ['Platform','Copilot Studio'],
+      ['Data source','Dataverse (live switch/LED state)'],
+      ['Topics','Diagnostics, state queries, escalation'],
+      ['Source','copilot agents/'],
+      ['Deploy','pac copilot publish --bot <name>'],
+    ],
+    tags: [['Power Platform','tp'],['AI Agent','tb'],['Copilot Studio','tp']],
+  },
+  'flows': {
+    name: 'Automation Layer',
+    sub: 'Power Automate',
+    icon: '🔀', iconBg: '#081838',
+    desc: 'Power Automate cloud flows handle business automation: alert emails triggered by Dataverse row changes, scheduled reports, and cross-system integrations. Managed email templates (HTML + JSON metadata) stored in automations/emails/ are referenced by flows for consistent branding.',
+    details: [
+      ['Triggers','Dataverse row change, scheduled'],
+      ['Actions','Email alerts, notifications, integrations'],
+      ['Email templates','automations/emails/'],
+      ['Flow definitions','flows/'],
+    ],
+    tags: [['Power Platform','tp'],['Automation','to'],['Power Automate','tp']],
+  },
+};
+
+let cur = null;
+
+function openPanel(id) {
+  const n = nodes[id];
+  if (!n) return;
+  if (cur) {
+    const prev = document.getElementById('n-' + cur);
+    if (prev) prev.classList.remove('sel');
+  }
+  cur = id;
+  const el = document.getElementById('n-' + id);
+  if (el) el.classList.add('sel');
+
+  document.getElementById('p-icon').style.background = n.iconBg;
+  document.getElementById('p-icon').textContent = n.icon;
+  document.getElementById('p-title').textContent = n.name;
+  document.getElementById('p-sub').textContent = n.sub;
+
+  document.getElementById('p-body').innerHTML = `
+    <div class="ps2">
+      <h3>About</h3>
+      <p>${n.desc}</p>
+    </div>
+    ${n.details.length ? `
+    <div class="ps2">
+      <h3>Technical Details</h3>
+      <table class="dt">
+        ${n.details.map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+      </table>
+    </div>` : ''}
+    <div class="ps2">
+      <h3>Labels</h3>
+      <div class="tags">
+        ${n.tags.map(([t,c]) => `<span class="tag ${c}">${t}</span>`).join('')}
       </div>
     </div>
+  `;
 
-    <div class="diagram-card">
-      <div
-        class="mxgraph"
-        data-mxgraph='{"highlight":"#58a6ff","nav":true,"resize":true,"toolbar":"zoom layers tags lightbox","edit":"_blank","url":"https://raw.githubusercontent.com/Andworx/copilot-iot-service/main/architecture.drawio"}'
-      ></div>
-    </div>
-  </main>
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('ov').classList.add('show');
+}
 
-  <footer>
-    Powered by <a href="https://www.diagrams.net/" target="_blank" rel="noreferrer">diagrams.net</a>
-    &nbsp;&middot;&nbsp;
-    <a href="https://github.com/Andworx/copilot-iot-service" target="_blank" rel="noreferrer">Andworx/copilot-iot-service</a>
-    &nbsp;&middot;&nbsp;
-    Built with Azure IoT Hub &middot; Azure Functions &middot; Power Platform &middot; Copilot Studio
-  </footer>
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('ov').classList.remove('show');
+  if (cur) {
+    const el = document.getElementById('n-' + cur);
+    if (el) el.classList.remove('sel');
+    cur = null;
+  }
+}
 
-  <script type="text/javascript" src="https://viewer.diagrams.net/js/viewer-static.min.js"></script>
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+</script>
 </body>
 </html>

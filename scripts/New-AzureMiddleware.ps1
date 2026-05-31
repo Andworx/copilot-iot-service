@@ -29,27 +29,15 @@
 .PARAMETER DryRun
     Preview mode — no Azure calls made.
 
-.PARAMETER SkipFunctionDeploy
-    Skip npm install + func publish step (use if Function Core Tools not installed).
-
-.EXAMPLE
-    .\New-AzureMiddleware.ps1 -Environment dev
-    # Full provision + deploy
-
-.EXAMPLE
-    .\New-AzureMiddleware.ps1 -Environment dev -DryRun
-    # Preview only
-
-.EXAMPLE
-    .\New-AzureMiddleware.ps1 -Environment dev -SkipFunctionDeploy
-    # Provision infrastructure only; deploy Function App manually later
-
 .NOTES
     PREREQUISITES:
     - Azure CLI installed and logged in: az login
     - Azure IoT extension: az extension add --name azure-iot
-    - Node.js + npm: for building function app deps locally before zip deploy
-    - (Optional) Azure Functions Core Tools not required — zip deploy is used
+
+    FUNCTION APP CODE DEPLOYMENT:
+    Function App code is deployed automatically via GitHub Actions (deploy-function-app.yml)
+    on every push to main. Run this script only to provision infrastructure; code deployment
+    is handled by CI/CD.
 
     OUTPUTS (printed at end):
     - Function App URL
@@ -60,8 +48,7 @@
 param(
     [Parameter(Mandatory)][ValidateSet('dev','test','prod')] [string]$Environment,
     [string]$Location     = 'eastus',
-    [switch]$DryRun,
-    [switch]$SkipFunctionDeploy
+    [switch]$DryRun
 )
 
 Set-StrictMode -Version Latest
@@ -84,8 +71,6 @@ $StorageName     = $storageConfig.name
 $EvhNsName       = $evhConfig.namespaceName
 $EvhName         = $evhConfig.eventHubName
 $DeviceId        = $iotHubConfig.deviceId
-
-$FuncSrcPath     = Join-Path $AzureInfraPath 'azure-functions\iot-signalr-func'
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -361,179 +346,20 @@ Invoke-Az @(
 Write-Ok "CORS configured"
 
 
-# ─── 7. Deploy Function App source ────────────────────────────────────────────
-if ($SkipFunctionDeploy) {
-    Write-Skip "Skipping Function App deployment (--SkipFunctionDeploy)"
-} else {
-    Write-Step "Deploying Function App from $FuncSrcPath"
-    if (-not $DryRun) {
-        $zipPath = Join-Path $env:TEMP "$($FuncAppName)-deploy.zip"
-        Push-Location $FuncSrcPath
-        try {
-            Write-Info "npm install (production deps)..."
-            npm install --omit=dev 2>&1 | ForEach-Object { Write-Host "    $_" }
-            if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
-
-            Write-Info "Creating deployment zip..."
-            if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-            $items = Get-ChildItem -Path . | Where-Object { $_.Name -notin @('.git', '.vscode', 'tests', '*.test.js') }
-            $prevPref = $ProgressPreference
-            $ProgressPreference = 'SilentlyContinue'
-            Compress-Archive -Path $items.FullName -DestinationPath $zipPath -Force
-            $ProgressPreference = $prevPref
-            Write-Info "Zip created: $zipPath ($([math]::Round((Get-Item $zipPath).Length/1KB))KB)"
-        } finally {
-            Pop-Location
-        }
-
-        # Deploy via WEBSITE_RUN_FROM_PACKAGE — reliable on Windows Consumption plans.
-        Write-Info "Uploading zip to Storage Account for WEBSITE_RUN_FROM_PACKAGE deploy..."
-
-        # Fetch account key once — avoids RBAC data-plane role requirement of --auth-mode login
-        $stKey = (az storage account keys list `
-            --account-name $StorageName `
-            --resource-group $ResourceGroup `
-            --query '[0].value' -o tsv 2>$null).Trim()
-        if (-not $stKey) { throw "Could not retrieve storage account key for $StorageName" }
-
-        # Ensure a deployment container exists
-        $deployContainer = 'function-releases'
-        $stExists = az storage container show `
-            --name $deployContainer `
-            --account-name $StorageName `
-            --account-key $stKey 2>$null
-        if (-not $stExists) {
-            Invoke-Az @(
-                'storage','container','create',
-                '--name',$deployContainer,
-                '--account-name',$StorageName,
-                '--account-key',$stKey
-            ) | Out-Null
-            Write-Info "Created container: $deployContainer"
-        }
-
-        $blobName = "func-deploy-$(Get-Date -Format 'yyyyMMdd-HHmmss').zip"
-        Invoke-Az @(
-            'storage','blob','upload',
-            '--container-name',$deployContainer,
-            '--file',$zipPath,
-            '--name',$blobName,
-            '--account-name',$StorageName,
-            '--account-key',$stKey,
-            '--overwrite'
-        ) | Out-Null
-        Write-Info "Blob uploaded: $blobName"
-
-        # Generate SAS URL valid for 1 year
-        $expiry = (Get-Date).AddYears(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
-        $sasToken = (az storage blob generate-sas `
-            --container-name $deployContainer `
-            --name $blobName `
-            --account-name $StorageName `
-            --account-key $stKey `
-            --permissions r `
-            --expiry $expiry `
-            -o tsv 2>$null).Trim()
-        if (-not $sasToken) { throw "Failed to generate SAS token for deployment blob" }
-
-        $blobUrl = "https://$StorageName.blob.core.windows.net/$deployContainer/${blobName}?$sasToken"
-        Write-Info "SAS URL generated (expires $expiry)"
-
-        # Point Function App at the zip via ARM REST API to avoid Windows
-        # shell splitting the SAS token on '&' through the az .cmd wrapper
-        Write-Host "  ℹ  Setting WEBSITE_RUN_FROM_PACKAGE via ARM API..." -ForegroundColor Cyan
-        $armToken  = (az account get-access-token --query accessToken -o tsv 2>$null).Trim()
-        $armSubId  = (az account show --query id -o tsv 2>$null).Trim()
-        $armBase   = "https://management.azure.com/subscriptions/$armSubId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/sites/$FuncAppName"
-        $armApiVer = "api-version=2022-03-01"
-        $armHeaders = @{ Authorization = "Bearer $armToken"; 'Content-Type' = 'application/json' }
-
-        # GET current settings (POST /config/appsettings/list)
-        $curSettings = (Invoke-RestMethod `
-            -Uri     "$armBase/config/appsettings/list?$armApiVer" `
-            -Method  POST `
-            -Headers $armHeaders).properties
-
-        # Merge: preserve existing settings, set/override WEBSITE_RUN_FROM_PACKAGE
-        $newProps = @{}
-        if ($curSettings) {
-            foreach ($prop in $curSettings.PSObject.Properties) {
-                $newProps[$prop.Name] = $prop.Value
-            }
-        }
-        $newProps['WEBSITE_RUN_FROM_PACKAGE']     = $blobUrl
-        $newProps['WEBSITE_NODE_DEFAULT_VERSION'] = '~24'   # Windows Consumption Node version
-
-        $settingsBody = ([pscustomobject]@{ properties = $newProps }) | ConvertTo-Json -Depth 5
-
-        Invoke-RestMethod `
-            -Uri     "$armBase/config/appsettings?$armApiVer" `
-            -Method  PUT `
-            -Headers $armHeaders `
-            -Body    $settingsBody | Out-Null
-
-        # Restart to pick up the new package
-        Invoke-Az @(
-            'functionapp','restart',
-            '--name',$FuncAppName,
-            '--resource-group',$ResourceGroup
-        ) | Out-Null
-        Write-Ok "Function App deployed (WEBSITE_RUN_FROM_PACKAGE)"
-    } else {
-        Write-Host "  [DRY RUN] Would npm install + Kudu zip deploy from $FuncSrcPath" -ForegroundColor DarkGray
-    }
-}
-
-# ─── 8. Get Function key ──────────────────────────────────────────────────────
-Write-Step "Retrieving Function App key"
-if (-not $DryRun) {
-    # Use ARM REST API to avoid az 32-bit Python warning corrupting output.
-    # Allow up to 120s for a cold Consumption plan to initialise after deploy.
-    $armToken  = (az account get-access-token --query accessToken -o tsv 2>$null).Trim()
-    $armSubId  = (az account show --query id -o tsv 2>$null).Trim()
-    $armBase   = "https://management.azure.com/subscriptions/$armSubId/resourceGroups/$ResourceGroup/providers/Microsoft.Web/sites/$FuncAppName"
-    $armApiVer = "api-version=2022-03-01"
-    $armHeaders = @{ Authorization = "Bearer $armToken"; 'Content-Type' = 'application/json' }
-
-    $funcKey = $null
-    for ($i = 0; $i -lt 12; $i++) {
-        try {
-            $keyResult = Invoke-RestMethod `
-                -Uri     "$armBase/host/default/listKeys?$armApiVer" `
-                -Method  POST `
-                -Headers $armHeaders `
-                -ErrorAction Stop
-            # Prefer the default function key; fall back to master key
-            $funcKey = $keyResult.functionKeys.default
-            if (-not $funcKey) { $funcKey = $keyResult.masterKey }
-            if ($funcKey) { break }
-        } catch { <# not ready yet #> }
-        Write-Info "Waiting for function key... ($($i*10)s)"
-        Start-Sleep -Seconds 10
-    }
-    if (-not $funcKey) { throw "Could not retrieve function key after 120s" }
-    $FuncUrl = "https://$FuncAppName.azurewebsites.net"
-    $TelemetryUrl = "$FuncUrl/api/telemetry?code=$funcKey"
-    Write-Ok "Function key retrieved"
-} else {
-    $funcKey = 'placeholder-key'
-    $FuncUrl = "https://$FuncAppName.azurewebsites.net"
-    $TelemetryUrl = "$FuncUrl/api/telemetry?code=$funcKey"
-}
-
 # ─── Summary ──────────────────────────────────────────────────────────────────
 Write-Host "`n============================================================" -ForegroundColor Green
 Write-Host " AgenticIoT Middleware — Provisioning Complete" -ForegroundColor Green
 Write-Host "============================================================`n" -ForegroundColor Green
+$FuncUrl = "https://$FuncAppName.azurewebsites.net"
 Write-Host "  Function App URL  : $FuncUrl"
 Write-Host "  Health check      : $FuncUrl/api/health"
-Write-Host "  Telemetry URL     : $TelemetryUrl  (secondary/test path)"
 Write-Host "  SignalR name      : $SignalRName"
 Write-Host "  Event Hub NS      : $EvhNsName"
 Write-Host "  Event Hub         : $EvhName"
 Write-Host ""
-Write-Host "  Primary telemetry path  : IoT Hub → Event Hub trigger → SignalR"
-Write-Host "  Secondary (test) path   : POST $FuncUrl/api/telemetry"
+Write-Host "  Function App code deployment is handled automatically by GitHub Actions." -ForegroundColor Cyan
+Write-Host "  Push to main (paths: azure infrastructure/azure-functions/iot-signalr-func/**)" -ForegroundColor Cyan
+Write-Host "  to trigger the deploy-function-app workflow." -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Expected next steps after deploy:"
 Write-Host "  A. Test: curl $FuncUrl/api/health"

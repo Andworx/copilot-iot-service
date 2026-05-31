@@ -11,10 +11,9 @@ This directory contains the source-controlled Azure resource definitions, config
 | IoT Hub | [`iot-hub/`](./iot-hub/) | `New-AzureIotInfrastructure.ps1` | Cloud gateway for Raspberry Pi MQTT telemetry |
 | Device Provisioning Service | [`device-provisioning-service/`](./device-provisioning-service/) | `New-AzureIotInfrastructure.ps1` | Zero-touch device provisioning via symmetric key group enrollment |
 | Event Hub | [`event-hub/`](./event-hub/) | `New-AzureMiddleware.ps1` | Dedicated event stream receiving IoT Hub telemetry for the Function App |
-| Azure Function App | [`azure-functions/`](./azure-functions/) | `New-AzureMiddleware.ps1` | SignalR broadcast endpoint; Event Hub trigger → browser clients |
+| Azure Function App | [`azure-functions/`](./azure-functions/) | `New-AzureMiddleware.ps1` | SignalR broadcast, Direct Line token exchange, and Event Hub trigger |
 | SignalR Service | [`signalr/`](./signalr/) | `New-AzureMiddleware.ps1` | Real-time WebSocket push from Function App to browser dashboard |
 | Storage Account | [`storage-account/`](./storage-account/) | `New-AzureMiddleware.ps1` | Mandatory backing store for the Consumption Function App |
-| Logic App *(deprecated)* | [`azure-logic apps/`](./azure-logic%20apps/) | — | Replaced by Event Hub trigger; retained for reference only |
 
 ## Shared Configuration
 
@@ -53,12 +52,9 @@ azure infrastructure/
 ├── signalr/
 │   ├── README.md
 │   └── config.json
-├── storage-account/
-│   ├── README.md
-│   └── config.json
-└── azure-logic apps/                       ← deprecated; retained for reference
-    └── la-aw-iot-copilot/
-        └── workflow.json
+└── storage-account/
+    ├── README.md
+    └── config.json
 ```
 
 ## Deployment

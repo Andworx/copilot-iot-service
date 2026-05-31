@@ -29,6 +29,8 @@ flowchart TD
     Agent -- "Embedded in portal" --> Browser
 ```
 
+> 📐 **[Interactive Architecture Diagram →](https://andworx.github.io/copilot-iot-service/)** — pan, zoom, and explore layers
+
 **Data flow:** Physical switch toggle → IoT Hub → Event Hub → Azure Function → SignalR → live dashboard update in ~10 seconds.
 
 ---
@@ -36,7 +38,7 @@ flowchart TD
 ## 🧩 Components
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
+|-------|-----------|----------|
 | **Hardware** | Raspberry Pi + GPIO | 4 toggle switches, 4 LEDs, configurable logic map |
 | **Device connectivity** | Azure IoT Hub (Standard S1) | MQTT device-to-cloud messaging |
 | **Message buffer** | Azure Event Hub | Decouples IoT Hub from the processing pipeline |
@@ -64,6 +66,7 @@ copilot-iot-service/
 ├── plugins/                    # Dataverse plugin projects (.NET)
 ├── reports/                    # Power BI PBIP report templates
 ├── tests/e2e/                  # Playwright end-to-end tests
+├── docs/                       # GitHub Pages — interactive architecture diagram
 ├── .github/instructions/       # Copilot coding agent instructions per technology area
 ├── .claude/commands/           # Claude Code slash commands (/deploy, /export, etc.)
 ├── PAC_COMMANDS.md             # PAC CLI quick reference

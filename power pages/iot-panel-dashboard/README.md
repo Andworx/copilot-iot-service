@@ -155,6 +155,26 @@ pac pages upload-code-site --rootPath "power pages\iot-panel-dashboard"
 
 ---
 
+## Data Integration
+
+The dashboard currently uses mock data stubs. Replace with real data calls when the Azure middleware stack is ready:
+
+| Page | Data source | Stub location |
+|------|-------------|---------------|
+| Dashboard | SignalR hub (Issue #12) + Dataverse `andy_iottelemetryevent` | `Home.tsx` — `useEffect` timer mock |
+| History | Dataverse WebAPI `andy_iottelemetryevents` | `History.tsx` — `useEffect` timer mock |
+| Device Status | Dataverse WebAPI `andy_iot_sensors` | `DeviceStatus.tsx` — `useEffect` timer mock |
+
+**Dataverse WebAPI base URL:**  
+`https://YOUR_ORG_NAME.crm.dynamics.com/api/data/v9.2/`
+
+**Example query — latest 50 telemetry events:**
+```
+GET /andy_iottelemetryevents?$orderby=createdon desc&$top=50
+```
+
+---
+
 ## Design System
 
 | Token | Value | Usage |

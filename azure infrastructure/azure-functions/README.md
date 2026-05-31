@@ -23,6 +23,8 @@ Azure Function App (func-aw-iot-copilot)  ◄── this directory
              Persisted event log — System-Assigned MSI auth
 ```
 
+> **Note:** An Azure Logic App (`la-aw-iot-copilot`) was previously used to poll Event Hubs and forward to the function's `/api/telemetry` HTTP endpoint. It has been superseded by the native Event Hub trigger and is retained only for reference in `azure-logic apps/`. See [#101](https://github.com/Andworx/copilot-iot-service/issues/101).
+
 ## Structure
 
 ```

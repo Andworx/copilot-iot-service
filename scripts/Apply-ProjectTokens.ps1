@@ -263,11 +263,14 @@ if ($Token) {
 # *.md covers CLAUDE.md, all subdirectory CLAUDE.md files, and .claude/commands/*.md
 $fileExtensions = '*.ps1','*.json','*.ts','*.md','*.yml','*.yaml','*.html','*.txt'
 
-$excludedFileNames = @('project.tokens.json', 'project.tokens.example.json', 'project.tokens.applied.json')
+$excludedFileNames = @('project.tokens.json', 'project.tokens.applied.json')
 
 $files = Get-ChildItem -Path $repoRoot -Recurse -File -Include $fileExtensions |
-    Where-Object { $_.FullName -notmatch [regex]::Escape("$([System.IO.Path]::DirectorySeparatorChar).git$([System.IO.Path]::DirectorySeparatorChar)") -and
-                   $_.Name -notin $excludedFileNames }
+    Where-Object {
+        $_.FullName -notmatch [regex]::Escape("$([System.IO.Path]::DirectorySeparatorChar).git$([System.IO.Path]::DirectorySeparatorChar)") -and
+        $_.Name -notin $excludedFileNames -and
+        $_.Name -notlike '*.example.*'   # exclude template/example files (e.g. config-prod.example.json)
+    }
 
 # ---------------------------------------------------------------------------
 # Process each token

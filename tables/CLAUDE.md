@@ -46,6 +46,31 @@ All custom entities, columns, choices, and relationships use the `andy_` prefix.
 - Lookup columns must include `target` pointing to the related table
 - Choice columns must include `choiceName` referencing a global choice
 
+## Canonical dataType Values (Enforced)
+
+Allowed values:
+
+- `String`
+- `Memo`
+- `Integer`
+- `Float`
+- `Decimal`
+- `Money`
+- `Boolean`
+- `DateTime`
+- `Choice`
+- `File`
+- `Lookup`
+
+Prohibited legacy aliases (do not use):
+
+- `SingleLine.Text`
+- `MultiLine.Text`
+- `Picklist`
+- `TwoOptions`
+- `WholeNumber`
+- `DateAndTime`
+
 ## Auto-Number Pattern
 
 Format: `PREFIX-{YYYY}-{SEQNUM:5}` → produces `PREFIX-2026-00001`

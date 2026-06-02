@@ -87,14 +87,34 @@ Each plugin class implements `IPlugin`:
 
 ## Registration Documentation Standard
 
-Each plugin feature must have a `FEATURE_REGISTRATION.md` with:
+Each plugin feature must have a `FEATURE_REGISTRATION.md` with exactly two sections: **Add Plugin Assembly** and **Add Steps**.
 
-1. Assembly and class name
-2. Primary entity, Message(s), Stage, Mode (sync/async), Filtering attributes
-3. Required images and attributes
-4. Step-by-step registration instructions
-5. Positive and negative manual test cases
-6. Troubleshooting section (symptom → likely cause → fix)
+Registration documents must include only registration values and procedural steps. Do not include Purpose, Prerequisites, Validation, Troubleshooting, or explanatory narrative.
+
+```text
+# <Feature Name> Registration Steps
+
+## Add Plugin Assembly
+
+1. Open Plugin Registration Tool and connect.
+2. Register New Assembly with:
+   - Assembly path: `bin/Release/<AssemblyName>.dll`
+   - Isolation Mode: Sandbox
+   - Storage: Database
+   - Select plugin type: `<Namespace.ClassName>`
+
+## Add Steps
+
+### Step 1
+- Message: <Create | Update | Delete>
+- Primary Entity: <schema_name>
+- Stage: <PreValidation | PreOperation | PostOperation>
+- Mode: <Synchronous | Asynchronous>
+- Rank: <integer>
+- Filtering Attributes: <comma-separated list or N/A>
+```
+
+Keep values specific and exact: schema names, class names, filtering attributes, and stage/mode settings must match the actual plugin implementation.
 
 ## Build and Verification
 

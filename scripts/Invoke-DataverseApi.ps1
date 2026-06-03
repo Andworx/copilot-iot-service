@@ -117,13 +117,13 @@ function Get-AllDataverseRecords {
         [string]$Endpoint
     )
 
-    $allRecords = @()
+    $allRecords = [System.Collections.Generic.List[object]]::new()
     $url = $Endpoint
 
     while ($url) {
         $response = Invoke-DataverseApi -Connection $Connection -Endpoint $url -Method GET
         if ($response.value) {
-            $allRecords += $response.value
+            $allRecords.AddRange([object[]]$response.value)
         }
         $url = $response.'@odata.nextLink'
     }

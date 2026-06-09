@@ -6,13 +6,34 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
   issues: write
 
 jobs:
   sync-project-label:
     runs-on: ubuntu-latest
     steps:
+      - name: Ensure dependencies label exists for Dependabot PRs
+        if: github.actor == 'dependabot[bot]'
+        run: |
+          TARGET_REPO="${{ github.event.pull_request.base.repo.full_name }}"
+          LABEL_EXISTS=$(gh label list --repo "$TARGET_REPO" --limit 200 --json name --jq '.[] | select(.name == "dependencies") | .name')
+          if [ -z "$LABEL_EXISTS" ]; then
+            gh label create "dependencies" --repo "$TARGET_REPO" --color "0366d6" --description "Pull requests that update a dependency"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+
+      - name: Add dependencies label to Dependabot PRs
+        if: github.actor == 'dependabot[bot]'
+        run: |
+          TARGET_REPO="${{ github.event.pull_request.base.repo.full_name }}"
+          gh pr edit ${{ github.event.pull_request.number }} --repo "$TARGET_REPO" --add-label "dependencies"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+
       - name: Get linked issue from PR body
         id: get-issue
         run: |

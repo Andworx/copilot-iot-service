@@ -110,6 +110,18 @@ async function writeToDataverse(messageData, context) {
 }
 
 /**
+ * True for this app's IoT panel payload: a `switches` array (SW1-SW4 as 1/0) alongside
+ * the LED state. Anything else on the shared IoT Hub belongs to another app.
+ *
+ * @param {object} messageData  Parsed JSON telemetry payload
+ */
+function isPanelTelemetry(messageData) {
+    return messageData !== null
+        && typeof messageData === 'object'
+        && Array.isArray(messageData.switches);
+}
+
+/**
  * Derives SignalR messages from a parsed IoT telemetry payload and writes them
  * to the SignalR output binding.  Called by both the Event Hub trigger and the
  * HTTP /api/telemetry endpoint so the logic stays in one place.
@@ -119,6 +131,16 @@ async function writeToDataverse(messageData, context) {
  */
 function broadcastTelemetry(messageData, context) {
     const deviceId = messageData.deviceId || messageData.device_id || 'raspberry-pi-iotpanel';
+
+    // IoT Hub routes every device's messages here, including the Restore & Spin panel Pi
+    // (Copilot-IoT-Game), whose payload is a different shape (deviceSlug/controls/cables,
+    // no `switches` array). That app has its own function on its own consumer group; if we
+    // processed those messages we would broadcast bogus help requests and write junk
+    // andy_iottelemetryevent rows (null switch/LED state). Only handle this app's payload.
+    if (!isPanelTelemetry(messageData)) {
+        context.log(`Ignoring non-panel telemetry from ${deviceId} (no switches array)`);
+        return { dvPromise: Promise.resolve(), deviceId, messageCount: 0 };
+    }
 
     // Derive needs_help if Pi didn't send it (older firmware)
     let needs_help = messageData.needs_help;

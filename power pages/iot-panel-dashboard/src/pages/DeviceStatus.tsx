@@ -1,6 +1,7 @@
 import { useSignalRContext } from '../context/SignalRContext';
 import { GPIO_CONFIG } from '../types/telemetry';
 import { StatusBadge, type Status } from '../components/StatusBadge';
+import { hexToRgb, formatLastSeen } from '../utils/format';
 
 /* ── Types ─────────────────────────────────── */
 interface GpioLed {
@@ -43,22 +44,6 @@ interface DeviceInfo {
  */
 const SW_PINS  = [29, 31, 33, 35];
 const LED_PINS = [12, 18, 22, 32];
-
-
-function formatLastSeen(d: Date | null) {
-  if (!d) return '—';
-  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  return `${Math.floor(diff / 3600)}h ago`;
-}
-
-function hexToRgb(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `${r}, ${g}, ${b}`;
-}
 
 const AMBER_RGB = '245, 158, 11';
 

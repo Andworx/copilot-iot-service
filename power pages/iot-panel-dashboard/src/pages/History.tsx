@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSignalRContext } from '../context/SignalRContext';
+import { formatTime } from '../utils/format';
 import type { TelemetryEvent } from '../types/telemetry';
 
 /* ── Display event type ─────────────────────── */
@@ -117,13 +118,6 @@ export default function History() {
   const uniqueTypes = Array.from(new Set(merged.map(e => e.eventType))).sort();
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageSlice  = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
-
-  const formatTime = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-    } catch { return iso; }
-  };
 
   return (
     <div>

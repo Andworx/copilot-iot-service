@@ -20,6 +20,7 @@ iot-credentials.env
 *.mobileconfig
 vpn-profile*/
 infra/*.json
+infra/bootstrap/*.json
 infra/parameters/*.json
 infra/parameters/*.local.bicepparam
 __pycache__/

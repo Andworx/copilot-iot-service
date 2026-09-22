@@ -19,6 +19,7 @@ jobs:
         run: |
           az bicep install --version v0.43.8
           az bicep build --file infra/main.bicep --outfile /tmp/network.json
+          az bicep build --file infra/bootstrap/network-identity.bicep --outfile /tmp/network-identity.json
           az bicep build-params --file infra/parameters/dev.bicepparam --outfile /tmp/network.parameters.json
           az bicep build-params --file infra/parameters/foundation.bicepparam --outfile /tmp/foundation.parameters.json
           az bicep build-params --file infra/parameters/vpn-poc.bicepparam --outfile /tmp/vpn.parameters.json

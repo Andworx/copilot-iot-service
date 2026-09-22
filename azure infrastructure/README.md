@@ -6,6 +6,12 @@ This directory contains the source-controlled Azure resource definitions, config
 
 ## Components
 
+The additive private-network design lives in [`infra/`](../infra/README.md), with
+[architecture and staged validation](../docs/architecture/network-architecture.md)
+tracked in [#206](https://github.com/Andworx/copilot-iot-service/issues/206).
+It preserves the existing resources and provisioning scripts below; no networking
+deployment or public-access change occurs automatically.
+
 | Component | Folder | Script | Purpose |
 |-----------|--------|--------|---------|
 | IoT Hub | [`iot-hub/`](./iot-hub/) | `New-AzureIotInfrastructure.ps1` | Cloud gateway for Raspberry Pi MQTT telemetry |

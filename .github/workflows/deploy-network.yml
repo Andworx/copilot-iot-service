@@ -1,0 +1,103 @@
+name: Deploy demo network
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Preview or deploy the additive network (never disables public access)
+        type: choice
+        options: [what-if, deploy]
+        default: what-if
+        required: true
+      stage:
+        description: Foundation first; VPN requires the protected public root certificate
+        type: choice
+        options: [foundation, vpn-poc]
+        default: foundation
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-network
+  cancel-in-progress: false
+
+jobs:
+  network:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: network-deploy
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CORE_OUTPUT: none
+      AZURE_CORE_ONLY_SHOW_ERRORS: 'true'
+      NETWORK_RESOURCE_GROUP: ${{ vars.NETWORK_RESOURCE_GROUP }}
+      NETWORK_STAGE: ${{ inputs.stage }}
+      NETWORK_ACTION: ${{ inputs.action }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate deployment configuration
+        env:
+          CLIENT_ID: ${{ vars.AZURE_NETWORK_CLIENT_ID }}
+          TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          for key in CLIENT_ID TENANT_ID SUBSCRIPTION_ID NETWORK_RESOURCE_GROUP; do
+            if [ -z "${!key}" ]; then echo "Missing environment variable: $key"; exit 1; fi
+          done
+      - name: Compile source-controlled parameters
+        env:
+          DEMO_VPN_ROOT_PUBLIC_CERT: ${{ secrets.DEMO_VPN_ROOT_PUBLIC_CERT }}
+        run: |
+          set -euo pipefail
+          if [ "$NETWORK_STAGE" = vpn-poc ] && [ -z "$DEMO_VPN_ROOT_PUBLIC_CERT" ]; then
+            echo 'VPN stage requires the public root certificate body. Never upload a private key.'
+            exit 1
+          fi
+          az bicep install --version v0.43.8
+          az bicep build --file infra/main.bicep --outfile "$RUNNER_TEMP/network.json"
+          az bicep build-params --file "infra/parameters/$NETWORK_STAGE.bicepparam" --outfile "$RUNNER_TEMP/network.parameters.json"
+          python3 infra/scripts/check_network_plan.py template "$RUNNER_TEMP/network.json"
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_NETWORK_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Preview and reject changes to existing resources
+        run: |
+          set -euo pipefail
+          az deployment group what-if \
+            --resource-group "$NETWORK_RESOURCE_GROUP" \
+            --template-file "$RUNNER_TEMP/network.json" \
+            --parameters "@$RUNNER_TEMP/network.parameters.json" \
+            --mode Incremental --no-pretty-print --output json > "$RUNNER_TEMP/what-if.json"
+          python3 infra/scripts/check_network_plan.py plan "$RUNNER_TEMP/what-if.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Deploy the reviewed additive stage
+        if: inputs.action == 'deploy'
+        run: |
+          set -euo pipefail
+          az deployment group create \
+            --name "network-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --resource-group "$NETWORK_RESOURCE_GROUP" \
+            --template-file "$RUNNER_TEMP/network.json" \
+            --parameters "@$RUNNER_TEMP/network.parameters.json" \
+            --mode Incremental --output none
+          state=$(az deployment group show \
+            --name "network-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --resource-group "$NETWORK_RESOURCE_GROUP" \
+            --query properties.provisioningState --output tsv)
+          test "$state" = Succeeded
+          printf 'Deployment succeeded. Live DNS, router and service checks remain **Verify**.\n' >> "$GITHUB_STEP_SUMMARY"
+      - name: Record source and stage
+        if: always()
+        run: |
+          printf 'Commit: `%s`\n\nStage: `%s`; action: `%s`\n' "$GITHUB_SHA" "$NETWORK_STAGE" "$NETWORK_ACTION" >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary deployment inputs
+        if: always()
+        run: |
+          rm -f -- "$RUNNER_TEMP/network.json" "$RUNNER_TEMP/network.parameters.json" "$RUNNER_TEMP/what-if.json"

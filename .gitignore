@@ -22,6 +22,7 @@ vpn-profile*/
 infra/*.json
 infra/parameters/*.json
 infra/parameters/*.local.bicepparam
+__pycache__/
 
 # App config with secrets
 appsettings.Development.json

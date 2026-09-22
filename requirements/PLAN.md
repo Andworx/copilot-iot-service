@@ -6,7 +6,7 @@ This plan covers the new network initiative only, not the repository's other wor
 | Phase | Status | Exit condition |
 |---|---|---|
 | Discovery | Verify | Initial source/read-only inventory complete; reconcile detailed dependencies and owners before rollout |
-| Network foundation | Verify | Initial Bicep compiled and safety checks passed; what-if, deployment and live validation pending |
+| Network foundation | Verify | Azure what-if passed: 14 Create, no Modify/Delete; manual workflow prepared; identity/environment, PR review, deployment and live validation pending |
 | VPN POC | TODO | TL-WR3002X profile, LAN SNAT/return path, split tunneling and recovery proven |
 | Private endpoints | TODO | Supported hosting/SKUs and one-service-at-a-time live tests passed |
 | Private DNS | TODO | Normal FQDNs resolve privately from all demo devices and Functions |

@@ -2,10 +2,10 @@ name: Validate network Bicep
 
 on:
   pull_request:
-    paths: ['infra/**', '.github/workflows/validate-network.yml']
+    paths: ['infra/**', '.github/workflows/validate-network.yml', '.github/workflows/deploy-network.yml']
   push:
     branches: [main]
-    paths: ['infra/**', '.github/workflows/validate-network.yml']
+    paths: ['infra/**', '.github/workflows/validate-network.yml', '.github/workflows/deploy-network.yml']
 
 permissions:
   contents: read
@@ -20,23 +20,7 @@ jobs:
           az bicep install --version v0.43.8
           az bicep build --file infra/main.bicep --outfile /tmp/network.json
           az bicep build-params --file infra/parameters/dev.bicepparam --outfile /tmp/network.parameters.json
-          python3 - <<'PY'
-          import json
-          with open('/tmp/network.json') as f:
-              template = json.load(f)
-          forbidden = {'microsoft.devices/iothubs', 'microsoft.devices/provisioningservices',
-                       'microsoft.eventhub/namespaces', 'microsoft.web/sites',
-                       'microsoft.signalrservice/signalr', 'microsoft.storage/storageaccounts'}
-          def check(node):
-              if isinstance(node, dict):
-                  assert node.get('type', '').lower() not in forbidden, 'Existing service must not be redeclared'
-                  assert 'publicNetworkAccess' not in node, 'Foundation must not change public access'
-                  for value in node.values():
-                      check(value)
-              elif isinstance(node, list):
-                  for value in node:
-                      check(value)
-          check(template)
-          assert template['parameters']['deployVpn']['defaultValue'] is False
-          assert template['parameters']['endpoints']['defaultValue'] == []
-          PY
+          az bicep build-params --file infra/parameters/foundation.bicepparam --outfile /tmp/foundation.parameters.json
+          az bicep build-params --file infra/parameters/vpn-poc.bicepparam --outfile /tmp/vpn.parameters.json
+          python3 infra/scripts/check_network_plan.py template /tmp/network.json
+          python3 -m unittest discover -s infra/scripts -p 'test_*.py'

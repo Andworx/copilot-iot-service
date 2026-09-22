@@ -1,0 +1,42 @@
+name: Validate network Bicep
+
+on:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/validate-network.yml']
+  push:
+    branches: [main]
+    paths: ['infra/**', '.github/workflows/validate-network.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Compile and lint (no Azure login or deployment)
+        run: |
+          az bicep install --version v0.43.8
+          az bicep build --file infra/main.bicep --outfile /tmp/network.json
+          az bicep build-params --file infra/parameters/dev.bicepparam --outfile /tmp/network.parameters.json
+          python3 - <<'PY'
+          import json
+          with open('/tmp/network.json') as f:
+              template = json.load(f)
+          forbidden = {'microsoft.devices/iothubs', 'microsoft.devices/provisioningservices',
+                       'microsoft.eventhub/namespaces', 'microsoft.web/sites',
+                       'microsoft.signalrservice/signalr', 'microsoft.storage/storageaccounts'}
+          def check(node):
+              if isinstance(node, dict):
+                  assert node.get('type', '').lower() not in forbidden, 'Existing service must not be redeclared'
+                  assert 'publicNetworkAccess' not in node, 'Foundation must not change public access'
+                  for value in node.values():
+                      check(value)
+              elif isinstance(node, list):
+                  for value in node:
+                      check(value)
+          check(template)
+          assert template['parameters']['deployVpn']['defaultValue'] is False
+          assert template['parameters']['endpoints']['defaultValue'] == []
+          PY

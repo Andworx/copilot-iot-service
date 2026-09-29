@@ -1,5 +1,7 @@
 # Secure IoT Demo Network with Azure Private Networking and VPN
 
+> **2026-09-29 update:** The manual build now exists. Read [manual build status and browser API follow-up](manual-build-status.md) first; it supersedes the original hardware, deployment status and all-private Function assumptions below. Initial Bicep remains unreconciled with the manual build.
+
 ## Background
 
 The portable demo uses a TL-WR3002X on venue Wi-Fi, Raspberry Pi control and display devices, and a demo PC. Preserve the live Pi â†’ IoT Hub â†’ Event Hub â†’ Function â†’ SignalR â†’ dashboard flow while removing unnecessary public exposure. Attendees must redeem QR claim tokens over cellular Internet without joining the demo network.

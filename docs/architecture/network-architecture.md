@@ -1,5 +1,7 @@
 # Private demo network architecture
 
+> **2026-09-29 update:** The manual build now exists. Read [manual build status and browser API follow-up](manual-build-status.md) first; it supersedes the original hardware, deployment status and all-private Function assumptions below. Initial Bicep remains unreconciled with the manual build.
+
 Status: **initial IaC/design only; live acceptance pending**. Track deployment and evidence in [issue #206](https://github.com/Andworx/copilot-iot-service/issues/206). Nothing in this change deploys Azure resources, changes application behavior or disables public connectivity.
 
 ## Discovery and ownership

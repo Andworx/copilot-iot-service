@@ -16,6 +16,14 @@ iot-credentials.env
 *.crt
 *.jks
 *.keystore
+*.ovpn
+*.mobileconfig
+vpn-profile*/
+infra/*.json
+infra/bootstrap/*.json
+infra/parameters/*.json
+infra/parameters/*.local.bicepparam
+__pycache__/
 
 # App config with secrets
 appsettings.Development.json

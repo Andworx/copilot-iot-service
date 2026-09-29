@@ -62,8 +62,7 @@ records consumer separation, Entra authorization, DNS cutover, rollback and test
 Preferred cost-conscious option is a public authenticated control API with private
 downstream access, avoiding a new gateway fee. APIM Developer is an alternative
 at approximately $48/month (East US retail USD, 730 hours, development/test without
-SLA); Standard v2 is approximately $700/month before extras. Selection remains
-pending confirmation; neither gateway nor authentication cutover is deployed.
+SLA); Standard v2 is approximately $700/month before extras. The owner selected a separate staff Function API with a per-user Entra OAuth Power Apps connector; no APIM deployment. Manual Entra setup and code implementation are underway in game PR #178. No authentication cutover is deployed.
 
 The public API is an explicit application exception to the original all-private
 Function target. Keep public prize token redemption separate from staff controls.
@@ -72,6 +71,7 @@ staff login on the shared Function, or disable public access before testing host
 Code App, kiosk, cellular claims and CI/CD. Public prize separation and negative
 authorization tests remain lockdown gates.
 
-Next: choose the API boundary, implement Entra validation and supported token
-acquisition, retire client-bundled Function keys, validate live, then capture the
+Next: finish the manual staff API/connector setup, bind and validate the authenticated Code App, retire exposed Function keys after acceptance, then capture the
 final manually built configuration in Bicep with a new what-if.
+
+The selected connector sends API requests from Power Platform, so no Beryl DNS change is required for staff calls. Keep existing private resolution in place. The staff presentation screen uses authenticated polling instead of direct private SignalR. Code and setup runbook: [game PR #178](https://github.com/Andworx/Copilot-IoT-Game/pull/178).
